@@ -97,6 +97,7 @@ for md in vault.rglob("*.md"):
                 copy_asset(svg)
                 link = (VIEWER
                         + "?src=" + quote(slug(srel))
+                        + "&fallback=" + quote(slug(png.relative_to(vault).as_posix()))
                         + "&back=" + quote(slug(rel.with_suffix("").as_posix()))
                         + "&title=" + quote(base))
                 out += f"\n\n> [!tip] 마인드맵 크게 보기\n> [확대·축소해서 보기]({link})"

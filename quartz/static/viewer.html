@@ -27,7 +27,7 @@
 </head>
 <body>
 <div id="stage"><img id="pic" alt="마인드맵" draggable="false"></div>
-<div id="msg">불러오는 중…</div>
+<div id="msg">마인드맵 불러오는 중… (처음엔 몇 초 걸려요)</div>
 <div class="bar" id="top">
   <a id="back" href="../">← 노트로 돌아가기</a>
   <span id="hint">드래그로 이동 · 휠/핀치로 확대 · 더블클릭 확대</span>
@@ -72,11 +72,26 @@
     x = cx - (cx - x) * k; y = cy - (cy - y) * k; z = nz; apply();
   };
 
+  // SVG 를 먼저 시도하고, 실패하거나 너무 오래 걸리면 PNG 로 대체
+  const fallback = qs.get("fallback") ? new URL(qs.get("fallback"), siteRoot).href : null;
+  let usingFallback = false, done = false;
+  const useFallback = why => {
+    if (usingFallback || !fallback) {
+      if (!done) msg.textContent = "그림을 불러오지 못했어요. 새로고침하거나 '원본'을 눌러 주세요.";
+      return;
+    }
+    usingFallback = true; msg.textContent = "가벼운 이미지로 다시 불러오는 중…";
+    console.warn("[viewer] SVG 대신 PNG 사용:", why);
+    document.getElementById("raw").href = fallback;
+    img.src = fallback;
+  };
   img.onload = () => {
-    natW = img.naturalWidth || 1600; natH = img.naturalHeight || 900;
+    if (!img.naturalWidth) return useFallback("크기 0");
+    done = true; natW = img.naturalWidth; natH = img.naturalHeight;
     msg.remove(); fit();
   };
-  img.onerror = () => { msg.textContent = "그림을 불러오지 못했어요."; };
+  img.onerror = () => useFallback("onerror");
+  setTimeout(() => { if (!done) useFallback("시간 초과"); }, 12000);
   img.src = url;
 
   stage.addEventListener("wheel", e => {
