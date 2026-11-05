@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>마인드맵 뷰어 · 뉴리의창고</title>
+<style>
+  :root { --bg:#161618; --fg:#ebebec; --muted:#9a9aa0; --btn:#2a2a2e; --btn-h:#3a3a40; }
+  html,body { margin:0; height:100%; background:var(--bg); color:var(--fg);
+    font-family: system-ui, -apple-system, "Segoe UI", "Malgun Gothic", sans-serif; overflow:hidden; }
+  #stage { position:fixed; inset:0; cursor:grab; touch-action:none; }
+  #stage.drag { cursor:grabbing; }
+  #pic { position:absolute; left:0; top:0; user-select:none; -webkit-user-drag:none;
+    border-radius:10px; box-shadow:0 8px 40px rgba(0,0,0,.5); background:#fff; }
+  .bar { position:fixed; display:flex; gap:6px; align-items:center; z-index:2; }
+  #top { top:12px; left:12px; right:12px; justify-content:space-between; pointer-events:none; }
+  #top > * { pointer-events:auto; }
+  #tools { bottom:16px; left:50%; transform:translateX(-50%); background:rgba(30,30,34,.9);
+    padding:6px; border-radius:12px; backdrop-filter:blur(6px); }
+  a, button { color:var(--fg); background:var(--btn); border:0; border-radius:8px;
+    padding:8px 12px; font-size:14px; text-decoration:none; cursor:pointer; }
+  a:hover, button:hover { background:var(--btn-h); }
+  #zoom { min-width:56px; text-align:center; color:var(--muted); font-size:13px; }
+  #hint { color:var(--muted); font-size:12px; background:rgba(30,30,34,.8); padding:6px 10px; border-radius:8px; }
+  #msg { position:fixed; inset:0; display:grid; place-items:center; color:var(--muted); }
+</style>
+</head>
+<body>
+<div id="stage"><img id="pic" alt="마인드맵" draggable="false"></div>
+<div id="msg">불러오는 중…</div>
+<div class="bar" id="top">
+  <a id="back" href="../">← 노트로 돌아가기</a>
+  <span id="hint">드래그로 이동 · 휠/핀치로 확대 · 더블클릭 확대</span>
+</div>
+<div class="bar" id="tools">
+  <button id="out" title="축소">−</button>
+  <span id="zoom">100%</span>
+  <button id="in" title="확대">+</button>
+  <button id="fit" title="화면에 맞추기">맞추기</button>
+  <a id="raw" target="_blank" rel="noopener">원본</a>
+</div>
+<script>
+(() => {
+  const qs = new URLSearchParams(location.search);
+  const siteRoot = location.href.replace(/static\/viewer\.html.*$/, "");
+  const src = qs.get("src");
+  const back = qs.get("back");
+  const img = document.getElementById("pic"), stage = document.getElementById("stage");
+  const msg = document.getElementById("msg"), zoomEl = document.getElementById("zoom");
+  if (back) document.getElementById("back").href = new URL(back, siteRoot).href;
+  if (qs.get("title")) document.title = qs.get("title") + " · 뉴리의창고";
+  if (!src) { msg.textContent = "표시할 그림이 지정되지 않았어요."; return; }
+  const url = new URL(src, siteRoot).href;
+  document.getElementById("raw").href = url;
+
+  let natW = 1, natH = 1, z = 1, x = 0, y = 0;
+  const MIN = 0.05, MAX = 8;
+  // width/height 를 직접 바꿔서 벡터를 다시 그리게 함 (확대해도 선명)
+  const apply = () => {
+    img.style.width = natW * z + "px"; img.style.height = natH * z + "px";
+    img.style.left = x + "px"; img.style.top = y + "px";
+    zoomEl.textContent = Math.round(z * 100) + "%";
+  };
+  const fit = () => {
+    const pad = 40, W = innerWidth - pad * 2, H = innerHeight - pad * 2 - 60;
+    z = Math.min(W / natW, H / natH);
+    x = (innerWidth - natW * z) / 2; y = (innerHeight - natH * z) / 2;
+    apply();
+  };
+  const zoomAt = (factor, cx, cy) => {
+    const nz = Math.min(MAX, Math.max(MIN, z * factor)); const k = nz / z;
+    x = cx - (cx - x) * k; y = cy - (cy - y) * k; z = nz; apply();
+  };
+
+  img.onload = () => {
+    natW = img.naturalWidth || 1600; natH = img.naturalHeight || 900;
+    msg.remove(); fit();
+  };
+  img.onerror = () => { msg.textContent = "그림을 불러오지 못했어요."; };
+  img.src = url;
+
+  stage.addEventListener("wheel", e => {
+    e.preventDefault();
+    zoomAt(Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0015)), e.clientX, e.clientY);
+  }, { passive: false });
+  stage.addEventListener("dblclick", e => zoomAt(2, e.clientX, e.clientY));
+
+  // 마우스 드래그 + 터치 핀치
+  const pts = new Map(); let last = null;
+  stage.addEventListener("pointerdown", e => {
+    stage.setPointerCapture(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]);
+    stage.classList.add("drag"); last = null;
+  });
+  stage.addEventListener("pointermove", e => {
+    if (!pts.has(e.pointerId)) return;
+    const prev = pts.get(e.pointerId); pts.set(e.pointerId, [e.clientX, e.clientY]);
+    if (pts.size === 1) { x += e.clientX - prev[0]; y += e.clientY - prev[1]; apply(); }
+    else if (pts.size === 2) {
+      const [a, b] = [...pts.values()];
+      const d = Math.hypot(a[0] - b[0], a[1] - b[1]);
+      const cx = (a[0] + b[0]) / 2, cy = (a[1] + b[1]) / 2;
+      if (last) { x += cx - last.cx; y += cy - last.cy; zoomAt(d / last.d, cx, cy); }
+      last = { d, cx, cy };
+    }
+  });
+  const end = e => { pts.delete(e.pointerId); last = null; if (!pts.size) stage.classList.remove("drag"); };
+  stage.addEventListener("pointerup", end); stage.addEventListener("pointercancel", end);
+
+  const center = () => [innerWidth / 2, innerHeight / 2];
+  document.getElementById("in").onclick = () => zoomAt(1.4, ...center());
+  document.getElementById("out").onclick = () => zoomAt(1 / 1.4, ...center());
+  document.getElementById("fit").onclick = fit;
+  addEventListener("keydown", e => {
+    if (e.key === "+" || e.key === "=") zoomAt(1.4, ...center());
+    else if (e.key === "-") zoomAt(1 / 1.4, ...center());
+    else if (e.key === "0") fit();
+  });
+  addEventListener("resize", fit);
+})();
+</script>
+</body>
+</html>

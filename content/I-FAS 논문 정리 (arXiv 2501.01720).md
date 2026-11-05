@@ -22,8 +22,8 @@ tags:
 created: 2026-11-05
 status: 정리완료
 publish: true
-share_link: https://share.note.sx/gy6tgnhu
-share_updated: 2026-11-05T18:08:47+09:00
+share_link: https://share.note.sx/8n0wmqpw
+share_updated: 2026-11-05T18:10:19+09:00
 ---
 
 # I-FAS: 해석 가능한 얼굴 위조 방지
@@ -32,6 +32,9 @@ share_updated: 2026-11-05T18:08:47+09:00
 > 얼굴 위조 방지(FAS)를 "진짜/가짜" 이진 분류가 아니라 **멀티모달 LLM이 답하는 VQA 문제**로 바꿨다. 모델이 "No, 이건 화면을 다시 찍은 사진이다"처럼 **판단 + 이유**를 함께 말하게 만들었더니, 한 번도 본 적 없는 환경·공격 유형에서도 훨씬 잘 버틴다.
 
 ![[첨부/I-FAS/I-FAS 마인드맵.png]]
+
+> [!tip] 마인드맵 크게 보기
+> [확대·축소해서 보기](https://imvely.github.io/nyuri-garden/static/viewer.html?src=%EC%B2%A8%EB%B6%80/i-fas/i-fas-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&back=i-fas-%EB%85%BC%EB%AC%B8-%EC%A0%95%EB%A6%AC-%28arxiv-2501.01720%29&title=I-FAS%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5)
 
 ## 1. 문제의식
 
