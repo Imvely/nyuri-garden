@@ -73,7 +73,8 @@
   };
 
   // SVG 를 먼저 시도하고, 실패하거나 너무 오래 걸리면 PNG 로 대체
-  const fallback = qs.get("fallback") ? new URL(qs.get("fallback"), siteRoot).href : null;
+  const fbSrc = qs.get("fallback") || (/\.svg$/i.test(src) ? src.replace(/\.svg$/i, ".png") : null);
+  const fallback = fbSrc ? new URL(fbSrc, siteRoot).href : null;
   let usingFallback = false, done = false;
   const useFallback = why => {
     if (usingFallback || !fallback) {
