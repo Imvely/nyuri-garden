@@ -811,3 +811,61 @@ table th {
     }
   }
 }
+
+// ── 캐릭터 로고: 사이트 이름 옆 ──────────────────────────────
+.page-title a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+
+  &::before {
+    content: "";
+    flex: none;
+    width: 1.55em;
+    height: 1.55em;
+    background: url("static/nyuri.svg") center / contain no-repeat;
+    transform: translateY(-0.04em);
+  }
+}
+
+// 링크 미리보기 창: 본문과 구분되게 옅은 테두리와 그림자
+.popover > .popover-inner {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--light);
+  box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.55);
+}
+
+// 모바일 상단 바: 로고가 들어가도 한 줄에 맞게
+@media all and ($mobile) {
+  .page > #quartz-body .sidebar.left {
+    gap: 0.4rem;
+
+    .page-title {
+      font-size: 1.5rem;
+    }
+
+    .page-title a {
+      gap: 0.3rem;
+    }
+
+    .flex-component {
+      justify-content: flex-end;
+    }
+
+    .search {
+      flex: 0 0 auto;
+
+      & > .search-button {
+        width: 2.5rem;
+        min-height: 2.5rem;
+        padding: 0;
+        justify-content: center;
+
+        p {
+          display: none;
+        }
+      }
+    }
+  }
+}

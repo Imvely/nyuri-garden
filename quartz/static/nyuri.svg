@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="뉴리의창고 캐릭터: 쪽지가 삐죽 나온 종이 상자">
+  <title>뉴리</title>
+  <g stroke="#4a3322" stroke-width="9" stroke-linejoin="round" stroke-linecap="round">
+    <!-- 바닥 그림자 -->
+    <ellipse cx="258" cy="458" rx="158" ry="16" fill="#4a3322" fill-opacity="0.14" stroke="none"/>
+
+    <!-- 연필: 상자 뒤에 꽂혀 있음 -->
+    <g transform="rotate(24 360 120)">
+      <rect x="340" y="40" width="34" height="150" rx="6" fill="#f2c14e"/>
+      <path d="M340 40 L357 6 L374 40 Z" fill="#f6dfb8"/>
+      <path d="M351 18 L357 6 L363 18 Z" fill="#4a3322" stroke-width="5"/>
+      <rect x="340" y="172" width="34" height="18" rx="4" fill="#e79a8c"/>
+    </g>
+
+    <!-- 쪽지: 상자 안에서 삐죽 -->
+    <g transform="rotate(-6 252 120)">
+      <path d="M196 196 L202 62 Q252 52 304 60 L312 196 Z" fill="#fffaf0"/>
+      <path d="M222 92 L284 90 M220 116 L286 114 M218 140 L270 139" stroke="#d9c7a8" stroke-width="6"/>
+      <path d="M220 115 L284 113" stroke="#f2c46d" stroke-width="12" stroke-opacity="0.75"/>
+    </g>
+
+    <!-- 상자 안쪽(어두운 입구) -->
+    <path d="M100 206 L152 168 L362 168 L414 206 Z" fill="#a8743f"/>
+
+    <!-- 왼쪽·오른쪽 날개 -->
+    <path d="M100 206 L152 168 L118 108 L54 150 Z" fill="#e2b47a"/>
+    <path d="M414 206 L362 168 L396 104 L462 144 Z" fill="#e2b47a"/>
+
+    <!-- 상자 앞면 -->
+    <path d="M100 206 Q256 198 414 206 L404 440 Q256 448 110 440 Z" fill="#eec48b"/>
+
+    <!-- 테이프 -->
+    <path d="M232 202 L282 202 L280 246 L234 246 Z" fill="#f8e6c8" stroke-width="6"/>
+
+    <!-- 볼터치 -->
+    <ellipse cx="168" cy="344" rx="26" ry="15" fill="#f2a08f" fill-opacity="0.75" stroke="none"/>
+    <ellipse cx="346" cy="344" rx="26" ry="15" fill="#f2a08f" fill-opacity="0.75" stroke="none"/>
+
+    <!-- 눈 -->
+    <ellipse cx="204" cy="306" rx="17" ry="23" fill="#4a3322" stroke="none"/>
+    <ellipse cx="310" cy="306" rx="17" ry="23" fill="#4a3322" stroke="none"/>
+    <circle cx="210" cy="296" r="6.5" fill="#fffaf0" stroke="none"/>
+    <circle cx="316" cy="296" r="6.5" fill="#fffaf0" stroke="none"/>
+
+    <!-- 입 -->
+    <path d="M236 342 Q257 364 278 342" fill="none" stroke-width="8"/>
+  </g>
+</svg>
