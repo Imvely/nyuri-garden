@@ -174,6 +174,48 @@ for md in vault.rglob("*.md"):
     dst.write_text(text, encoding="utf-8")
     published.append(rel.as_posix())
 
+# ── 폴더 첫 화면(index.md) 자동 생성: 소개 글 + 노트 목록(제목 · 한 줄 설명) ──
+_intro_file = root / "scripts" / "folder_intros.json"
+INTROS = {}
+if _intro_file.exists():
+    INTROS = {k: v for k, v in _json.loads(_intro_file.read_text(encoding="utf-8")).items() if not k.startswith("_")}
+
+
+def fm_value(text, key):
+    m = FM_RE.match(text)
+    if not m:
+        return ""
+    v = re.search(rf"^{key}:\s*(.+?)\s*$", m.group(1), re.M)
+    if not v:
+        return ""
+    v = v.group(1).strip()
+    if len(v) >= 2 and v[0] == v[-1] and v[0] in "\"'":
+        v = v[1:-1]
+    return v.replace('\\"', '"')
+
+
+folders = {}
+for rel in published:
+    p = Path(rel)
+    if len(p.parts) > 1:
+        folders.setdefault(p.parent.as_posix(), []).append(p)
+
+for folder, notes in folders.items():
+    items = []
+    for p in sorted(notes, key=lambda x: x.as_posix()):
+        text = (content / p).read_text(encoding="utf-8")
+        title = fm_value(text, "title") or p.stem
+        summary = fm_value(text, "summary")
+        line = f"- [[{p.with_suffix('').as_posix()}|{title}]]"
+        if summary:
+            line += f"\n  {summary}"
+        items.append(line)
+    name = folder.split("/")[-1]
+    intro = INTROS.get(folder, "")
+    body = f'---\ntitle: "{name}"\n---\n\n' + (intro + "\n\n" if intro else "") + "\n".join(items) + "\n"
+    (content / folder / "index.md").write_text(body, encoding="utf-8")
+    published.append(f"{folder}/index.md")
+
 # publish 가 풀린 노트는 content 에서 제거
 for md in content.rglob("*.md"):
     rel = md.relative_to(content).as_posix()

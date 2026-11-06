@@ -1,0 +1,207 @@
+@use "./variables.scss" as *;
+
+// ═════════════════════════════════════════════════════════════
+// 첫 화면 지식 그래프 (quartz/static/nyuri-graph.js)
+// 마인드맵 뷰어와 같은 '점 모눈 스케치북' 위에 노트들이 떠 있다.
+// 색은 사이트 토큰만: 노트 = 호박색, 폴더 = 빈 동그라미, 태그 = 작은 회색 점.
+// ═════════════════════════════════════════════════════════════
+
+.ng {
+  position: relative;
+  margin: 0.4rem 0 0;
+  height: clamp(420px, 66vh, 720px);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  overflow: hidden;
+  background-color: var(--light);
+  background-image: radial-gradient(color-mix(in srgb, var(--gray) 22%, transparent) 1.1px, transparent 1.2px);
+  background-size: 22px 22px;
+  box-shadow: 0 18px 48px -28px rgba(0, 0, 0, 0.55);
+}
+
+:root[saved-theme="light"] .ng {
+  box-shadow: 0 18px 44px -28px rgba(90, 55, 20, 0.35);
+}
+
+.ng-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: pan-y; // 휴대폰에선 세로 스크롤은 페이지가, 점 끌기는 그래프가
+  opacity: 0;
+  transition: opacity 0.6s var(--ease-out);
+}
+
+.ng.is-ready .ng-canvas {
+  opacity: 1;
+}
+
+.ng-status {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  color: var(--gray);
+  font-size: 0.92rem;
+}
+
+// 떠 있는 작은 판 (범례 · 확대 도구)
+.ng-legend,
+.ng-tools {
+  position: absolute;
+  bottom: 14px;
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--light) 86%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.ng-legend {
+  left: 14px;
+  gap: 0.9rem;
+  padding: 0.4rem 0.85rem;
+  color: var(--gray);
+  font-size: 0.8rem;
+  pointer-events: none;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+}
+
+.ng-key {
+  display: inline-block;
+  flex: none;
+  border-radius: 50%;
+
+  &.is-note {
+    width: 10px;
+    height: 10px;
+    background: var(--secondary);
+  }
+
+  &.is-folder {
+    width: 10px;
+    height: 10px;
+    box-sizing: border-box;
+    border: 1.8px solid var(--gray);
+    background: radial-gradient(var(--gray) 0 28%, transparent 32%);
+  }
+
+  &.is-tag {
+    width: 6px;
+    height: 6px;
+    background: var(--gray);
+  }
+}
+
+.ng-tools {
+  right: 14px;
+  gap: 2px;
+  padding: 3px;
+
+  button {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--darkgray);
+    cursor: pointer;
+    transition:
+      color 0.2s ease,
+      background-color 0.2s ease;
+
+    &:focus-visible {
+      outline: 2px solid var(--secondary);
+      outline-offset: 1px;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        color: var(--secondary);
+        background: color-mix(in srgb, var(--secondary) 12%, transparent);
+      }
+    }
+  }
+}
+
+// 그래프 아래: 사용법 한 줄 + 노트 목록으로 가는 길
+.ng-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.6rem 1rem;
+  margin: 0.9rem 0.2rem 0;
+
+  p {
+    margin: 0;
+    color: var(--gray);
+    font-size: 0.88rem;
+  }
+}
+
+// Quartz 의 내부 링크 기본 모양(형광 배경 · 좁은 여백)을 덮어쓴다
+.ng-foot a.ng-more {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.4rem;
+  padding: 0 1rem;
+  border: 1px solid color-mix(in srgb, var(--secondary) 45%, transparent);
+  border-radius: 999px;
+  color: var(--dark) !important;
+  background: color-mix(in srgb, var(--secondary) 8%, transparent);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none !important;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+
+  &:focus-visible {
+    outline: 2px solid var(--secondary);
+    outline-offset: 2px;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      border-color: var(--secondary);
+      background: color-mix(in srgb, var(--secondary) 16%, transparent);
+    }
+  }
+}
+
+@media all and ($mobile) {
+  .ng {
+    height: clamp(360px, 62vh, 520px);
+    border-radius: 14px;
+  }
+
+  .ng-legend {
+    left: 10px;
+    bottom: 10px;
+    gap: 0.7rem;
+  }
+
+  .ng-tools {
+    right: 10px;
+    bottom: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ng-canvas {
+    transition-duration: 0.01s;
+  }
+}

@@ -28,8 +28,9 @@ SNIPPET = (
     '<script src="__ROOT__static/share.js" defer></script>'
     '<script src="__ROOT__static/nyuri-pet.js" defer></script>'
     '<script src="__ROOT__static/comments.js" defer></script>'
+    '<script src="__ROOT__static/nyuri-graph.js" defer></script>'
 )
-MARKER = "static/comments.js"
+MARKER = "static/nyuri-graph.js"
 OLD_SNIPPET = '<script>try{if(!localStorage.getItem("theme"))localStorage.setItem("theme","dark")}catch(e){}</script>'
 
 out = Path(sys.argv[1] if len(sys.argv) > 1 else "public")
@@ -50,3 +51,20 @@ print(f"head snippet injected into {n} pages")
 
 # RSS 피드에는 스타일시트를 붙이지 않는다.
 # (Chrome 이 XSLT 지원을 없애는 중이라 경고 배너가 뜬다. 사람이 보는 안내는 static/rss.html)
+
+# 이름을 바꾼 폴더: 예전 폴더 주소로 들어오면 새 폴더로 넘긴다
+DIR_REDIRECTS = {"논문": "논문-노트/"}
+for old, new in DIR_REDIRECTS.items():
+    d = out / old
+    if (d / "index.html").exists() and "nyuri-redirect" not in (d / "index.html").read_text(encoding="utf-8"):
+        continue  # 같은 이름의 진짜 폴더가 다시 생겼으면 건드리지 않는다
+    d.mkdir(parents=True, exist_ok=True)
+    target = "../" + new
+    (d / "index.html").write_text(
+        '<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>옮겨졌어요 · 뉴리의창고</title>'
+        f'<meta name="nyuri-redirect" content="{new}"><link rel="canonical" href="{target}">'
+        f'<meta http-equiv="refresh" content="0; url={target}"></head>'
+        f'<body><a href="{target}">새 주소로 이동</a></body></html>',
+        encoding="utf-8",
+    )
+print("folder redirects:", ", ".join(DIR_REDIRECTS))

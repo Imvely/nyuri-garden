@@ -1,6 +1,7 @@
 @use "./variables.scss" as *;
 @use "./nyuri-pet";
 @use "./nyuri-comments";
+@use "./nyuri-graph";
 
 // ─────────────────────────────────────────────────────────────
 // 뉴리의창고 · 차분한 손글씨 공부 노트
@@ -85,6 +86,7 @@ textarea {
   }
 
   .center > article,
+  .center > .popover-hint, // 폴더 · 태그 첫 화면은 글을 한 겹 더 감싼다
   .center > .page-header,
   .center > hr,
   .center > .page-footer {
@@ -568,20 +570,34 @@ footer {
 }
 
 // ── 홈 ──────────────────────────────────────────────────────
-body[data-slug="index"] {
-  .content-meta {
-    display: none;
+// 첫 화면과 폴더 첫 화면엔 날짜 · 읽는 시간이 필요 없다
+body[data-slug="index"] .content-meta,
+body[data-slug$="/index"] .content-meta {
+  display: none;
+}
+
+// 폴더 첫 화면: 소개 글 + 노트 목록(제목 + 한 줄 설명)
+// 직접 만든 목록이 있으면 Quartz 가 붙이는 자동 목록은 숨긴다 (같은 노트가 두 번 보이지 않게)
+article:has(.markdown-rendered > *) ~ .page-listing {
+  display: none;
+}
+
+body[data-slug$="/index"]:not([data-slug^="tags/"]) article .markdown-rendered {
+  & > p:first-of-type {
+    font-size: 1.08rem;
+    color: var(--darkgray);
   }
 
-  article {
-    & > p:first-of-type {
-      font-size: 1.12rem;
-    }
+  & > ul {
+    margin-top: 1.6rem;
+    padding-left: 1.1rem;
 
-    ul > li {
-      margin-block: 0.9rem;
+    & > li {
+      margin-block: 1rem;
+      color: var(--gray);
 
-      & > a {
+      & > a,
+      & > p > a {
         font-size: 1.15rem;
         font-weight: 700;
       }
