@@ -53,8 +53,10 @@
 
   const ICON_SEND =
     '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>'
+  const ICON_NOTE =
+    '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>'
   const ICON_MOON =
-    '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>'
+    '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>'
   const ICON_CLOSE =
     '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>'
 
@@ -64,7 +66,7 @@
   root.setAttribute("data-persist", "")
   root.innerHTML = `
     <div class="np-bubble" role="status" aria-live="polite"></div>
-    <button type="button" class="np-avatar" aria-label="뉴리에게 말 걸기 (끌어서 옮길 수 있어요)" aria-expanded="false" aria-controls="np-chat">
+    <button type="button" class="np-avatar" aria-label="뉴리 메뉴 열기 (끌어서 옮길 수도 있어요)" aria-haspopup="true" aria-expanded="false" aria-controls="np-menu">
       <span class="np-float">${SVG}</span>
       <span class="np-zzz" aria-hidden="true">z</span>
     </button>
@@ -98,15 +100,18 @@
     </section>`
   document.body.appendChild(root)
 
-  // 채팅창을 열면 뉴리 바로 옆에 뜨는 재우기 버튼 (휴대폰 시트에서는 시트 위 오른쪽)
-  const nap = document.createElement("button")
-  nap.type = "button"
-  nap.className = "np-nap"
-  nap.setAttribute("data-persist", "")
-  nap.setAttribute("aria-label", "뉴리 재우기 (오른쪽 아래로 가서 쉬어요)")
-  nap.hidden = true
-  nap.innerHTML = `${ICON_MOON}<span>재우기</span>`
-  document.body.appendChild(nap)
+  // 뉴리를 누르면 옆에 뜨는 두 갈래 메뉴: 쪽지 건네기 / 잠깐 재우기
+  const menu = document.createElement("div")
+  menu.className = "np-menu"
+  menu.id = "np-menu"
+  menu.setAttribute("data-persist", "")
+  menu.setAttribute("role", "group")
+  menu.setAttribute("aria-label", "뉴리에게 부탁하기")
+  menu.hidden = true
+  menu.innerHTML = `
+    <button type="button" class="np-menu-item" data-act="note">${ICON_NOTE}<span>쪽지 건네기</span></button>
+    <button type="button" class="np-menu-item" data-act="nap">${ICON_MOON}<span>잠깐 재우기</span></button>`
+  document.body.appendChild(menu)
 
   // 재우면 오른쪽 아래에 들어가 쉬는 작은 아이콘. 누르면 다시 깨어난다.
   const dock = document.createElement("button")
@@ -132,7 +137,7 @@
     if (!root.isConnected) document.body.appendChild(root)
     if (!chat.isConnected) document.body.appendChild(chat)
     if (!dock.isConnected) document.body.appendChild(dock)
-    if (!nap.isConnected) document.body.appendChild(nap)
+    if (!menu.isConnected) document.body.appendChild(menu)
   }
   new MutationObserver(keepMounted).observe(document.body, { childList: true })
   document.addEventListener("nav", keepMounted)
@@ -163,6 +168,7 @@
     root.dataset.vert = pos.y + size() / 2 < window.innerHeight / 2 ? "top" : "bottom"
     void b
     if (!chat.hidden) placeChat()
+    if (!menu.hidden) placeMenu()
   }
 
   // 채팅창을 뉴리 옆에 놓고, 뉴리 쪽 모서리에서 커지도록 transform-origin 을 맞춘다
@@ -177,40 +183,19 @@
     const kb = Math.max(0, Math.round(window.innerHeight - h - top))
     return { top, h, kb }
   }
-  function placeNap() {
-    if (nap.hidden) return
-    const w = nap.offsetWidth || 92
-    const h = nap.offsetHeight || 36
+  // 메뉴는 뉴리 옆, 화면 가운데 쪽으로 펼친다 (위아래는 화면 안으로)
+  function placeMenu() {
+    if (menu.hidden) return
+    const s = size()
     const v = viewport()
-    let left
-    let top
-    if (chat.classList.contains("is-sheet")) {
-      // 시트 윗변 바로 위 오른쪽
-      const sheetTop = window.innerHeight - v.kb - chat.offsetHeight
-      left = window.innerWidth - w - 12
-      top = sheetTop - h - 10
-      nap.dataset.from = "bottom"
-    } else {
-      // 뉴리 옆, 화면 가운데 쪽으로
-      const s = size()
-      const toLeft = root.dataset.side === "right"
-      left = toLeft ? pos.x - w - 8 : pos.x + s + 8
-      top = pos.y + s / 2 - h / 2
-      nap.dataset.from = toLeft ? "right" : "left"
-      // 채팅창과 겹치면 채팅창 바깥(위나 아래)으로 비킨다
-      const cl = parseFloat(chat.style.left) || 0
-      const ct = parseFloat(chat.style.top) || 0
-      const cw = chat.offsetWidth
-      const ch = chat.offsetHeight
-      const hits = (t) => left < cl + cw && left + w > cl && t < ct + ch && t + h > ct
-      if (hits(top)) {
-        const above = ct - h - 8
-        const below = ct + ch + 8
-        top = root.dataset.vert === "top" && above >= v.top + 8 ? above : below + h <= v.top + v.h - 8 ? below : above
-      }
-    }
-    nap.style.left = clamp(left, 8, window.innerWidth - w - 8) + "px"
-    nap.style.top = clamp(top, v.top + 8, v.top + v.h - h - 8) + "px"
+    const toLeft = root.dataset.side === "right"
+    const w = menu.offsetWidth || 150
+    const h = menu.offsetHeight || 96
+    const left = toLeft ? pos.x - w - 10 : pos.x + s + 10
+    const top = pos.y + s / 2 - h / 2
+    menu.dataset.from = toLeft ? "right" : "left"
+    menu.style.left = clamp(left, 8, window.innerWidth - w - 8) + "px"
+    menu.style.top = clamp(top, v.top + 8, v.top + v.h - h - 8) + "px"
   }
   function placeChat() {
     const s = size()
@@ -224,7 +209,6 @@
       // 시트 바닥을 키보드 바로 위에, 높이는 보이는 영역 안으로
       chat.style.setProperty("--np-kb", v.kb + "px")
       chat.style.setProperty("--np-vvh", v.h + "px")
-      placeNap()
       return
     }
     chat.classList.remove("is-sheet")
@@ -246,7 +230,6 @@
     const ox = clamp(pos.x + s / 2 - left, 0, w)
     const oy = clamp(pos.y + s / 2 - top, 0, h)
     chat.style.transformOrigin = `${ox}px ${oy}px`
-    placeNap()
   }
 
   function restore() {
@@ -353,6 +336,7 @@
       root.classList.add("is-dragging")
       hideBubble()
       if (!chat.hidden) closeChat(false)
+      closeMenu(false)
       if (Math.random() < 0.5) say(pick(LINES.act.lift), 1800, true)
     }
     const b = bounds()
@@ -383,6 +367,7 @@
       clearTimeout(secretTimer)
       if (taps.length >= 5) {
         closeChat(false)
+        closeMenu(false)
         setTimeout(() => talk(pick(LINES.act.tease)), 340)
         // 정말 그만 누르면 비밀을 알려 준다
         if (!quietDay())
@@ -394,10 +379,11 @@
       }
       if (taps.length >= 3) {
         closeChat(false)
+        closeMenu(false)
         setTimeout(() => talk(pick(LINES.act.dizzy)), 340)
         return
       }
-      toggleChat()
+      tapPet(false)
       return
     }
     // 놓는 순간의 속도: 직전 90ms 안의 움직임만 본다.
@@ -445,7 +431,7 @@
   })
   // 키보드: Enter/Space 는 button 기본 동작(click)으로 처리
   avatar.addEventListener("click", (e) => {
-    if (e.detail === 0) toggleChat() // 키보드로 누른 경우만 (포인터는 pointerup 에서 처리)
+    if (e.detail === 0) tapPet(true) // 키보드로 누른 경우만 (포인터는 pointerup 에서 처리)
   })
 
   // 창 크기, 화면 돌림, 휴대폰 키보드: 늘 화면 안으로 다시 들인다
@@ -532,6 +518,7 @@
   function say(text, ms = 5200, force = false) {
     if (docked) return
     if (flying && !force) return // 재우기를 누른 뒤에는 잘 자요 인사만
+    if (!force && menu.classList.contains("is-open")) return // 메뉴를 고르는 중에는 조용히
     if (chat.classList.contains("is-open") || (!force && (root.classList.contains("is-sleeping") || drag))) return
     const wait = readUntil - Date.now()
     if (!force && wait > 0 && root.classList.contains("has-bubble")) {
@@ -1205,7 +1192,7 @@
   let walking = false
   let placedAt = 0 // 사용자가 직접 옮긴 시각
   function wander() {
-    if (reduce.matches || walking || drag || docked || !chat.hidden || root.classList.contains("is-sleeping")) return
+    if (reduce.matches || walking || drag || docked || !chat.hidden || !menu.hidden || root.classList.contains("is-sleeping")) return
     if (Date.now() - placedAt < 90000) return // 방금 옮겨 둔 자리는 한동안 지킨다
     const b = bounds()
     const ang = Math.random() * Math.PI * 2
@@ -1265,22 +1252,13 @@
       if (chat.hidden || docked || flying) return // 그 사이 닫혔으면 열지 않는다
       root.classList.add("chat-open")
       chat.classList.add("is-open")
-      nap.hidden = false
-      placeNap()
-      requestAnimationFrame(() => nap.classList.add("is-shown"))
     })
-    avatar.setAttribute("aria-expanded", "true")
     setTimeout(() => textarea.focus({ preventScroll: true }), 60)
   }
   function closeChat(focusBack = true) {
     if (chat.hidden) return
     root.classList.remove("chat-open")
     chat.classList.remove("is-open")
-    nap.classList.remove("is-shown")
-    setTimeout(() => {
-      if (!chat.classList.contains("is-open")) nap.hidden = true
-    }, 200)
-    avatar.setAttribute("aria-expanded", "false")
     const hideNow = () => {
       if (!root.classList.contains("chat-open")) chat.hidden = true
     }
@@ -1295,13 +1273,59 @@
     }
   }
   let afterClose = null
+  // ── 메뉴 열고 닫기 ──
+  let menuTimer = 0
+  function openMenu(byKeyboard) {
+    if (docked || flying || !menu.hidden && menu.classList.contains("is-open")) return
+    hideBubble()
+    clearTimeout(pendingSay)
+    clearTimeout(menuTimer)
+    root.classList.remove("is-sleeping")
+    menu.hidden = false
+    placeMenu()
+    // 다음 프레임에 열린 상태로 → 현재 값에서 transition 이 출발
+    requestAnimationFrame(() => {
+      if (menu.hidden) return
+      menu.classList.add("is-open")
+      root.classList.add("menu-open")
+    })
+    avatar.setAttribute("aria-expanded", "true")
+    if (byKeyboard) setTimeout(() => menu.querySelector("button").focus({ preventScroll: true }), 30)
+  }
+  function closeMenu(focusBack = true) {
+    if (menu.hidden) return
+    menu.classList.remove("is-open")
+    root.classList.remove("menu-open")
+    avatar.setAttribute("aria-expanded", "false")
+    clearTimeout(menuTimer)
+    menuTimer = setTimeout(() => {
+      if (!menu.classList.contains("is-open")) menu.hidden = true
+    }, reduce.matches ? 0 : 180)
+    if (focusBack && menu.contains(document.activeElement)) avatar.focus({ preventScroll: true })
+  }
+  // 뉴리를 눌렀을 때: 쪽지 창이 열려 있으면 닫고, 아니면 메뉴를 열고 닫는다
+  function tapPet(byKeyboard) {
+    if (!chat.hidden) return closeChat()
+    if (menu.classList.contains("is-open")) closeMenu()
+    else openMenu(byKeyboard)
+  }
+  menu.addEventListener("click", (e) => {
+    const b = e.target.closest(".np-menu-item")
+    if (!b) return
+    closeMenu(false)
+    if (b.dataset.act === "note") openChat()
+    else goNap()
+  })
   const toggleChat = () => (chat.hidden ? openChat() : closeChat())
+  void toggleChat
   chat.querySelector(".np-close").addEventListener("click", () => closeChat())
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !chat.hidden) closeChat()
+    else if (e.key === "Escape" && !menu.hidden) closeMenu()
   })
   document.addEventListener("pointerdown", (e) => {
-    if (!chat.hidden && !root.contains(e.target) && !chat.contains(e.target) && !nap.contains(e.target)) closeChat(false)
+    if (!chat.hidden && !root.contains(e.target) && !chat.contains(e.target)) closeChat(false)
+    if (!menu.hidden && !root.contains(e.target) && !menu.contains(e.target)) closeMenu(false)
   })
 
   let sending = false
@@ -1434,6 +1458,7 @@
   function goNap() {
     if (docked || flying) return
     closeChat(false)
+    closeMenu(false)
     convoTimers.forEach(clearTimeout)
     walking = false
     cancelAnimationFrame(springRaf)
@@ -1494,7 +1519,6 @@
     const anim = root.animate(arcFrames(t, pos, t.scale, 1, 10), { duration: 640, easing: EASE_OUT })
     anim.onfinish = end
   }
-  nap.addEventListener("click", goNap)
   dock.addEventListener("click", wakeFromNap)
   window.addEventListener("resize", () => {
     if (docked) dock.hidden = false
