@@ -20,6 +20,8 @@ SNIPPET = (
     '&family=JetBrains+Mono:wght@400;600&display=swap">'
     '<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9'
     '/dist/web/variable/pretendardvariable-dynamic-subset.min.css">'
+    '<link rel="alternate" type="application/rss+xml" title="뉴리의창고" href="__ROOT__index.xml">'
+    '<script src="__ROOT__static/share.js" defer></script>'
 )
 OLD_SNIPPET = '<script>try{if(!localStorage.getItem("theme"))localStorage.setItem("theme","dark")}catch(e){}</script>'
 
@@ -29,9 +31,12 @@ for f in out.rglob("*.html"):
     if "static" in f.relative_to(out).parts:
         continue
     s = f.read_text(encoding="utf-8")
-    if SNIPPET in s or "<head>" not in s:
+    if 'static/share.js' in s or "<head>" not in s:
         continue
     s = s.replace(OLD_SNIPPET, "")
-    f.write_text(s.replace("<head>", "<head>" + SNIPPET, 1), encoding="utf-8")
+    # 페이지 깊이에 맞춘 사이트 루트 상대 경로 (예: tags/x.html -> ../)
+    depth = len(f.relative_to(out).parts) - 1
+    root = "./" if depth == 0 else "../" * depth
+    f.write_text(s.replace("<head>", "<head>" + SNIPPET.replace("__ROOT__", root), 1), encoding="utf-8")
     n += 1
 print(f"dark default + web fonts injected into {n} pages")

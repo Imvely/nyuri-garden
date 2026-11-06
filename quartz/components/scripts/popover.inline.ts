@@ -1,4 +1,4 @@
-import { computePosition, flip, inline, shift } from "@floating-ui/dom"
+import { computePosition, flip, inline, offset, shift } from "@floating-ui/dom"
 import { normalizeRelativeURLs } from "../../util/path"
 import { fetchCanonical } from "./util"
 
@@ -15,9 +15,17 @@ async function mouseEnterHandler(
   }
 
   async function setPosition(popoverElement: HTMLElement) {
+    // 뉴리의창고: 링크 가운데가 아니라 링크 시작점에 맞춰 아래로 펼친다
+    // (본문 왼쪽 끝 링크에서 미리보기가 사이드바 쪽으로 밀려나던 문제)
     const { x, y } = await computePosition(link, popoverElement, {
       strategy: "fixed",
-      middleware: [inline({ x: clientX, y: clientY }), shift(), flip()],
+      placement: "bottom-start",
+      middleware: [
+        inline({ x: clientX, y: clientY }),
+        offset(6),
+        flip(),
+        shift({ padding: 16 }),
+      ],
     })
     Object.assign(popoverElement.style, {
       transform: `translate(${x.toFixed()}px, ${y.toFixed()}px)`,
