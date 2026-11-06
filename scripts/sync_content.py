@@ -71,10 +71,12 @@ def is_publish(text):
 
 # 볼트 안 파일 색인 (파일명 -> 경로). 옵시디언의 '가장 짧은 경로' 링크 해석용
 index = {}
+files = []  # 공개 가능한 파일 전체 (폴더까지 적은 링크를 뒤에서부터 맞춰 찾는 데 쓴다)
 for p in vault.rglob("*"):
     if p.is_file() and not SKIP_DIRS.intersection(p.parts) and not SECRET_DIRS.intersection(p.parts):
         index.setdefault(p.name, p)
         index.setdefault(p.stem, p)
+        files.append(p)
 
 
 def resolve(name):
@@ -82,6 +84,13 @@ def resolve(name):
     cand = vault / name
     if cand.exists():
         return cand
+    # '첨부/SSDG/fig2-overview.png' 처럼 폴더까지 적었으면 그 경로로 끝나는 파일만 고른다.
+    # (같은 파일 이름이 논문마다 있어서 이름만으로 찾으면 다른 논문 그림이 붙는다)
+    if "/" in name:
+        tail = "/" + name.lstrip("/")
+        hits = [f for f in files if f.as_posix().endswith(tail) or f.as_posix().endswith(tail + ".md")]
+        if hits:
+            return hits[0]
     for key in (name, Path(name).name, Path(name).stem):
         if key in index:
             return index[key]
