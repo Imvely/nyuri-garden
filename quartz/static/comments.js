@@ -154,7 +154,7 @@
     if (like.liked) {
       pop()
       window.dispatchEvent(new CustomEvent("nyuri:liked"))
-    }
+    } else window.dispatchEvent(new CustomEvent("nyuri:unliked"))
     try {
       const j = await post({
         action: "like",
@@ -536,6 +536,7 @@
         }
         render()
         saveCache()
+        window.dispatchEvent(new CustomEvent(kind === "reply" ? "nyuri:replied" : "nyuri:commented"))
       } catch (e) {
         fail(e, snapshot)
       }
@@ -553,6 +554,7 @@
         Object.assign(data.comments.find((x) => x.id === target) || c, j.comment, { pending: false })
         render()
         saveCache()
+        window.dispatchEvent(new CustomEvent("nyuri:edited"))
       } catch (e) {
         fail(e, snapshot)
       }
@@ -574,6 +576,7 @@
       }
       render()
       saveCache()
+      window.dispatchEvent(new CustomEvent("nyuri:deleted"))
     } catch (e) {
       fail(e, snapshot)
     }

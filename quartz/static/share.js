@@ -32,6 +32,7 @@
       document.execCommand("copy")
       t.remove()
     }
+    window.dispatchEvent(new CustomEvent("nyuri:copied"))
     const label = btn.querySelector("span")
     const old = label.textContent
     btn.dataset.done = "true"
@@ -76,6 +77,7 @@
       if (navigator.share) {
         try {
           await navigator.share({ title, url })
+          window.dispatchEvent(new CustomEvent("nyuri:shared"))
         } catch {}
       } else {
         copy(url, e.currentTarget)

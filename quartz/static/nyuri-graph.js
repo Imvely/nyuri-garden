@@ -543,6 +543,7 @@
         // 뉴리를 누르면 한 번 통 튀어 오른다
         n.vy -= 9
         wake()
+        window.dispatchEvent(new CustomEvent("nyuri:hub"))
         return
       }
       const url = new URL(n.href, siteRoot())

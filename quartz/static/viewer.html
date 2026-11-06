@@ -6,7 +6,7 @@
 <title>마인드맵 · 뉴리의창고</title>
 <script>
   // 사이트와 같은 테마 (기본 다크, 사이트에서 바꾼 값이 있으면 그걸 따른다)
-  try { document.documentElement.dataset.theme = localStorage.getItem("theme") === "light" ? "light" : "dark" } catch (e) { document.documentElement.dataset.theme = "dark" }
+  try { document.documentElement.dataset.theme = localStorage.getItem("nyuri-theme-picked") && localStorage.getItem("theme") === "dark" ? "dark" : "light" } catch (e) { document.documentElement.dataset.theme = "light" }
 </script>
 <link rel="icon" href="icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">

@@ -47,7 +47,7 @@ jobs:
         run: npx quartz build
       - name: Custom share thumbnails
         run: node scripts/make_og.mjs public
-      - name: Dark mode by default
+      - name: Light mode default, scripts and fonts
         run: python3 scripts/postbuild.py public
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

@@ -1,8 +1,10 @@
 """빌드 결과(public)를 마무리한다.
 
 1. 모든 HTML 의 <head> 맨 앞에 넣는 것
-   - 다크모드 기본값: Quartz darkmode 플러그인은 localStorage 'theme' 이 없으면 OS 설정을 따른다.
-     이 스크립트가 먼저 실행돼 기본값을 dark 로 정해두고, 방문자가 토글하면 그 선택이 유지된다.
+   - 테마 기본값: 어떤 기기든 라이트. Quartz darkmode 플러그인은 OS 설정을 따르므로,
+     방문자가 직접 토글을 누른 적이 없으면(nyuri-theme-picked 없음) 먼저 light 로 정해 둔다.
+     예전 기본값(dark)이 저장된 방문자도 직접 고른 적이 없으면 라이트로 돌아간다.
+     토글을 누르면 그 선택을 기억하고 그 뒤로는 손대지 않는다.
    - 웹폰트 링크: 손글씨 제목(Gaegu), 코드(JetBrains Mono), 본문(Pretendard).
      Quartz 는 custom.scss 를 다른 CSS 뒤에 이어 붙여서 @import 를 쓸 수 없기 때문에 여기서 넣는다.
    - RSS alternate 링크, 공유 줄(share.js), 뉴리펫(nyuri-pet.js)
@@ -15,7 +17,11 @@ import sys
 from pathlib import Path
 
 SNIPPET = (
-    '<script>try{if(!localStorage.getItem("theme"))localStorage.setItem("theme","dark")}catch(e){}</script>'
+    '<script>try{var k="nyuri-theme-picked";if(!localStorage.getItem(k)){localStorage.setItem("theme","light");'
+    'matchMedia("(prefers-color-scheme: dark)").addEventListener("change",function(){if(!localStorage.getItem(k))'
+    'setTimeout(function(){localStorage.setItem("theme","light");document.documentElement.setAttribute("saved-theme","light")},0)})}'
+    'document.addEventListener("click",function(e){if(e.target.closest&&e.target.closest(".darkmode"))localStorage.setItem(k,"1")},true)'
+    '}catch(e){}</script>'
     '<link rel="preconnect" href="https://fonts.googleapis.com">'
     '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>'
     '<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>'
