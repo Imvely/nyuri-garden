@@ -126,7 +126,14 @@
         window.dispatchEvent(new CustomEvent("nyuri:liked"))
       }
       try {
-        const j = await post({ action: "like", page: pageKey(), title: pageTitle(), clientId, like: state.liked })
+        const j = await post({
+          action: "like",
+          page: pageKey(),
+          title: pageTitle(),
+          url: location.href.split("#")[0],
+          clientId,
+          like: state.liked,
+        })
         state.likes = j.likes
         state.liked = j.liked
       } catch {

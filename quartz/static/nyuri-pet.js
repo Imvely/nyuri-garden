@@ -7,7 +7,7 @@
   if (window.__nyuriPet) return
   window.__nyuriPet = true
 
-  const OWNER_EMAIL = "lim.dayeong@gmail.com"
+  const OWNER_EMAIL = "dayeong.comp@gmail.com"
   // 백엔드(구글 앱스 스크립트) 주소는 static/nyuri-config.js 의 window.NYURI.api
   const STORE_KEY = "nyuri-pet-pos"
   const reduce = window.matchMedia("(prefers-reduced-motion: reduce)")
@@ -226,7 +226,9 @@
   avatar.addEventListener("pointerdown", (e) => {
     if (e.button !== 0) return
     cancelAnimationFrame(springRaf)
-    avatar.setPointerCapture(e.pointerId)
+    try {
+      avatar.setPointerCapture(e.pointerId)
+    } catch {}
     drag = {
       id: e.pointerId,
       sx: e.clientX,
@@ -274,19 +276,29 @@
       if (!cancelled) toggleChat()
       return
     }
-    // 마지막 몇 점으로 속도 계산
-    const a = h[0]
-    const z = h[h.length - 1]
-    const dt = Math.max(16, z.t - a.t) / 1000
-    const vel = { x: (z.x - a.x) / dt, y: (z.y - a.y) / dt }
+    // 놓는 순간의 속도: 직전 90ms 안의 움직임만 본다.
+    // 손을 멈췄다가 놓으면(마지막 움직임이 70ms 넘게 지났으면) 속도 0 → 놓은 자리에 그대로.
+    const now = performance.now()
+    const recent = h.filter((p) => now - p.t < 90)
+    const last = h[h.length - 1]
+    let vel = { x: 0, y: 0 }
+    if (recent.length >= 2 && now - last.t < 70) {
+      const a = recent[0]
+      const z = recent[recent.length - 1]
+      const dt = Math.max(16, z.t - a.t) / 1000
+      vel = { x: (z.x - a.x) / dt, y: (z.y - a.y) / dt }
+    }
+    placedAt = Date.now()
+    const speed = Math.hypot(vel.x, vel.y)
+    const thrown = speed > 650 // 휙 던졌을 때만 관성으로 날아간다
     const b = bounds()
-    const cap = (v) => clamp(project(v), -320, 320) // 너무 멀리 날아가지 않게
-    const px = pos.x + cap(vel.x)
-    const py = pos.y + cap(vel.y)
-    // 화면 어디든: 던진 방향으로 조금 더 가서 화면 안에 멈춘다
+    const cap = (v) => clamp(project(v, 0.997), -360, 360)
+    const px = thrown ? pos.x + cap(vel.x) : pos.x
+    const py = thrown ? pos.y + cap(vel.y) : pos.y
+    // 화면 밖으로 끌어 놓았으면 화면 안으로만 살짝 돌아온다
     const target = { x: clamp(px, b.minX, b.maxX), y: clamp(py, b.minY, b.maxY) }
-    springTo(target, vel)
-    const fast = Math.hypot(vel.x, vel.y) > 900
+    springTo(target, thrown ? vel : { x: 0, y: 0 })
+    const fast = speed > 900
     setTimeout(() => talk(fast ? pick(["우와 날았다!", "어지러워요~", "슝!"]) : pick(["여기로 이사!", "고마워요", "자리 좋네요"])), 450)
   }
   avatar.addEventListener("pointerup", (e) => endDrag(e, false))
@@ -541,8 +553,10 @@
 
   // 지금 자리에서 사방으로 조금씩 아장아장 (화면 밖으로는 안 나감)
   let walking = false
+  let placedAt = 0 // 사용자가 직접 옮긴 시각
   function wander() {
     if (reduce.matches || walking || drag || !chat.hidden || root.classList.contains("is-sleeping")) return
+    if (Date.now() - placedAt < 90000) return // 방금 옮겨 둔 자리는 한동안 지킨다
     const b = bounds()
     const ang = Math.random() * Math.PI * 2
     const dist = 110 + Math.random() * 170

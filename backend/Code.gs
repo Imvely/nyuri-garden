@@ -5,12 +5,12 @@
  *  - 글마다 좋아요 수 저장 (방문자마다 한 번)
  *  - 댓글 · 답글 저장, 비밀번호로 수정 · 삭제 (비밀번호는 소금을 친 SHA-256 해시로만 저장)
  *  - 주인(관리자 키 보유)이 남긴 댓글은 "뉴리"로 표시
- *  - 뉴리펫 쪽지와 새 댓글을 주인 Gmail 로 알림
+ *  - 방문자의 모든 행동(쪽지 · 댓글 · 답글 · 수정 · 삭제 · 좋아요 · 좋아요 취소)을 주인 메일로 알림
  *
  * 설치 방법은 backend/README.md 참고.
  */
 
-const OWNER_EMAIL = "lim.dayeong@gmail.com"
+const OWNER_EMAIL = "dayeong.comp@gmail.com" // 모든 알림을 받는 주소
 const SITE_NAME = "뉴리의창고"
 const MAX_BODY = 2000
 
@@ -144,14 +144,11 @@ function addComment(b) {
   append_("comments", row)
 
   if (!owner) {
-    MailApp.sendEmail({
-      to: OWNER_EMAIL,
-      subject: "[" + SITE_NAME + "] 새 " + (row.parentId ? "답글" : "댓글") + ": " + row.title,
-      body:
-        row.nickname + " 님이 「" + row.title + "」에 " + (row.parentId ? "답글" : "댓글") + "을 남겼어요.\n\n" +
-        row.body + "\n\n" + (row.url || "") + "\n",
-      name: "뉴리펫",
-    })
+    notify_(
+      "새 " + (row.parentId ? "답글" : "댓글") + ": " + row.title,
+      row.nickname + " 님이 「" + row.title + "」에 " + (row.parentId ? "답글" : "댓글") + "을 남겼어요.\n\n" +
+        row.body + "\n\n" + (row.url || ""),
+    )
   }
   return { ok: true, comment: publicComment_(row) }
 }
@@ -163,9 +160,17 @@ function editComment(b) {
   const text = clean_(b.body)
   if (!text) return { ok: false, error: "empty" }
   if (text.length > MAX_BODY) return { ok: false, error: "too_long" }
+  const before = String(found.data.body || "")
   found.data.body = text
   found.data.updatedAt = new Date().toISOString()
   write_("comments", found.row, found.data)
+  if (!isAdmin_(b.adminKey)) {
+    notify_(
+      "댓글 수정: " + found.data.title,
+      found.data.nickname + " 님이 「" + found.data.title + "」의 댓글을 고쳤어요.\n\n" +
+        "[고치기 전]\n" + before + "\n\n[고친 뒤]\n" + text + "\n\n" + (found.data.url || ""),
+    )
+  }
   return { ok: true, comment: publicComment_(found.data) }
 }
 
@@ -173,6 +178,13 @@ function deleteComment(b) {
   const found = findRow_("comments", b.id)
   if (!found || truthy_(found.data.deleted)) return { ok: false, error: "not_found" }
   if (!canTouch_(found.data, b)) return { ok: false, error: "password" }
+  if (!isAdmin_(b.adminKey)) {
+    notify_(
+      "댓글 삭제: " + found.data.title,
+      found.data.nickname + " 님이 「" + found.data.title + "」의 댓글을 지웠어요.\n\n" +
+        "[지운 내용]\n" + found.data.body + "\n\n" + (found.data.url || ""),
+    )
+  }
   const hasReplies = readAll_("comments").some(function (r) {
     return r.parentId === found.data.id && !truthy_(r.deleted)
   })
@@ -202,12 +214,21 @@ function setLike(b) {
       break
     }
   }
+  const title = clean_(b.title).slice(0, 200) || page
   if (b.like && at < 0) {
     if (!rateOk_("like", 120)) return { ok: false, error: "rate" }
     sh.appendRow([page, clientId, new Date().toISOString()])
   }
   if (!b.like && at > 0) sh.deleteRow(at)
-  return thread(page, clientId)
+  const result = thread(page, clientId)
+  if ((b.like && at < 0) || (!b.like && at > 0)) {
+    notify_(
+      (b.like ? "좋아요: " : "좋아요 취소: ") + title,
+      "「" + title + "」에 " + (b.like ? "좋아요가 눌렸어요." : "좋아요가 취소됐어요.") +
+        "\n지금 좋아요 " + result.likes + "개\n\n" + String(b.url || ""),
+    )
+  }
+  return result
 }
 
 // ── 뉴리펫 쪽지 → 메일 ──────────────────────────────────────
@@ -235,6 +256,20 @@ function sendMail(b) {
 }
 
 // ── 도우미 ───────────────────────────────────────────────────
+
+// 주인에게 알림 메일. 메일 한도 초과 등으로 실패해도 방문자의 행동은 막지 않는다.
+function notify_(subject, body) {
+  try {
+    MailApp.sendEmail({
+      to: OWNER_EMAIL,
+      subject: "[" + SITE_NAME + "] " + subject,
+      body: body + "\n\n— " + Utilities.formatDate(new Date(), "Asia/Seoul", "yyyy-MM-dd HH:mm") + " 뉴리펫 알림",
+      name: "뉴리펫",
+    })
+  } catch (err) {
+    console.warn("알림 메일 실패: " + err)
+  }
+}
 
 function json(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON)
