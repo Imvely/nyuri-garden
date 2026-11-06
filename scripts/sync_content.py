@@ -81,6 +81,27 @@ def promote_h1(text):
     return f"---\n{fm}\n---\n" + body
 
 
+import json as _json
+
+_redir_file = root / "scripts" / "redirects.json"
+REDIRECTS = {}
+if _redir_file.exists():
+    REDIRECTS = {k: v for k, v in _json.loads(_redir_file.read_text(encoding="utf-8")).items() if not k.startswith("_")}
+
+
+def add_aliases(text, key):
+    """옮긴 노트에 예전 주소를 aliases 로 붙인다 (Quartz 가 예전 주소 → 새 주소 이동 페이지를 만든다)."""
+    olds = REDIRECTS.get(key)
+    if not olds:
+        return text
+    m = FM_RE.match(text)
+    if not m:
+        return text
+    lines = "\n".join(f'  - "{o}"' for o in olds)
+    fm = m.group(1) + f"\naliases:\n{lines}"
+    return f"---\n{fm}\n---\n" + text[m.end():]
+
+
 published, copied_assets = [], []
 
 
@@ -147,6 +168,7 @@ for md in vault.rglob("*.md"):
     text = EMBED_RE.sub(fix_embed, text)
     text = LINK_RE.sub(fix_link, text)
     text = promote_h1(text)
+    text = add_aliases(text, rel.with_suffix("").as_posix())
     dst = content / rel
     dst.parent.mkdir(parents=True, exist_ok=True)
     dst.write_text(text, encoding="utf-8")

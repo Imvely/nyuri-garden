@@ -81,7 +81,31 @@
     })
   }
 
+  // 탐색기: 한 줄로 줄인 제목은 마우스를 올리면 전체 제목이 보이게
+  function titleExplorer() {
+    document.querySelectorAll(".explorer a.nav-file-title").forEach((a) => {
+      if (!a.title) a.title = a.textContent.trim()
+    })
+  }
+  // 탐색기는 Quartz 가 나중에(또는 다시) 그리므로, 페이지 변화를 지켜보다가 붙인다
+  let titleTimer = 0
+  const explorerTitles = () => {
+    if (titleTimer) return
+    titleTimer = setTimeout(() => {
+      titleTimer = 0
+      titleExplorer()
+    }, 60)
+  }
+  new MutationObserver(explorerTitles).observe(document.documentElement, { childList: true, subtree: true })
+
+  document.addEventListener("nav", explorerTitles)
   document.addEventListener("nav", build)
-  if (document.readyState !== "loading") build()
-  else document.addEventListener("DOMContentLoaded", build)
+  if (document.readyState !== "loading") {
+    build()
+    explorerTitles()
+  } else
+    document.addEventListener("DOMContentLoaded", () => {
+      build()
+      explorerTitles()
+    })
 })()

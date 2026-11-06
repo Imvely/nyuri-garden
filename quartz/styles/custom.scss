@@ -882,3 +882,44 @@ table th {
     max-width: 1680px !important;
   }
 }
+
+// ── 탐색기: 제목은 한 줄, 넘치면 말줄임 (전체 제목은 마우스를 올리면 툴팁) ──
+.explorer {
+  a.nav-file-title {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.92rem;
+    line-height: 1.4;
+    padding: 0.42rem 0.6rem;
+  }
+
+  .folder-container {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    min-height: 2.2rem;
+
+    svg {
+      color: var(--gray);
+      flex: none;
+    }
+  }
+
+  .folder-title {
+    font-family: var(--bodyFont) !important;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--darkgray);
+    letter-spacing: 0;
+  }
+
+  // 폴더 안의 노트는 얇은 세로선으로 묶는다
+  .folder-outer > ul,
+  .folder-outer ul {
+    margin-left: 0.55rem !important;
+    padding-left: 0.5rem !important;
+    border-left: 1px solid var(--line);
+  }
+}
