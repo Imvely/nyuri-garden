@@ -764,7 +764,14 @@
       const r = await fetch(api, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" }, // 사전 요청 없이 보내기
-        body: JSON.stringify({ action: "mail", message, email, page: location.href, title }),
+        body: JSON.stringify({
+          action: "mail",
+          message,
+          email,
+          page: location.href,
+          title,
+          meta: window.NYURI && window.NYURI.meta ? await window.NYURI.meta() : {},
+        }),
       })
       const j = await r.json()
       if (!j.ok) throw new Error(j.error || "failed")

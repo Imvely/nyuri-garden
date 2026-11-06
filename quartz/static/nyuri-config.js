@@ -5,3 +5,38 @@ window.NYURI = {
   api: "https://script.google.com/macros/s/AKfycbxgRPj5bTNPfiabtl3ocTHTbbgN0AztWspZKrva9CEwBYv9DkggVhuMA217pTYWZ1bC/exec",
   site: "https://imvely.github.io/nyuri-garden/",
 }
+
+// 백엔드로 보낼 때 함께 붙이는 기록용 정보 (관리 시트에만 남고 화면엔 IP 앞 두 자리만 보인다)
+;(() => {
+  let ipPromise = null
+  // 방문자의 공개 IP (ipify). 실패하면 빈 값.
+  window.NYURI.ip = () => {
+    if (!ipPromise) {
+      ipPromise = fetch("https://api.ipify.org?format=json")
+        .then((r) => r.json())
+        .then((j) => String(j.ip || ""))
+        .catch(() => "")
+    }
+    return ipPromise
+  }
+  // 방문자 식별값(브라우저마다 하나, 좋아요 중복 방지와 기록용)
+  window.NYURI.clientId = () => {
+    try {
+      let id = localStorage.getItem("nyuri-client")
+      if (!id) {
+        id = (crypto.randomUUID && crypto.randomUUID()) || String(Math.random()).slice(2) + Date.now()
+        localStorage.setItem("nyuri-client", id)
+      }
+      return id
+    } catch {
+      return ""
+    }
+  }
+  // 요청 본문에 덧붙일 기록 정보
+  window.NYURI.meta = async () => ({
+    ip: await window.NYURI.ip(),
+    ua: navigator.userAgent.slice(0, 300),
+    clientId: window.NYURI.clientId(),
+    referrer: document.referrer.slice(0, 300),
+  })
+})()

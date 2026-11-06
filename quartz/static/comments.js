@@ -25,17 +25,18 @@
     },
   }
 
-  // 방문자 고유값(좋아요 중복 방지)과 이 방문자의 랜덤 닉네임
-  let clientId = store.get("nyuri-client")
-  if (!clientId) {
-    clientId = (crypto.randomUUID && crypto.randomUUID()) || String(Math.random()).slice(2) + Date.now()
-    store.set("nyuri-client", clientId)
-  }
-  let randomNick = store.get("nyuri-random-nick")
-  if (!randomNick) {
-    const pick = (a) => a[Math.floor(Math.random() * a.length)]
-    randomNick = `${pick(ADJ)} ${pick(NOUN)}`
-    store.set("nyuri-random-nick", randomNick)
+  // 방문자 식별값 (nyuri-config.js 공통)
+  const clientId = (window.NYURI && window.NYURI.clientId && window.NYURI.clientId()) || ""
+
+  // 닉네임은 쓸 때마다 새로 뽑는다 (같은 이름이 반복돼 한 사람처럼 보이지 않게)
+  const pickOne = (a) => a[Math.floor(Math.random() * a.length)]
+  let lastNick = ""
+  function makeNick() {
+    let n = ""
+    do n = `${pickOne(ADJ)} ${pickOne(NOUN)}`
+    while (n === lastNick)
+    lastNick = n
+    return n
   }
 
   // 주인 모드 키: #nyuri-admin=KEY 로 들어오면 저장하고 주소에서 지운다
@@ -59,6 +60,8 @@
     return j
   }
   async function post(body) {
+    const meta = window.NYURI && window.NYURI.meta ? await window.NYURI.meta() : {}
+    body = { ...body, meta }
     const r = await fetch(api(), {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" }, // CORS 사전 요청 없이
@@ -82,14 +85,25 @@
   const esc = (s) =>
     String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c])
 
-  function ago(iso) {
+  // 작성 시각: 한국 시간 기준 2026.11.06 13:05:42
+  function stamp(iso) {
     const d = new Date(iso)
-    const s = (Date.now() - d.getTime()) / 1000
-    if (s < 60) return "방금"
-    if (s < 3600) return `${Math.floor(s / 60)}분 전`
-    if (s < 86400) return `${Math.floor(s / 3600)}시간 전`
-    if (s < 86400 * 7) return `${Math.floor(s / 86400)}일 전`
-    return d.toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" })
+    if (isNaN(d)) return ""
+    const p = Object.fromEntries(
+      new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Seoul",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hourCycle: "h23",
+      })
+        .formatToParts(d)
+        .map((x) => [x.type, x.value]),
+    )
+    return `${p.year}.${p.month}.${p.day} ${p.hour}:${p.minute}:${p.second}`
   }
 
   const HEART =
@@ -144,10 +158,9 @@
   }
 
   // ── 댓글 ────────────────────────────────────────────────────
+  // 얼굴은 주인(뉴리)만. 방문자는 닉네임만 보여 준다.
   function avatar(c) {
-    if (c.isOwner) return `<img class="nc-avatar is-owner" src="${root()}static/nyuri.svg" alt="">`
-    const ch = [...(c.nickname || "?").replace(/^(졸린|수줍은|배고픈|말랑한|반짝이는|꼬질꼬질한|용감한|느긋한|호기심 많은|동글동글한|부지런한|엉뚱한|다정한|깜찍한|새침한|꿈꾸는)\s/, "")][0] || "?"
-    return `<span class="nc-avatar" aria-hidden="true">${esc(ch)}</span>`
+    return c.isOwner ? `<img class="nc-avatar is-owner" src="${root()}static/nyuri.svg" alt="">` : ""
   }
 
   function itemHTML(c, isReply) {
@@ -159,13 +172,17 @@
           ${c.isOwner && !adminKey() ? "" : `<button type="button" data-act="edit" aria-expanded="false">수정</button><button type="button" data-act="delete" aria-expanded="false">삭제</button>`}
         </div>`
     return `<li class="nc-item${c.isOwner ? " is-owner" : ""}${c.deleted ? " is-deleted" : ""}" data-id="${esc(c.id)}">
-      <article class="nc-card">
+      <article class="nc-card${c.isOwner ? " has-face" : ""}">
         ${avatar(c)}
         <div class="nc-main">
           <header class="nc-meta">
             <span class="nc-name">${esc(name)}</span>
             ${c.isOwner ? '<span class="nc-badge">주인</span>' : ""}
-            <time datetime="${esc(c.createdAt)}">${ago(c.createdAt)}${c.edited ? " (수정됨)" : ""}</time>
+            <span class="nc-info">
+              <time datetime="${esc(c.createdAt)}">${stamp(c.createdAt)}</time>
+              ${c.ip && !c.isOwner ? `<span class="nc-ip" title="IP 앞 두 자리">${esc(c.ip)}</span>` : ""}
+              ${c.edited ? '<span class="nc-edited">수정됨</span>' : ""}
+            </span>
           </header>
           <p class="nc-body">${c.deleted ? "삭제된 댓글이에요." : esc(c.body)}</p>
           ${actions}
@@ -200,6 +217,7 @@
 
   function formHTML({ kind, value = "" }) {
     const owner = !!adminKey()
+    const nick = makeNick()
     const isEdit = kind === "edit"
     const isDelete = kind === "delete"
     const existingPw = () =>
@@ -230,7 +248,7 @@
         : field({
             label: "닉네임",
             hint: "선택",
-            input: `<input type="text" name="nickname" maxlength="20" autocomplete="nickname" placeholder="비워 두면 ‘${esc(randomNick)}’(으)로 남겨져요">`,
+            input: `<input type="text" name="nickname" maxlength="20" autocomplete="nickname" data-nick="${esc(nick)}" placeholder="비워 두면 ‘${esc(nick)}’(으)로 남겨져요">`,
           }) +
           field({
             label: "비밀번호",
@@ -250,6 +268,7 @@
         </div>
       </div>
       <p class="nc-status" role="status" aria-live="polite"></p>
+      ${kind === "new" && !owner ? '<p class="nc-privacy">남긴 글에는 작성 시각과 IP 앞 두 자리가 함께 보여요. 관리를 위해 전체 IP가 기록돼요.</p>' : ""}
     </form>`
   }
 
@@ -299,7 +318,8 @@
     const fd = new FormData(form)
     const body = String(fd.get("body") || "").trim()
     const password = String(fd.get("password") || "")
-    const nickname = String(fd.get("nickname") || "").trim() || randomNick
+    const nickInput = form.querySelector('input[name="nickname"]')
+    const nickname = String(fd.get("nickname") || "").trim() || nickInput?.dataset.nick || makeNick()
     const owner = adminKey()
 
     if (kind !== "delete" && !body) return setStatus(form, ERR.empty, true)
@@ -325,7 +345,16 @@
           adminKey: owner,
         })
         data.comments.push(j.comment)
-        if (kind === "new") form.reset()
+        if (kind === "new") {
+          form.reset()
+          // 다음 댓글은 또 다른 이름으로
+          const n = form.querySelector('input[name="nickname"]')
+          if (n) {
+            const next = makeNick()
+            n.dataset.nick = next
+            n.placeholder = `비워 두면 ‘${next}’(으)로 남겨져요`
+          }
+        }
       } else if (kind === "edit") {
         const j = await post({ action: "edit", id: target, body, password, adminKey: owner })
         Object.assign(
@@ -407,6 +436,7 @@
 
     const form = section.querySelector(".nc-form")
     wireComposer(form)
+    form.addEventListener("focusin", () => window.NYURI?.ip?.(), { once: true }) // 남기기 전에 미리 받아 둔다
     form.addEventListener("submit", (e) => {
       e.preventDefault()
       submitForm(form, "new")

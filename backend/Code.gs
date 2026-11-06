@@ -36,6 +36,7 @@ function doPost(e) {
   const lock = LockService.getScriptLock()
   try {
     lock.waitLock(10000)
+    body.meta = meta_(body)
     switch (body.action) {
       case "comment":
         return json(addComment(body))
@@ -65,9 +66,11 @@ function setup() {
   const ss = book()
   sheet_(ss, "comments", [
     "id", "page", "title", "url", "parentId", "nickname", "isOwner", "body",
-    "pwHash", "salt", "createdAt", "updatedAt", "deleted",
+    "pwHash", "salt", "createdAt", "updatedAt", "deleted", "ip",
+    "createdAtKst", "ipFull", "userAgent", "clientId",
   ])
-  sheet_(ss, "likers", ["page", "clientId", "createdAt"])
+  sheet_(ss, "likers", ["page", "clientId", "createdAt", "createdAtKst", "ipFull", "userAgent"])
+  sheet_(ss, "log", LOG_HEADER)
   const props = PropertiesService.getScriptProperties()
   let key = props.getProperty("ADMIN_KEY")
   if (!key) {
@@ -140,8 +143,17 @@ function addComment(b) {
     createdAt: now,
     updatedAt: "",
     deleted: false,
+    // 방문자 브라우저가 보낸 IP 앞 두 자리(예: 121.134.xx.xx). 전체 IP 는 받지 않는다.
+    ip: owner ? "" : maskIp_(b.meta.ip || b.ip),
+    // 관리용 기록 (화면에는 나가지 않음)
+    createdAtKst: kst_(),
+    ipFull: b.meta.ip,
+    userAgent: b.meta.ua,
+    clientId: b.meta.clientId,
   }
+  ensureColumns_("comments", ["ip", "createdAtKst", "ipFull", "userAgent", "clientId"])
   append_("comments", row)
+  log_(row.parentId ? "답글" : "댓글", b, { id: row.id, title: row.title, url: row.url, nickname: row.nickname, owner: owner, detail: row.body })
 
   if (!owner) {
     notify_(
@@ -156,11 +168,15 @@ function addComment(b) {
 function editComment(b) {
   const found = findRow_("comments", b.id)
   if (!found || truthy_(found.data.deleted)) return { ok: false, error: "not_found" }
-  if (!canTouch_(found.data, b)) return { ok: false, error: "password" }
+  if (!canTouch_(found.data, b)) {
+    log_("수정 실패(비밀번호)", b, { id: found.data.id, title: found.data.title, url: found.data.url, nickname: found.data.nickname })
+    return { ok: false, error: "password" }
+  }
   const text = clean_(b.body)
   if (!text) return { ok: false, error: "empty" }
   if (text.length > MAX_BODY) return { ok: false, error: "too_long" }
   const before = String(found.data.body || "")
+  log_("수정", b, { id: found.data.id, title: found.data.title, url: found.data.url, nickname: found.data.nickname, owner: isAdmin_(b.adminKey), detail: "[전] " + before + "\n[후] " + text })
   found.data.body = text
   found.data.updatedAt = new Date().toISOString()
   write_("comments", found.row, found.data)
@@ -177,7 +193,11 @@ function editComment(b) {
 function deleteComment(b) {
   const found = findRow_("comments", b.id)
   if (!found || truthy_(found.data.deleted)) return { ok: false, error: "not_found" }
-  if (!canTouch_(found.data, b)) return { ok: false, error: "password" }
+  if (!canTouch_(found.data, b)) {
+    log_("삭제 실패(비밀번호)", b, { id: found.data.id, title: found.data.title, url: found.data.url, nickname: found.data.nickname })
+    return { ok: false, error: "password" }
+  }
+  log_("삭제", b, { id: found.data.id, title: found.data.title, url: found.data.url, nickname: found.data.nickname, owner: isAdmin_(b.adminKey), detail: found.data.body })
   if (!isAdmin_(b.adminKey)) {
     notify_(
       "댓글 삭제: " + found.data.title,
@@ -217,11 +237,20 @@ function setLike(b) {
   const title = clean_(b.title).slice(0, 200) || page
   if (b.like && at < 0) {
     if (!rateOk_("like", 120)) return { ok: false, error: "rate" }
-    sh.appendRow([page, clientId, new Date().toISOString()])
+    ensureColumns_("likers", ["createdAtKst", "ipFull", "userAgent"])
+    append_("likers", {
+      page: page,
+      clientId: clientId,
+      createdAt: new Date().toISOString(),
+      createdAtKst: kst_(),
+      ipFull: b.meta.ip,
+      userAgent: b.meta.ua,
+    })
   }
   if (!b.like && at > 0) sh.deleteRow(at)
   const result = thread(page, clientId)
   if ((b.like && at < 0) || (!b.like && at > 0)) {
+    log_(b.like ? "좋아요" : "좋아요 취소", b, { title: title, url: b.url, detail: "지금 좋아요 " + result.likes + "개" })
     notify_(
       (b.like ? "좋아요: " : "좋아요 취소: ") + title,
       "「" + title + "」에 " + (b.like ? "좋아요가 눌렸어요." : "좋아요가 취소됐어요.") +
@@ -241,6 +270,7 @@ function sendMail(b) {
   const email = String(b.email || "").trim()
   // 답장 받을 이메일은 필수
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: "email" }
+  log_("뉴리펫 쪽지", b, { title: clean_(b.title), url: String(b.page || ""), nickname: email, detail: message })
   MailApp.sendEmail({
     to: OWNER_EMAIL,
     replyTo: email, // 메일에서 '답장'을 누르면 바로 보낸 사람에게 간다
@@ -249,6 +279,7 @@ function sendMail(b) {
       message + "\n\n" +
       "답장 받을 이메일: " + email + "\n" +
       "보낸 페이지: " + String(b.page || "") + "\n" +
+      "IP: " + (b.meta.ip || "(알 수 없음)") + "\n" +
       "보낸 시각: " + Utilities.formatDate(new Date(), "Asia/Seoul", "yyyy-MM-dd HH:mm") + "\n",
     name: "뉴리펫",
   })
@@ -256,6 +287,53 @@ function sendMail(b) {
 }
 
 // ── 도우미 ───────────────────────────────────────────────────
+
+const LOG_HEADER = [
+  "time", "action", "title", "url", "commentId", "nickname", "owner",
+  "ipFull", "ip", "userAgent", "clientId", "referrer", "detail",
+]
+
+// 요청에 딸려 온 기록 정보 (브라우저가 보낸 값이라 참고용)
+function meta_(b) {
+  const m = (b && b.meta) || {}
+  const ip = String(m.ip || "").trim().slice(0, 60)
+  return {
+    ip: /^[0-9a-fA-F.:]+$/.test(ip) ? ip : "",
+    ua: String(m.ua || "").slice(0, 300),
+    clientId: String(m.clientId || b.clientId || "").slice(0, 80),
+    referrer: String(m.referrer || "").slice(0, 300),
+  }
+}
+
+// 한국 시간 (2026-11-06 13:05:42)
+function kst_() {
+  return Utilities.formatDate(new Date(), "Asia/Seoul", "yyyy-MM-dd HH:mm:ss")
+}
+
+// 모든 행동을 log 탭에 한 줄씩 남긴다. 실패해도 본래 처리는 계속한다.
+function log_(action, b, f) {
+  try {
+    sheet_(book(), "log", LOG_HEADER)
+    const m = b.meta || {}
+    append_("log", {
+      time: kst_(),
+      action: action,
+      title: f.title || "",
+      url: f.url || "",
+      commentId: f.id || "",
+      nickname: f.nickname || "",
+      owner: f.owner ? "TRUE" : "",
+      ipFull: m.ip || "",
+      ip: maskIp_(m.ip),
+      userAgent: m.ua || "",
+      clientId: m.clientId || "",
+      referrer: m.referrer || "",
+      detail: String(f.detail || "").slice(0, 2000),
+    })
+  } catch (err) {
+    console.warn("기록 실패: " + err)
+  }
+}
 
 // 주인에게 알림 메일. 메일 한도 초과 등으로 실패해도 방문자의 행동은 막지 않는다.
 function notify_(subject, body) {
@@ -356,7 +434,28 @@ function publicComment_(r) {
     createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
     edited: !!r.updatedAt,
     deleted: deleted,
+    ip: String(r.ip || ""),
   }
+}
+
+// IP 를 앞 두 자리만 남긴 형태로만 받는다
+function maskIp_(raw) {
+  const s = String(raw || "").trim().slice(0, 60)
+  const v4 = s.match(/^(\d{1,3})\.(\d{1,3})\./)
+  if (v4) return v4[1] + "." + v4[2] + ".xx.xx"
+  const v6 = s.match(/^([0-9a-f]{1,4}):([0-9a-f]{1,4}):/i)
+  if (v6) return v6[1] + ":" + v6[2] + ":xx:xx"
+  return ""
+}
+
+// 시트 제목 줄에 칸이 없으면 맨 끝에 추가한다 (기존 시트 호환)
+function ensureColumns_(name, cols) {
+  const sh = book().getSheetByName(name)
+  const head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0]
+  let n = head.length
+  cols.forEach(function (c) {
+    if (head.indexOf(c) < 0) sh.getRange(1, ++n).setValue(c)
+  })
 }
 
 function canTouch_(row, b) {
