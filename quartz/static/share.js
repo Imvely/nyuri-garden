@@ -128,7 +128,24 @@
       if (a.closest(".page-listing")) a.after(badge("is-inline"))
     })
     if (document.body.dataset.private) mountLocked()
+    mountLost()
     polishListing()
+  }
+
+  // 404: 기본 안내 대신 길 잃은 상자 뉴리와 처음으로 가는 버튼
+  function mountLost() {
+    if (document.body.dataset.slug !== "404" || document.querySelector(".nyuri-lost")) return
+    const article = document.querySelector(".center article") || document.querySelector("article")
+    if (!article) return
+    const box = document.createElement("section")
+    box.className = "nyuri-locked nyuri-lost"
+    box.innerHTML = `
+      <div class="nyuri-locked-art" aria-hidden="true"><img src="${siteRoot()}static/nyuri.svg" alt=""></div>
+      <h2 class="nyuri-locked-title">찾는 페이지가 없어요</h2>
+      <p class="nyuri-locked-sub">주소가 바뀌었거나 지워진 글이에요.</p>
+      <a class="nyuri-lost-home" href="${siteRoot()}"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>뉴리의창고 처음으로</a>`
+    article.querySelectorAll(":scope > :not(script)").forEach((e) => e.remove())
+    article.append(box)
   }
 
   // 비공개 안내 화면: 잠긴 상자 뉴리 + 한 줄 설명. 본문 자리에 놓는다
@@ -145,7 +162,7 @@
         <span class="nyuri-locked-lock"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
       </div>
       <h2 class="nyuri-locked-title">보안 이슈로 비공개</h2>
-      <p class="nyuri-locked-sub">발표 전이라 잠시 닫아 두었어요.</p>`
+      <p class="nyuri-locked-sub">공개 전 연구 결과라 잠시 닫아 두었어요.</p>`
     const listing = document.querySelector(".center .page-listing")
     if (listing) {
       // 항목이 하나도 없는 폴더는 "0건" 목록 대신 안내만

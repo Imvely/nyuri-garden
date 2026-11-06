@@ -658,10 +658,10 @@
     font-size: 16px; // iOS 확대 방지
   }
 
-  // 모바일에선 댓글 보는 동안 뉴리펫을 아예 숨겨 글을 가리지 않게
-  .nyuri-reading-comments .nyuri-pet {
-    opacity: 0 !important;
-    pointer-events: none;
+  // 모바일에선 댓글 보는 동안 더 작고 흐리게 (사라지지는 않는다)
+  .nyuri-reading-comments .nyuri-pet .np-float {
+    opacity: 0.35;
+    transform: scale(0.7);
   }
 }
 

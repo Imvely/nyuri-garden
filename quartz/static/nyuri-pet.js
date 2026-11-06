@@ -140,7 +140,8 @@
   }
 
   // 채팅창을 뉴리 옆에 놓고, 뉴리 쪽 모서리에서 커지도록 transform-origin 을 맞춘다
-  const SHEET = window.matchMedia("(max-width: 800px)")
+  // 폭이 좁거나 높이가 낮은 화면(휴대폰 가로)은 아래에서 올라오는 시트
+  const SHEET = window.matchMedia("(max-width: 800px), (max-height: 560px)")
   function placeChat() {
     const s = size()
     if (SHEET.matches) {
@@ -156,7 +157,7 @@
     let left = root.dataset.side === "right" ? pos.x + s - w : pos.x
     let top = root.dataset.vert === "bottom" ? pos.y - gap - h : pos.y + s + gap
     left = clamp(left, MARGIN, window.innerWidth - w - MARGIN)
-    top = clamp(top, MARGIN, window.innerHeight - h - MARGIN)
+    top = h > window.innerHeight - MARGIN * 2 ? MARGIN : clamp(top, MARGIN, window.innerHeight - h - MARGIN)
     chat.style.left = left + "px"
     chat.style.top = top + "px"
     const ox = clamp(pos.x + s / 2 - left, 0, w)
@@ -239,7 +240,9 @@
     if (e.button !== 0) return
     cancelAnimationFrame(springRaf)
     try {
-      avatar.setPointerCapture(e.pointerId)
+      try {
+        avatar.setPointerCapture(e.pointerId)
+      } catch {}
     } catch {}
     drag = {
       id: e.pointerId,
@@ -326,12 +329,16 @@
     if (e.detail === 0) toggleChat() // 키보드로 누른 경우만 (포인터는 pointerup 에서 처리)
   })
 
-  window.addEventListener("resize", () => {
+  // 창 크기, 화면 돌림, 휴대폰 키보드: 늘 화면 안으로 다시 들인다
+  const keepInside = () => {
     const b = bounds()
     pos.x = clamp(pos.x, b.minX, b.maxX)
     pos.y = clamp(pos.y, b.minY, b.maxY)
     apply()
-  })
+  }
+  window.addEventListener("resize", keepInside)
+  window.addEventListener("orientationchange", () => setTimeout(keepInside, 250))
+  window.visualViewport?.addEventListener("resize", keepInside)
 
   // ── 살아 있는 느낌: 깜빡임 · 날개 · 졸기 ──────────────────────
   function schedule(fn, min, max) {
@@ -443,21 +450,54 @@
   }
 
   // 상황별 대사. 함수는 그때그때 상황을 보고 null 이면 건너뛴다.
+  // ── 비공개 프로젝트 안에서 하는 말 (share.js 가 body 에 data-private 를 단다) ──
+  const isPrivate = () => !!document.body.dataset.private
+  function privateLines() {
+    const slug = decodeURIComponent(document.body.dataset.slug || "")
+    const project = /얼굴-위조-방지/.test(slug) ? "face" : /번호판/.test(slug) ? "plate" : ""
+    const last = slug.replace(/\/index$/, "").split("/").pop() || ""
+    const bySection = {
+      "실험": [["실험 노트가 잔뜩 들어 있는 칸이에요", "지금은 잠가 뒀어요"], "실험 기록은 아직 상자 안에 꼭꼭"],
+      "결과": ["결과는 공개하는 날 짠 하고 보여 드릴게요", ["결과 칸이에요", "숫자는 아직 비밀이에요"]],
+      "개념": [["개념 정리도 같이 묶어 뒀어요", "열리면 쉽게 풀어서 보여 드릴게요"]],
+      "첨부": ["그래프랑 그림도 상자 안에 넣어 뒀어요", ["그림 칸이에요", "지금은 테이프로 붙여 놨어요"]],
+      "00-허브": [["여기가 연구 전체 지도인데요", "지금은 접어 둔 상태예요"]],
+      "01-계획": ["다음 계획은 저만 알고 있을게요", ["계획표도 잠겨 있어요", "궁금해도 조금만 참아 주세요"]],
+    }
+    const byProject = {
+      face: [["진짜 얼굴과 가짜 얼굴을 가려내는 연구예요", "자세한 건 공개되면 보여 드릴게요"], "얼굴 위조 방지 연구는 아직 비밀 상자 속이에요"],
+      plate: [["차량 번호판을 읽어 내는 연구예요", "내용은 아직 상자 안에 있어요"], "번호판 연구도 공개 전이라 잠가 뒀어요"],
+    }
+    const general = [
+      ["여긴 아직 테이프를 안 뜯은 상자예요", "공개하는 날 제일 먼저 열어 드릴게요"],
+      ["쉿, 공개 전 연구 결과예요", "지금은 제가 꼭 안고 있어요"],
+      "자물쇠가 단단히 잠겨 있네요",
+      ["궁금하죠? 저도 말하고 싶어서 근질근질해요", "조금만 기다려 주세요"],
+      "이 상자는 제가 지키고 있어요",
+      ["안에 뭐가 들었는지는 비밀", "힌트도 아직 안 돼요"],
+      ["여기까지 찾아오셨네요", "열리면 꼭 다시 놀러 와요"],
+      ["다른 노트는 열려 있어요", "왼쪽 메뉴에서 골라 보세요"],
+    ]
+    return [...(bySection[last] || []), ...(byProject[project] || []), ...general]
+  }
+
   const TOPICS = [
+    () => (isPrivate() ? pick(privateLines()) : null),
+    () => (isPrivate() ? pick(privateLines()) : null),
     () => {
       const h = new Date().getHours()
       if (h < 5) return ["이 시간까지 공부 중이세요?", "너무 무리하지는 마요"]
       if (h < 9) return ["좋은 아침이에요!", "아침에 읽는 논문이 제일 잘 들어온대요"]
       if (h < 12) return "오전 공부 화이팅이에요!"
       if (h < 14) return ["점심은 맛있게 드셨어요?", "저는 종이 상자라 쪽지를 먹어요"]
-      if (h < 18) return ["오후엔 졸리죠?", "저도 가끔 졸아요… 쿨"]
+      if (h < 18) return ["오후엔 졸리죠?", "저도 가끔 꾸벅꾸벅 졸아요"]
       if (h < 22) return "오늘 하루도 수고 많았어요"
       return ["밤이 깊었네요", "읽던 건 저장해 두고 푹 자요"]
     },
     () => (weatherLine ? [weatherLine, pick(["산책하기 좋을까요?", "따뜻하게 입어요", "창밖 한 번 봐요"])] : null),
-    () => (isNote() ? [`「${pageTitle()}」 읽고 계시네요!`, "궁금한 데가 있으면 저를 눌러 물어보세요"] : null),
+    () => (isNote() && !isPrivate() ? [`「${pageTitle()}」 읽고 계시네요!`, "궁금한 데가 있으면 저를 눌러 물어보세요"] : null),
     () => {
-      if (!isNote()) return null
+      if (!isNote() || isPrivate()) return null
       const r = scrollRatio()
       if (r > 0.9) return ["끝까지 다 읽으셨네요!", "도움이 됐다면 아래에서 공유해 주세요"]
       if (r > 0.45) return "벌써 반이나 읽었어요. 잠깐 쉬어 가도 좋아요"
@@ -466,7 +506,7 @@
     },
     () =>
       document.querySelector(".callout a[data-router-ignore]")
-        ? ["마인드맵은 크게 열어서 볼 수 있어요", "확대·축소해서 보기를 눌러 보세요"]
+        ? ["마인드맵은 크게 열어서 볼 수 있어요", "확대해서 보기를 눌러 보세요"]
         : null,
     () => ["궁금한 건 뭐든 저에게 물어보세요", "주인에게 메일로 전해 드릴게요"],
     () => "저를 끌어서 원하는 곳에 둘 수 있어요",
@@ -474,7 +514,7 @@
     () => "새 노트가 올라오면 RSS로 받아볼 수 있어요",
     () => ["사실 저는 이 사이트 창고지기예요", "노트들이 다 제 안에 들어 있어요"],
     () => pick(["물 한 잔 마시고 와요", "어깨 한 번 쭉 펴 볼까요?", "눈도 잠깐 쉬어 줘요"]),
-    () => pick(["흠흠~ ♪", "심심하다…", "여기 따뜻하다"]),
+    () => pick(["흠흠, 콧노래 중", "조금 심심하다", "여기 따뜻하다"]),
     () =>
       document.documentElement.getAttribute("saved-theme") === "dark"
         ? "밤에는 어두운 화면이 눈에 편해요"
@@ -506,6 +546,11 @@
         return 1
       }
     })()
+    // 비공개 프로젝트에서 처음 열었으면 인사도 그 자리에 맞게
+    if (isPrivate()) {
+      talk(visits === 1 ? ["안녕하세요, 뉴리예요!", "여긴 공개 전이라 잠가 둔 상자예요"] : pick(privateLines()))
+      return
+    }
     talk(
       visits === 1
         ? ["안녕하세요, 뉴리예요!", "여기 노트들을 지키는 창고 친구예요"]
@@ -613,7 +658,11 @@
   )
   document.addEventListener("nav", () => {
     endSaid = false
-    if (isNote()) setTimeout(() => talk(`「${pageTitle()}」 펼쳐 볼까요?`), 900)
+    // 비공개 프로젝트면 그 자리에 맞는 말, 아니면 글 제목 인사
+    setTimeout(() => {
+      if (isPrivate()) talk(pick(privateLines()))
+      else if (isNote()) talk(`「${pageTitle()}」 펼쳐 볼까요?`)
+    }, 900)
   })
 
   // 좋아요를 누르면 뉴리가 기뻐한다

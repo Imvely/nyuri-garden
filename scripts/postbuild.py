@@ -45,6 +45,9 @@ for f in out.rglob("*.html"):
     # 페이지 깊이에 맞춘 사이트 루트 상대 경로 (예: tags/x.html -> ../)
     depth = len(f.relative_to(out).parts) - 1
     root = "./" if depth == 0 else "../" * depth
+    # 404 페이지는 없는 주소 어디서나 뜨므로 사이트 절대 경로를 쓴다
+    if f.relative_to(out).as_posix() == "404.html":
+        root = "/nyuri-garden/"
     f.write_text(s.replace("<head>", "<head>" + SNIPPET.replace("__ROOT__", root), 1), encoding="utf-8")
     n += 1
 print(f"head snippet injected into {n} pages")

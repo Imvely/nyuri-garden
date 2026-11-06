@@ -451,7 +451,9 @@
     canvas.addEventListener("pointerdown", (e) => {
       const [px, py] = local(e)
       const n = hit(px, py)
-      canvas.setPointerCapture(e.pointerId)
+      try {
+        canvas.setPointerCapture(e.pointerId)
+      } catch {}
       if (n) {
         const [wx, wy] = toWorld(px, py)
         drag = { node: n, wx, wy, sx: px, sy: py, moved: false, ox: n.x - wx, oy: n.y - wy }
