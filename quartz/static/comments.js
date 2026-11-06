@@ -155,8 +155,8 @@
     const actions = c.deleted
       ? ""
       : `<div class="nc-actions">
-          ${isReply ? "" : `<button type="button" data-act="reply">답글</button>`}
-          ${c.isOwner && !adminKey() ? "" : `<button type="button" data-act="edit">수정</button><button type="button" data-act="delete">삭제</button>`}
+          ${isReply ? "" : `<button type="button" data-act="reply" aria-expanded="false">답글</button>`}
+          ${c.isOwner && !adminKey() ? "" : `<button type="button" data-act="edit" aria-expanded="false">수정</button><button type="button" data-act="delete" aria-expanded="false">삭제</button>`}
         </div>`
     return `<li class="nc-item${c.isOwner ? " is-owner" : ""}${c.deleted ? " is-deleted" : ""}" data-id="${esc(c.id)}">
       <article class="nc-card">
@@ -240,7 +240,7 @@
     return `<form class="nc-form${kind === "reply" ? " nc-inline" : ""}${isEdit ? " nc-inline" : ""}" novalidate>
       <label class="nc-sr" for="nc-${kind}-body">${isEdit ? "고칠 내용" : kind === "reply" ? "답글" : "댓글"}</label>
       <textarea id="nc-${kind}-body" name="body" rows="${kind === "new" ? 3 : 2}" maxlength="2000" placeholder="${
-        kind === "reply" ? "답글을 적어 주세요" : isEdit ? "" : "이 노트에 대한 생각이나 질문을 남겨 주세요"
+        kind === "reply" ? "답글을 적어 주세요" : isEdit ? "" : "이 노트에 대한 생각이나 궁금한 점을 남겨 주세요"
       }" required>${esc(value)}</textarea>
       <div class="nc-row nc-row-end">
         ${who}
@@ -276,6 +276,7 @@
 
   let data = { comments: [] }
   let section = null
+  let readingObserver = null
 
   function render() {
     const list = section.querySelector(".nc-list")
@@ -344,19 +345,42 @@
     }
   }
 
-  function openInline(li, kind) {
+  function closeInline() {
     section.querySelectorAll(".nc-slot").forEach((s) => (s.innerHTML = ""))
+    section.querySelectorAll(".nc-actions [aria-expanded]").forEach((b) => b.setAttribute("aria-expanded", "false"))
+  }
+
+  function openInline(li, kind, trigger) {
+    const already = trigger && trigger.getAttribute("aria-expanded") === "true"
+    closeInline()
+    if (already) return // 같은 버튼을 다시 누르면 닫기
     const id = li.dataset.id
     const c = data.comments.find((x) => x.id === id)
     const slot = li.querySelector(":scope > .nc-card .nc-slot")
     slot.innerHTML = formHTML({ kind, value: kind === "edit" ? c.body : "" })
+    trigger?.setAttribute("aria-expanded", "true")
     const form = slot.querySelector("form")
     form.addEventListener("submit", (e) => {
       e.preventDefault()
       submitForm(form, kind, id)
     })
-    form.querySelector('[data-act="cancel"]').addEventListener("click", () => (slot.innerHTML = ""))
+    form.querySelector('[data-act="cancel"]').addEventListener("click", () => {
+      closeInline()
+      trigger?.focus()
+    })
     ;(form.querySelector("textarea") || form.querySelector("input"))?.focus()
+  }
+
+  // 새 댓글 입력칸: 처음엔 한 줄로 접혀 있다가, 누르면 닉네임·비밀번호까지 펼친다
+  function wireComposer(form) {
+    const ta = form.querySelector("textarea")
+    const open = () => form.classList.add("is-open")
+    form.addEventListener("focusin", open)
+    form.addEventListener("focusout", () => {
+      setTimeout(() => {
+        if (!form.contains(document.activeElement) && !ta.value.trim()) form.classList.remove("is-open")
+      }, 120)
+    })
   }
 
   async function build() {
@@ -368,13 +392,21 @@
     section = document.createElement("section")
     section.className = "nyuri-comments"
     section.setAttribute("aria-labelledby", "nc-title")
+    // 대화를 먼저, 입력칸은 그 아래에
     section.innerHTML = `
-      <h2 id="nc-title" class="nc-title">댓글 <span class="nc-count"></span></h2>
-      ${formHTML({ kind: "new" })}
-      <ol class="nc-list" aria-live="polite"><li class="nc-empty">댓글을 불러오는 중이에요…</li></ol>`
+      <header class="nc-head">
+        <h2 id="nc-title" class="nc-title">댓글</h2>
+        <span class="nc-count" aria-label="댓글 수"></span>
+      </header>
+      <ol class="nc-list" aria-live="polite"><li class="nc-empty">댓글을 불러오는 중이에요…</li></ol>
+      <div class="nc-composer">
+        <img class="nc-composer-face" src="${root()}static/nyuri.svg" alt="">
+        ${formHTML({ kind: "new" })}
+      </div>`
     share.after(section)
 
     const form = section.querySelector(".nc-form")
+    wireComposer(form)
     form.addEventListener("submit", (e) => {
       e.preventDefault()
       submitForm(form, "new")
@@ -382,8 +414,16 @@
     section.querySelector(".nc-list").addEventListener("click", (e) => {
       const b = e.target.closest("button[data-act]")
       if (!b || b.closest("form")) return
-      openInline(b.closest(".nc-item"), b.dataset.act)
+      openInline(b.closest(".nc-item"), b.dataset.act, b)
     })
+
+    // 댓글을 보는 동안엔 뉴리펫이 한쪽으로 비켜선다
+    readingObserver?.disconnect()
+    readingObserver = new IntersectionObserver(
+      ([entry]) => document.documentElement.classList.toggle("nyuri-reading-comments", entry.isIntersecting),
+      { rootMargin: "-20% 0px -10% 0px" },
+    )
+    readingObserver.observe(section)
 
     const page = pageKey()
     try {

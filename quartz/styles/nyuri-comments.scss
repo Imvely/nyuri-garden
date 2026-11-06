@@ -3,12 +3,29 @@
 // ═════════════════════════════════════════════════════════════
 // 좋아요 · 댓글 (quartz/static/comments.js)
 // 사이트의 기존 토큰만 쓴다: --line, --surface, --accent, --gray, --dark, --darkgray, --radius
-// 새 색·새 그림자 없음. 위계는 크기와 굵기, 간격으로 만든다.
+// 구성: 대화가 먼저, 입력칸은 그 아래 한 줄로 접혀 있다가 누르면 펼쳐진다.
+// 주인(뉴리)의 답글만 옅은 호박색 쪽지로 구분한다. 그 외엔 색을 더하지 않는다.
 // ═════════════════════════════════════════════════════════════
 
+:root {
+  --nc-field-line: color-mix(in srgb, var(--gray) 38%, transparent); // 입력칸 테두리(눈에 보이게)
+  --nc-owner-bg: color-mix(in srgb, var(--accent) 8%, transparent);
+  --nc-on-accent: #2b1d10; // 호박색 버튼 위 글자(다크)
+}
+
+:root[saved-theme="light"] {
+  --nc-on-accent: #fffaf2; // 라이트의 진한 호박색 위에선 밝은 글자 (대비 4.9:1)
+  --nc-owner-bg: color-mix(in srgb, var(--accent) 7%, transparent);
+}
+
 // ── 좋아요 ──────────────────────────────────────────────────
+// 공유 버튼들과 구분되도록 처음부터 호박색 테두리. 눌리면 하트가 채워진다.
 .nyuri-share .nyuri-share-row .nyuri-like {
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  color: var(--dark);
+
   svg {
+    color: var(--accent);
     transition:
       fill 0.2s ease,
       transform 0.2s var(--ease-out);
@@ -21,8 +38,8 @@
   }
 
   &[aria-pressed="true"] {
-    color: var(--dark);
-    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    border-color: var(--accent);
 
     svg {
       fill: var(--accent);
@@ -34,7 +51,6 @@
   }
 }
 
-// 누른 순간 하트만 한 번 톡 (방문자가 직접 누른 반응이라 허용)
 @media (prefers-reduced-motion: no-preference) {
   .nyuri-like.is-pop svg {
     animation: nc-pop 0.32s var(--ease-out);
@@ -53,37 +69,49 @@
   }
 }
 
-// ── 댓글 영역 ───────────────────────────────────────────────
+// ── 영역 ────────────────────────────────────────────────────
 .nyuri-comments {
   max-width: var(--measure);
-  margin: 2.6rem auto 0;
-  padding-top: 1.4rem;
+  margin: 2.8rem auto 0;
+  padding-top: 1.6rem;
   border-top: 1px solid var(--line);
+}
+
+.nc-head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.4rem;
 }
 
 .nc-title {
   font-family: var(--headerFont) !important;
   font-size: 2rem;
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.1;
   color: var(--dark);
-  margin: 0 0 1rem;
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
+  margin: 0 !important;
   border: 0 !important;
   padding: 0 !important;
 
   &::before {
     display: none !important; // 본문 h2 장식 상속 방지
   }
+}
 
-  .nc-count {
-    font-family: var(--bodyFont);
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--gray);
-    font-variant-numeric: tabular-nums;
+// 댓글 수: 제목 기준선과 따로 노는 숫자 대신 작은 알약
+.nc-count {
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--darkgray);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+
+  &:empty {
+    display: none;
   }
 }
 
@@ -96,49 +124,200 @@
   white-space: nowrap;
 }
 
-// ── 입력 폼 ─────────────────────────────────────────────────
-.nc-form,
-.nc-inline {
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
+// ── 목록 ────────────────────────────────────────────────────
+.nc-list,
+.nc-replies {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
-.nc-form:not(.nc-inline) {
-  margin-bottom: 1.6rem;
+.nc-list > .nc-item + .nc-item {
+  border-top: 1px solid var(--line);
 }
 
-.nc-inline {
-  margin-top: 0.7rem;
+.nc-empty {
+  padding: 1.4rem 0 0.6rem;
+  color: var(--gray);
+  font-size: 0.97rem;
 }
 
-.nyuri-comments :is(textarea, input[type="text"], input[type="password"]) {
-  font: 500 0.95rem/1.55 var(--bodyFont);
+.nc-card {
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr);
+  gap: 0.85rem;
+  padding: 1.15rem 0;
+}
+
+// 방문자 얼굴: 첫 글자를 담은 둥근 쪽지
+.nc-avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font: 700 1rem/1 var(--bodyFont);
   color: var(--dark);
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 0.65rem 0.8rem;
-  outline: none;
-  transition: border-color 0.2s ease;
+
+  &.is-owner {
+    border: 0;
+    background: none;
+    object-fit: contain;
+  }
+}
+
+.nc-main {
   min-width: 0;
+}
+
+.nc-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.5rem;
+  margin-bottom: 0.25rem;
+
+  time {
+    font-size: 0.82rem;
+    color: var(--gray);
+  }
+}
+
+.nc-name {
+  font-weight: 700;
+  font-size: 0.97rem;
+  color: var(--dark);
+}
+
+.nc-body {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--darkgray);
+  white-space: pre-wrap;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+// 삭제된 댓글: 자기 본문만 흐리게 (아래 답글엔 번지지 않게 직계만)
+.is-deleted > .nc-card .nc-body {
+  color: var(--gray);
+  font-style: italic;
+}
+
+.is-deleted > .nc-card .nc-avatar {
+  opacity: 0.5;
+}
+
+// 주인(뉴리)의 글: 옅은 호박색 쪽지
+.nc-item.is-owner > .nc-card {
+  background: var(--nc-owner-bg);
+  border-radius: var(--radius);
+  padding: 1rem 1rem 0.9rem;
+  margin: 0.4rem 0;
+
+  .nc-name {
+    font-family: var(--headerFont);
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+}
+
+.nc-badge {
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  color: var(--dark);
+  background: color-mix(in srgb, var(--accent) 32%, transparent);
+}
+
+// 답글 · 수정 · 삭제
+.nc-actions {
+  display: flex;
+  gap: 0.15rem;
+  margin: 0.4rem 0 0 -0.55rem;
+
+  button {
+    border: 0;
+    background: none;
+    padding: 0 0.6rem;
+    min-height: 2.25rem;
+    border-radius: 9px;
+    font: 600 0.86rem/1 var(--bodyFont);
+    color: var(--gray);
+    cursor: pointer;
+    transition:
+      color 0.2s ease,
+      background-color 0.2s ease;
+
+    &:hover,
+    &[aria-expanded="true"] {
+      color: var(--dark);
+      background: var(--surface);
+    }
+
+    &[aria-expanded="true"] {
+      box-shadow: inset 0 0 0 1px var(--line);
+    }
+  }
+}
+
+// 답글: 한 단계 들여서 얇은 선으로 잇는다
+.nc-replies {
+  margin-left: 1.25rem;
+  padding-left: 1.5rem;
+  border-left: 1px solid var(--nc-field-line);
+
+  &:empty {
+    display: none;
+  }
+
+  .nc-card {
+    padding: 0.85rem 0;
+  }
+}
+
+// ── 입력칸 공통 ─────────────────────────────────────────────
+.nyuri-comments :is(textarea, input[type="text"], input[type="password"]) {
+  font: 500 0.95rem/1.55 var(--bodyFont);
+  color: var(--dark);
+  background: var(--light);
+  border: 1px solid var(--nc-field-line);
+  border-radius: 12px;
+  padding: 0.65rem 0.85rem;
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 
   &::placeholder {
     color: var(--gray);
-    opacity: 0.85;
   }
 
   &:focus {
-    border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
   }
 }
 
 .nyuri-comments textarea {
-  resize: vertical;
-  min-height: 3rem;
+  resize: none;
+  display: block;
 }
 
-// 이름표 붙은 칸들 + 오른쪽 버튼 묶음. 버튼은 칸의 아래선에 맞춘다.
+.nc-form,
+.nc-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
 .nc-row {
   display: flex;
   flex-wrap: wrap;
@@ -152,11 +331,6 @@
   gap: 0.3rem;
   flex: 1 1 13rem;
   min-width: 0;
-
-  input {
-    width: 100%;
-    box-sizing: border-box;
-  }
 }
 
 .nc-label {
@@ -178,13 +352,12 @@
   margin-left: auto;
 }
 
-// 비밀번호 칸 오른쪽 눈 아이콘
 .nc-pw {
   position: relative;
   display: block;
 
   input {
-    padding-right: 2.75rem !important;
+    padding-right: 2.85rem !important;
   }
 }
 
@@ -222,37 +395,44 @@
   gap: 0.4rem;
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--gray);
+  color: var(--darkgray);
+  margin-right: auto;
 
   img {
-    width: 26px;
-    height: 26px;
+    width: 28px;
+    height: 28px;
   }
 }
 
 .nc-submit,
 .nc-ghost,
 .nc-danger {
-  min-height: 2.5rem;
-  padding: 0 1rem;
+  min-height: 2.6rem;
+  padding: 0 1.1rem;
   border-radius: 999px;
-  font: 700 0.9rem/1 var(--bodyFont);
+  font: 700 0.92rem/1 var(--bodyFont);
   cursor: pointer;
   transition:
     background-color 0.2s ease,
     border-color 0.2s ease,
-    color 0.2s ease;
+    color 0.2s ease,
+    transform 0.12s var(--ease-out);
+
+  &:active {
+    transform: scale(0.97);
+  }
 
   &:disabled {
     opacity: 0.55;
     cursor: default;
+    transform: none;
   }
 }
 
 .nc-submit {
   border: 0;
   background: var(--accent);
-  color: #2b1d10;
+  color: var(--nc-on-accent);
 }
 
 .nc-ghost {
@@ -262,6 +442,7 @@
 
   &:hover {
     color: var(--dark);
+    background: var(--surface);
   }
 }
 
@@ -278,12 +459,16 @@
 
 .nc-status {
   margin: 0;
-  min-height: 1.2em;
   font-size: 0.86rem;
   color: var(--gray);
 
+  &:empty {
+    display: none;
+  }
+
   &.is-error {
     color: #f0a8a8;
+    font-weight: 600;
   }
 }
 
@@ -291,142 +476,85 @@
   color: #a3322f;
 }
 
-.nc-confirm {
-  margin: 0;
-  font-size: 0.92rem;
-  color: var(--darkgray);
-}
-
-// ── 목록 ────────────────────────────────────────────────────
-.nc-list,
-.nc-replies {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.nc-list > .nc-item + .nc-item {
-  border-top: 1px solid var(--line);
-}
-
-.nc-empty {
-  padding: 1rem 0;
-  color: var(--gray);
-  font-size: 0.95rem;
-}
-
-.nc-card {
+// ── 새 댓글: 뉴리 얼굴 옆 한 줄 → 누르면 펼쳐짐 ─────────────────
+.nc-composer {
   display: grid;
-  grid-template-columns: 2.25rem minmax(0, 1fr);
-  gap: 0.8rem;
-  padding: 1rem 0;
-}
-
-.nc-avatar {
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  font: 700 0.95rem/1 var(--bodyFont);
-  color: var(--dark);
+  grid-template-columns: 2.5rem minmax(0, 1fr);
+  gap: 0.85rem;
+  align-items: start;
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: calc(var(--radius) + 4px);
   background: var(--surface);
   border: 1px solid var(--line);
-
-  &.is-owner {
-    border: 0;
-    background: none;
-    object-fit: contain;
-  }
 }
 
-.nc-meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.45rem;
-  margin-bottom: 0.2rem;
-
-  time {
-    font-size: 0.82rem;
-    color: var(--gray);
-  }
+.nc-composer-face {
+  width: 2.5rem;
+  height: 2.5rem;
 }
 
-.nc-name {
-  font-weight: 700;
-  font-size: 0.95rem;
-  color: var(--dark);
-}
+.nc-composer .nc-form {
+  gap: 0;
 
-.is-owner > .nc-card .nc-name {
-  font-family: var(--headerFont);
-  font-size: 1.25rem;
-  line-height: 1;
-}
-
-.nc-badge {
-  font-size: 0.72rem;
-  font-weight: 700;
-  padding: 0.18rem 0.5rem;
-  border-radius: 999px;
-  color: var(--dark);
-  background: color-mix(in srgb, var(--accent) 22%, transparent);
-}
-
-.nc-body {
-  margin: 0;
-  font-size: 1rem;
-  line-height: 1.75;
-  color: var(--darkgray);
-  white-space: pre-wrap;
-  word-break: keep-all;
-  overflow-wrap: anywhere;
-}
-
-.is-deleted .nc-body {
-  color: var(--gray);
-  font-style: italic;
-}
-
-.nc-actions {
-  display: flex;
-  gap: 0.2rem;
-  margin: 0.35rem 0 0 -0.5rem;
-
-  button {
-    border: 0;
-    background: none;
-    padding: 0.35rem 0.5rem;
-    min-height: 2rem;
-    border-radius: 8px;
-    font: 600 0.84rem/1 var(--bodyFont);
-    color: var(--gray);
-    cursor: pointer;
+  textarea {
+    min-height: 2.75rem;
+    max-height: 2.75rem;
+    overflow: hidden;
     transition:
-      color 0.2s ease,
-      background-color 0.2s ease;
+      max-height 0.25s var(--ease-out),
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
+  }
 
-    &:hover {
-      color: var(--dark);
-      background: var(--surface);
+  // 접혀 있을 땐 닉네임·비밀번호·버튼을 숨긴다
+  > .nc-row,
+  > .nc-status {
+    display: none;
+  }
+
+  &.is-open {
+    gap: 0.75rem;
+
+    textarea {
+      min-height: 6rem;
+      max-height: 16rem;
+      overflow: auto;
+    }
+
+    > .nc-row {
+      display: flex;
+    }
+
+    > .nc-status:not(:empty) {
+      display: block;
     }
   }
 }
 
-// 답글: 한 단계 들여서 얇은 선으로 잇는다
-.nc-replies {
-  margin-left: 1.1rem;
-  padding-left: 1.4rem;
-  border-left: 1px solid var(--line);
+// 상태 문구(남겼어요)는 접힌 상태에서도 보이게
+.nc-composer .nc-form > .nc-status:not(:empty) {
+  display: block;
+  margin-top: 0.5rem;
+}
 
-  &:empty {
-    display: none;
-  }
+// ── 답글 · 수정 · 삭제 칸: 열린 댓글에 붙은 작은 쪽지 ─────────────
+.nc-slot:not(:empty) {
+  margin-top: 0.6rem;
+}
 
-  .nc-card {
-    padding: 0.75rem 0;
-  }
+.nc-inline {
+  padding: 0.85rem;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.nc-confirm {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--dark);
 }
 
 .nyuri-comments :focus-visible {
@@ -434,9 +562,48 @@
   outline-offset: 2px;
 }
 
+// 댓글을 보는 동안 뉴리펫은 작게, 흐리게 비켜선다 (마우스를 올리면 다시 또렷)
+.nyuri-reading-comments {
+  .nyuri-pet .np-float {
+    opacity: 0.45;
+    transform: scale(0.82);
+    transition:
+      opacity 0.3s ease,
+      transform 0.3s var(--ease-out);
+  }
+
+  .nyuri-pet:hover .np-float,
+  .nyuri-pet.chat-open .np-float {
+    opacity: 1;
+    transform: none;
+  }
+
+  .nyuri-pet .np-bubble {
+    display: none;
+  }
+}
+
+// ── 모바일 ──────────────────────────────────────────────────
 @media all and ($mobile) {
   .nc-title {
     font-size: 1.8rem;
+  }
+
+  .nc-card {
+    grid-template-columns: 2.1rem minmax(0, 1fr);
+    gap: 0.7rem;
+  }
+
+  .nc-avatar,
+  .nc-composer-face {
+    width: 2.1rem;
+    height: 2.1rem;
+  }
+
+  .nc-composer {
+    grid-template-columns: 2.1rem minmax(0, 1fr);
+    gap: 0.6rem;
+    padding: 0.8rem;
   }
 
   .nc-field {
@@ -452,11 +619,21 @@
   }
 
   .nc-replies {
-    margin-left: 0.4rem;
-    padding-left: 0.9rem;
+    margin-left: 0.5rem;
+    padding-left: 0.95rem;
+  }
+
+  .nc-item.is-owner > .nc-card {
+    padding: 0.85rem;
   }
 
   .nyuri-comments :is(textarea, input[type="text"], input[type="password"]) {
     font-size: 16px; // iOS 확대 방지
+  }
+
+  // 모바일에선 댓글 보는 동안 뉴리펫을 아예 숨겨 글을 가리지 않게
+  .nyuri-reading-comments .nyuri-pet {
+    opacity: 0 !important;
+    pointer-events: none;
   }
 }
