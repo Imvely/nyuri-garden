@@ -160,6 +160,49 @@
   transform: rotate(14deg);
 }
 
+// 쓰다듬기: ^^ 눈
+.np-happy-eyes {
+  opacity: 0;
+}
+
+.is-happy {
+  .np-eyes {
+    opacity: 0;
+  }
+  .np-happy-eyes {
+    opacity: 1;
+  }
+}
+
+// 간지럼: 몸을 좌우로 꼼지락
+@media (prefers-reduced-motion: no-preference) {
+  .is-giggling .np-float {
+    animation: np-giggle 0.9s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+}
+
+@keyframes np-giggle {
+  0%,
+  100% {
+    transform: rotate(0) translateY(0);
+  }
+  15% {
+    transform: rotate(-9deg) translateY(-3px);
+  }
+  30% {
+    transform: rotate(8deg) translateY(-1px);
+  }
+  45% {
+    transform: rotate(-7deg) translateY(-3px);
+  }
+  60% {
+    transform: rotate(5deg) translateY(0);
+  }
+  75% {
+    transform: rotate(-3deg);
+  }
+}
+
 // 졸기: 눈 감고 z
 .np-sleep-eyes {
   opacity: 0;

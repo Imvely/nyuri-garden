@@ -239,19 +239,19 @@ function sendMail(b) {
   if (message.length > MAX_BODY) return { ok: false, error: "too_long" }
   if (!rateOk_("mail", 10)) return { ok: false, error: "rate" }
   const email = String(b.email || "").trim()
-  const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-  const opts = {
+  // 답장 받을 이메일은 필수
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: "email" }
+  MailApp.sendEmail({
     to: OWNER_EMAIL,
+    replyTo: email, // 메일에서 '답장'을 누르면 바로 보낸 사람에게 간다
     subject: "[" + SITE_NAME + "] 뉴리펫 쪽지: " + clean_(b.title).slice(0, 80),
     body:
       message + "\n\n" +
-      "답장 받을 이메일: " + (validEmail ? email : "(남기지 않음)") + "\n" +
+      "답장 받을 이메일: " + email + "\n" +
       "보낸 페이지: " + String(b.page || "") + "\n" +
       "보낸 시각: " + Utilities.formatDate(new Date(), "Asia/Seoul", "yyyy-MM-dd HH:mm") + "\n",
     name: "뉴리펫",
-  }
-  if (validEmail) opts.replyTo = email
-  MailApp.sendEmail(opts)
+  })
   return { ok: true }
 }
 

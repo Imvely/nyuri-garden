@@ -43,6 +43,9 @@
       <g class="np-sleep-eyes" fill="none" stroke-width="8">
         <path d="M188 308 Q204 318 220 308"/><path d="M294 308 Q310 318 326 308"/>
       </g>
+      <g class="np-happy-eyes" fill="none" stroke-width="8">
+        <path d="M188 314 Q204 292 220 314"/><path d="M294 314 Q310 292 326 314"/>
+      </g>
       <path class="np-mouth" d="M236 342 Q257 364 278 342" fill="none" stroke-width="8"/>
     </g>
   </g>
@@ -70,7 +73,7 @@
         <button type="button" class="np-close" aria-label="닫기">${ICON_CLOSE}</button>
       </header>
       <div class="np-chat-body">
-        <p class="np-guide">궁금한 점이나 하고 싶은 말을 적어 주세요. 주인에게 메일로 바로 전해 드릴게요.</p>
+        <p class="np-guide">궁금한 점이나 하고 싶은 말을 적어 주세요. 주인에게 메일로 전해 드리고, 답장은 적어 주신 이메일로 가요.</p>
         <form class="np-form" novalidate>
           <input class="np-hp" type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true">
           <label class="np-field">
@@ -78,8 +81,8 @@
             <textarea name="message" rows="4" maxlength="2000" placeholder="예: I-FAS 노트에서 GAC 부분이 궁금해요" required></textarea>
           </label>
           <label class="np-field">
-            <span>답장 받을 이메일 <em>(선택)</em></span>
-            <input type="email" name="email" inputmode="email" autocomplete="email" placeholder="you@example.com">
+            <span>답장 받을 이메일</span>
+            <input type="email" name="email" inputmode="email" autocomplete="email" placeholder="you@example.com" required>
           </label>
           <p class="np-status" role="status" aria-live="polite"></p>
           <button type="submit" class="np-send">${ICON_SEND}<span>메일 보내기</span></button>
@@ -503,13 +506,84 @@
   schedule(chatter, 14000, 26000)
 
   // 상황에 반응하는 말
-  let lastHoverTalk = 0
-  avatar.addEventListener("pointerenter", () => {
-    if (!finePointer.matches || !chat.hidden || drag) return
-    if (Date.now() - lastHoverTalk < 25000 || root.classList.contains("has-bubble")) return
-    lastHoverTalk = Date.now()
-    talk(pick(["간지러워요!", "히히, 반가워요", "저 누르면 주인에게 메일 보낼 수 있어요"]))
+  // ── 마우스 반응: 눈으로 따라보기 · 간지럼 · 쓰다듬기 ────────────
+  const eyes = avatar.querySelector(".np-eyes")
+  let eyeRaf = 0
+  let lastPointer = null
+  function lookAt() {
+    eyeRaf = 0
+    if (!lastPointer || root.classList.contains("is-sleeping") || drag) {
+      eyes.removeAttribute("transform")
+      return
+    }
+    const r = avatar.getBoundingClientRect()
+    const dx = lastPointer.x - (r.left + r.width / 2)
+    const dy = lastPointer.y - (r.top + r.height * 0.6)
+    const d = Math.hypot(dx, dy) || 1
+    const reach = Math.min(1, d / 260) // 가까우면 덜, 멀면 끝까지
+    const ox = (dx / d) * 9 * reach
+    const oy = (dy / d) * 7 * reach
+    eyes.setAttribute("transform", `translate(${ox.toFixed(1)} ${oy.toFixed(1)})`)
+  }
+  window.addEventListener(
+    "pointermove",
+    (e) => {
+      if (!finePointer.matches || e.pointerType !== "mouse") return
+      lastPointer = { x: e.clientX, y: e.clientY }
+      if (!eyeRaf) eyeRaf = requestAnimationFrame(lookAt)
+    },
+    { passive: true },
+  )
+  document.documentElement.addEventListener("mouseleave", () => {
+    lastPointer = null
+    if (!eyeRaf) eyeRaf = requestAnimationFrame(lookAt)
   })
+
+  // 간지럼: 뉴리 위에서 좌우로 빠르게 4번 이상 방향을 바꾸면
+  let flips = []
+  let lastDir = 0
+  let lastTickle = 0
+  avatar.addEventListener("pointermove", (e) => {
+    if (!finePointer.matches || drag || e.pointerType !== "mouse") return
+    const dir = Math.sign(e.movementX)
+    if (!dir || Math.abs(e.movementX) < 2) return
+    const now = Date.now()
+    if (lastDir && dir !== lastDir) flips.push(now)
+    lastDir = dir
+    flips = flips.filter((t) => now - t < 1200)
+    if (flips.length >= 4 && now - lastTickle > 4000) {
+      lastTickle = now
+      flips = []
+      stopPetting()
+      root.classList.remove("is-giggling")
+      void root.offsetWidth
+      root.classList.add("is-giggling")
+      setTimeout(() => root.classList.remove("is-giggling"), 900)
+      talk(pick(["히히 간지러워요!", "꺄르르, 그만~", "앗 간지러!", "헤헤헤 간질간질"]))
+    }
+  })
+
+  // 쓰다듬기: 뉴리 위에 마우스를 가만히 올려 두면
+  let petTimer = 0
+  let lastPetTalk = 0
+  function stopPetting() {
+    clearTimeout(petTimer)
+    root.classList.remove("is-happy")
+  }
+  avatar.addEventListener("pointerenter", (e) => {
+    if (!finePointer.matches || e.pointerType !== "mouse" || !chat.hidden || drag) return
+    clearTimeout(petTimer)
+    petTimer = setTimeout(() => {
+      if (drag || !chat.hidden) return
+      root.classList.add("is-happy")
+      if (Date.now() - lastPetTalk > 15000) {
+        lastPetTalk = Date.now()
+        talk(pick(["기분 좋아요~", "쓰담쓰담 좋아요", "헤헤, 따뜻해요"]))
+      }
+    }, 1400)
+  })
+  avatar.addEventListener("pointerleave", stopPetting)
+  avatar.addEventListener("pointerdown", stopPetting)
   let awayAt = 0
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) awayAt = Date.now()
@@ -657,7 +731,12 @@
       textarea.focus()
       return
     }
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!email) {
+      setStatus("답장 받을 이메일을 적어 주세요.", true)
+      emailInput.focus()
+      return
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setStatus("이메일 주소 형식을 확인해 주세요. 예: you@example.com", true)
       emailInput.focus()
       return
@@ -693,9 +772,7 @@
       setStatus("")
       form.hidden = true
       done.hidden = false
-      done.querySelector(".np-done-text").textContent = email
-        ? `답장은 ${email} 로 갈 거예요.`
-        : "답장을 받고 싶으면 다음엔 이메일도 남겨 주세요."
+      done.querySelector(".np-done-text").textContent = `답장은 ${email} 로 갈 거예요.`
       done.querySelector(".np-again").focus()
       hop()
     } catch {
