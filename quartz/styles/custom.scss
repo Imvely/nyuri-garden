@@ -1319,3 +1319,11 @@ table th {
     }
   }
 }
+
+// 긴 수식은 화면 밖으로 밀어내지 말고 그 줄 안에서만 옆으로 넘겨 보게
+article .katex-display {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.2rem 0;
+}
