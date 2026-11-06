@@ -53,6 +53,8 @@
 
   const ICON_SEND =
     '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>'
+  const ICON_MOON =
+    '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>'
   const ICON_CLOSE =
     '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>'
 
@@ -96,6 +98,27 @@
     </section>`
   document.body.appendChild(root)
 
+  // 채팅창을 열면 뉴리 바로 옆에 뜨는 재우기 버튼 (휴대폰 시트에서는 시트 위 오른쪽)
+  const nap = document.createElement("button")
+  nap.type = "button"
+  nap.className = "np-nap"
+  nap.setAttribute("data-persist", "")
+  nap.setAttribute("aria-label", "뉴리 재우기 (오른쪽 아래로 가서 쉬어요)")
+  nap.hidden = true
+  nap.innerHTML = `${ICON_MOON}<span>재우기</span>`
+  document.body.appendChild(nap)
+
+  // 재우면 오른쪽 아래에 들어가 쉬는 작은 아이콘. 누르면 다시 깨어난다.
+  const dock = document.createElement("button")
+  dock.type = "button"
+  dock.className = "np-dock is-sleeping"
+  dock.setAttribute("data-persist", "")
+  dock.setAttribute("aria-label", "뉴리 깨우기")
+  dock.title = "뉴리 깨우기"
+  dock.hidden = true
+  dock.innerHTML = `<span class="np-dock-face">${SVG}</span><span class="np-zzz" aria-hidden="true">z</span>`
+  document.body.appendChild(dock)
+
   const avatar = root.querySelector(".np-avatar")
   const bubble = root.querySelector(".np-bubble")
   const chat = root.querySelector(".np-chat")
@@ -108,6 +131,8 @@
   const keepMounted = () => {
     if (!root.isConnected) document.body.appendChild(root)
     if (!chat.isConnected) document.body.appendChild(chat)
+    if (!dock.isConnected) document.body.appendChild(dock)
+    if (!nap.isConnected) document.body.appendChild(nap)
   }
   new MutationObserver(keepMounted).observe(document.body, { childList: true })
   document.addEventListener("nav", keepMounted)
@@ -116,6 +141,7 @@
   const statusEl = chat.querySelector(".np-status")
   const textarea = form.querySelector("textarea")
   const emailInput = form.querySelector('input[type="email"]')
+  chat.addEventListener("focusin", () => setTimeout(() => !chat.hidden && placeChat(), 350))
 
   // ── 위치: transform 으로만 움직인다 ──────────────────────────
   const MARGIN = 16
@@ -142,27 +168,85 @@
   // 채팅창을 뉴리 옆에 놓고, 뉴리 쪽 모서리에서 커지도록 transform-origin 을 맞춘다
   // 폭이 좁거나 높이가 낮은 화면(휴대폰 가로)은 아래에서 올라오는 시트
   const SHEET = window.matchMedia("(max-width: 800px), (max-height: 560px)")
+  // 화면에서 실제로 보이는 부분. 휴대폰·태블릿 키보드가 올라오면 이 높이가 줄어든다
+  // (키보드는 페이지 아래를 덮을 뿐 화면 높이를 줄이지 않아서 bottom: 0 이 키보드 뒤로 숨는다)
+  function viewport() {
+    const vv = window.visualViewport
+    const top = vv ? vv.offsetTop : 0
+    const h = vv ? vv.height : window.innerHeight
+    const kb = Math.max(0, Math.round(window.innerHeight - h - top))
+    return { top, h, kb }
+  }
+  function placeNap() {
+    if (nap.hidden) return
+    const w = nap.offsetWidth || 92
+    const h = nap.offsetHeight || 36
+    const v = viewport()
+    let left
+    let top
+    if (chat.classList.contains("is-sheet")) {
+      // 시트 윗변 바로 위 오른쪽
+      const sheetTop = window.innerHeight - v.kb - chat.offsetHeight
+      left = window.innerWidth - w - 12
+      top = sheetTop - h - 10
+      nap.dataset.from = "bottom"
+    } else {
+      // 뉴리 옆, 화면 가운데 쪽으로
+      const s = size()
+      const toLeft = root.dataset.side === "right"
+      left = toLeft ? pos.x - w - 8 : pos.x + s + 8
+      top = pos.y + s / 2 - h / 2
+      nap.dataset.from = toLeft ? "right" : "left"
+      // 채팅창과 겹치면 채팅창 바깥(위나 아래)으로 비킨다
+      const cl = parseFloat(chat.style.left) || 0
+      const ct = parseFloat(chat.style.top) || 0
+      const cw = chat.offsetWidth
+      const ch = chat.offsetHeight
+      const hits = (t) => left < cl + cw && left + w > cl && t < ct + ch && t + h > ct
+      if (hits(top)) {
+        const above = ct - h - 8
+        const below = ct + ch + 8
+        top = root.dataset.vert === "top" && above >= v.top + 8 ? above : below + h <= v.top + v.h - 8 ? below : above
+      }
+    }
+    nap.style.left = clamp(left, 8, window.innerWidth - w - 8) + "px"
+    nap.style.top = clamp(top, v.top + 8, v.top + v.h - h - 8) + "px"
+  }
   function placeChat() {
     const s = size()
+    const v = viewport()
+    const kbOpen = v.kb > 80
+    chat.classList.toggle("kb-open", kbOpen)
     if (SHEET.matches) {
       chat.classList.add("is-sheet")
       chat.style.left = chat.style.top = ""
       chat.style.transformOrigin = ""
+      // 시트 바닥을 키보드 바로 위에, 높이는 보이는 영역 안으로
+      chat.style.setProperty("--np-kb", v.kb + "px")
+      chat.style.setProperty("--np-vvh", v.h + "px")
+      placeNap()
       return
     }
     chat.classList.remove("is-sheet")
+    chat.style.removeProperty("--np-kb")
+    chat.style.removeProperty("--np-vvh")
+    // 키보드가 떠 있으면 보이는 영역에 맞춰 줄인다
+    chat.style.maxHeight = kbOpen ? `${Math.max(220, v.h - MARGIN * 2)}px` : ""
     const w = chat.offsetWidth || 360
     const h = chat.offsetHeight || 480
     const gap = 12
+    const minTop = v.top + MARGIN
+    const maxTop = v.top + v.h - h - MARGIN
     let left = root.dataset.side === "right" ? pos.x + s - w : pos.x
     let top = root.dataset.vert === "bottom" ? pos.y - gap - h : pos.y + s + gap
     left = clamp(left, MARGIN, window.innerWidth - w - MARGIN)
-    top = h > window.innerHeight - MARGIN * 2 ? MARGIN : clamp(top, MARGIN, window.innerHeight - h - MARGIN)
+    top = maxTop < minTop ? minTop : clamp(top, minTop, maxTop)
     chat.style.left = left + "px"
     chat.style.top = top + "px"
     const ox = clamp(pos.x + s / 2 - left, 0, w)
     const oy = clamp(pos.y + s / 2 - top, 0, h)
     chat.style.transformOrigin = `${ox}px ${oy}px`
+    placeNap()
   }
 
   function restore() {
@@ -374,6 +458,19 @@
   window.addEventListener("resize", keepInside)
   window.addEventListener("orientationchange", () => setTimeout(keepInside, 250))
   window.visualViewport?.addEventListener("resize", keepInside)
+  // 키보드가 오르내리거나(iOS 는 화면이 위로 밀림) 하면 채팅창을 보이는 영역에 다시 맞춘다
+  let vvRaf = 0
+  const refit = () => {
+    if (chat.hidden || vvRaf) return
+    vvRaf = requestAnimationFrame(() => {
+      vvRaf = 0
+      placeChat()
+      const a = document.activeElement
+      if (a && chat.contains(a) && /^(TEXTAREA|INPUT)$/.test(a.tagName)) a.scrollIntoView({ block: "nearest" })
+    })
+  }
+  window.visualViewport?.addEventListener("resize", refit)
+  window.visualViewport?.addEventListener("scroll", refit)
 
   // ── 살아 있는 느낌: 깜빡임 · 날개 · 졸기 ──────────────────────
   function schedule(fn, min, max) {
@@ -394,6 +491,8 @@
   schedule(() => pulse("is-blinking", 180), 2800, 6200)
   schedule(() => pulse("is-flapping", 700), 14000, 30000)
 
+  let docked = false // 재워서 오른쪽 아래에서 쉬는 중
+  let flying = false // 재우러 가는 중 / 깨어나 돌아오는 중
   let idleTimer = 0
   let dozeTimer = 0
   function wake() {
@@ -401,6 +500,7 @@
     root.classList.remove("is-sleeping")
     clearTimeout(idleTimer)
     clearTimeout(dozeTimer)
+    if (docked) return
     if (wasAsleep) setTimeout(() => talk(pick(LINES.self.wake)), 300)
     // 한참 아무것도 안 하면: 하품 → 쿨쿨 → 잠
     dozeTimer = setTimeout(() => {
@@ -424,16 +524,32 @@
 
   // ── 말풍선 ──────────────────────────────────────────────────
   let bubbleTimer = 0
+  // 말풍선이 뜨면 최소한 읽을 시간(2.2초 + 글자당 0.06초, 최대 4.5초)은 그대로 둔다.
+  // 그 사이에 온 말은 기다렸다가 띄운다 (가장 마지막 것 하나만).
+  let readUntil = 0
+  let pendingSay = 0
+  const readTime = (text) => Math.min(4500, 2200 + text.length * 60)
   function say(text, ms = 5200, force = false) {
-    if (!chat.hidden || (!force && (root.classList.contains("is-sleeping") || drag))) return
+    if (docked) return
+    if (flying && !force) return // 재우기를 누른 뒤에는 잘 자요 인사만
+    if (chat.classList.contains("is-open") || (!force && (root.classList.contains("is-sleeping") || drag))) return
+    const wait = readUntil - Date.now()
+    if (!force && wait > 0 && root.classList.contains("has-bubble")) {
+      clearTimeout(pendingSay)
+      pendingSay = setTimeout(() => say(text, ms), wait)
+      return
+    }
+    clearTimeout(pendingSay)
     bubble.textContent = text
     root.classList.add("has-bubble")
+    readUntil = Date.now() + readTime(text)
     clearTimeout(bubbleTimer)
-    bubbleTimer = setTimeout(hideBubble, ms)
+    bubbleTimer = setTimeout(hideBubble, Math.max(ms, readTime(text)))
   }
   function hideBubble() {
     root.classList.remove("has-bubble")
     clearTimeout(bubbleTimer)
+    readUntil = 0
   }
   bubble.addEventListener("click", () => {
     hideBubble()
@@ -622,6 +738,17 @@
       doze: ["하암, 조금 졸려요"],
       sleep: ["쿨쿨"],
       wake: ["앗, 졸았어요!", "깼어요, 다시 놀아요"],
+      // 재우기 버튼을 눌렀을 때 (오른쪽 아래로 날아가기 전에)
+      goNap: [
+        "저는 자러 갈게요. 이따 또 깨워 주세요",
+        "하암, 잠깐 눈 붙일게요. 오른쪽 아래에 있을게요",
+        "상자 뚜껑 닫고 쉴게요. 부르면 바로 와요",
+        "그럼 꿈나라 다녀올게요. 이따 또 깨워 주세요",
+        "알겠어요, 구석에서 조용히 쉴게요",
+        "오늘은 여기까지! 이따 또 놀아요",
+      ],
+      // 쉬던 아이콘을 눌러 깨웠을 때
+      wakeUp: ["잘 잤다! 다시 왔어요", "깨워 줘서 고마워요!", "기지개 쭉, 다시 놀아요", "벌써 아침이에요?", "꿈에서 노트 정리하고 왔어요"],
     },
     chat: {
       keeper: [["사실 저는 이 사이트 창고지기예요", "노트들이 다 제 안에 들어 있어요"], "오늘 쪽지 정리했어요", "상자 안에서 노트 냄새가 나요", "테이프 다시 붙이는 중이에요"],
@@ -659,7 +786,7 @@
     convoTimers = []
     remember(lines)
     const seq = Array.isArray(lines) ? lines : [lines]
-    let t = 0
+    let t = root.classList.contains("has-bubble") ? Math.max(0, readUntil - Date.now()) : 0
     seq.forEach((line, i) => {
       const ms = Math.min(6500, 2600 + line.length * 70)
       convoTimers.push(
@@ -837,7 +964,8 @@
   }
   let lastTopic = -1
   function chatter() {
-    if (!chat.hidden || drag || walking || busyReading()) return
+    if (!chat.hidden || drag || walking || flying || docked || busyReading()) return
+    if (root.classList.contains("has-bubble")) return
     // 특별한 날이면 잡담 세 번 중 한 번 정도는 그날 이야기
     const sp = specialLines()
     if (sp && Math.random() < 0.33) return talk(pick(sp))
@@ -1060,7 +1188,7 @@
 
   // ── 깡충 · 돌아다니기 ───────────────────────────────────────
   function hop() {
-    if (reduce.matches || drag || root.classList.contains("is-sleeping")) return
+    if (reduce.matches || drag || docked || root.classList.contains("is-sleeping")) return
     root.classList.remove("is-hopping")
     void root.offsetWidth // 연속으로 뛰어도 처음부터 다시
     root.classList.add("is-hopping")
@@ -1077,7 +1205,7 @@
   let walking = false
   let placedAt = 0 // 사용자가 직접 옮긴 시각
   function wander() {
-    if (reduce.matches || walking || drag || !chat.hidden || root.classList.contains("is-sleeping")) return
+    if (reduce.matches || walking || drag || docked || !chat.hidden || root.classList.contains("is-sleeping")) return
     if (Date.now() - placedAt < 90000) return // 방금 옮겨 둔 자리는 한동안 지킨다
     const b = bounds()
     const ang = Math.random() * Math.PI * 2
@@ -1134,8 +1262,12 @@
     placeChat()
     // 다음 프레임에 열린 상태로 → transition 이 현재 값에서 출발
     requestAnimationFrame(() => {
+      if (chat.hidden || docked || flying) return // 그 사이 닫혔으면 열지 않는다
       root.classList.add("chat-open")
       chat.classList.add("is-open")
+      nap.hidden = false
+      placeNap()
+      requestAnimationFrame(() => nap.classList.add("is-shown"))
     })
     avatar.setAttribute("aria-expanded", "true")
     setTimeout(() => textarea.focus({ preventScroll: true }), 60)
@@ -1144,6 +1276,10 @@
     if (chat.hidden) return
     root.classList.remove("chat-open")
     chat.classList.remove("is-open")
+    nap.classList.remove("is-shown")
+    setTimeout(() => {
+      if (!chat.classList.contains("is-open")) nap.hidden = true
+    }, 200)
     avatar.setAttribute("aria-expanded", "false")
     const hideNow = () => {
       if (!root.classList.contains("chat-open")) chat.hidden = true
@@ -1165,7 +1301,7 @@
     if (e.key === "Escape" && !chat.hidden) closeChat()
   })
   document.addEventListener("pointerdown", (e) => {
-    if (!chat.hidden && !root.contains(e.target) && !chat.contains(e.target)) closeChat(false)
+    if (!chat.hidden && !root.contains(e.target) && !chat.contains(e.target) && !nap.contains(e.target)) closeChat(false)
   })
 
   let sending = false
@@ -1261,7 +1397,118 @@
     }
   })
 
+  // ── 재우기: 인사 → 오른쪽 아래로 슈웅 날아가 작은 아이콘이 된다 ──────
+  const DOCK_KEY = "nyuri-pet-docked"
+  const EASE_MOVE = "cubic-bezier(0.77, 0, 0.175, 1)" // 화면 위 이동
+  const EASE_OUT = "cubic-bezier(0.23, 1, 0.32, 1)" // 나타나기
+  // 두 점 사이를 위로 볼록한 곡선으로 잇는 키프레임 (크기·기울기도 같이)
+  function arcFrames(from, to, s0, s1, tilt) {
+    const lift = Math.min(170, Math.hypot(to.x - from.x, to.y - from.y) * 0.4 + 40)
+    const ctrl = { x: (from.x + to.x) / 2, y: Math.min(from.y, to.y) - lift }
+    const frames = []
+    for (let i = 0; i <= 14; i++) {
+      const t = i / 14
+      const u = 1 - t
+      const x = u * u * from.x + 2 * u * t * ctrl.x + t * t * to.x
+      const y = u * u * from.y + 2 * u * t * ctrl.y + t * t * to.y
+      const sc = s0 + (s1 - s0) * t
+      const r = Math.sin(t * Math.PI) * tilt
+      frames.push({ transform: `translate3d(${x}px, ${y}px, 0) rotate(${r}deg) scale(${sc})` })
+    }
+    return frames
+  }
+  function dockTarget() {
+    // 보이기 전에 자리를 재야 해서 잠깐 투명하게 꺼낸다
+    const wasHidden = dock.hidden
+    dock.hidden = false
+    const d = dock.getBoundingClientRect()
+    if (wasHidden) dock.hidden = true
+    const s = size()
+    return { x: d.left + d.width / 2 - s / 2, y: d.top + d.height / 2 - s / 2, scale: (d.width * 0.8) / s }
+  }
+  function showDock(pop) {
+    dock.hidden = false
+    dock.classList.toggle("is-pop", !!pop)
+    requestAnimationFrame(() => dock.classList.add("is-shown"))
+  }
+  function goNap() {
+    if (docked || flying) return
+    closeChat(false)
+    convoTimers.forEach(clearTimeout)
+    walking = false
+    cancelAnimationFrame(springRaf)
+    root.classList.remove("is-sleeping")
+    flying = true
+    // 누르자마자 잘 자요 인사(다른 말은 모두 취소), 읽을 틈을 준 다음 날아간다
+    clearTimeout(pendingSay)
+    hideBubble()
+    say(pick(LINES.self.goNap), 2000, true)
+    hop()
+    setTimeout(() => {
+      hideBubble()
+      docked = true
+      clearTimeout(idleTimer)
+      clearTimeout(dozeTimer)
+      try {
+        localStorage.setItem(DOCK_KEY, "1")
+      } catch {}
+      const end = () => {
+        root.classList.add("is-docked")
+        root.classList.add("is-sleeping")
+        showDock(true)
+        flying = false
+      }
+      if (reduce.matches) return end()
+      const t = dockTarget()
+      const anim = root.animate(
+        [...arcFrames(pos, t, 1, t.scale, -14).slice(0, -1), { transform: `translate3d(${t.x}px, ${t.y}px, 0) scale(${t.scale})`, opacity: 0.6 }],
+        { duration: 760, easing: EASE_MOVE, fill: "forwards" },
+      )
+      anim.onfinish = () => {
+        end()
+        anim.cancel()
+      }
+    }, 1600)
+  }
+  function wakeFromNap() {
+    if (!docked || flying) return
+    flying = true
+    docked = false
+    try {
+      localStorage.removeItem(DOCK_KEY)
+    } catch {}
+    const t = dockTarget()
+    dock.classList.remove("is-shown", "is-pop")
+    setTimeout(() => (dock.hidden = true), 200)
+    keepInside() // 화면이 바뀌었어도 돌아갈 자리는 화면 안
+    root.classList.remove("is-docked", "is-sleeping")
+    const end = () => {
+      flying = false
+      apply()
+      save()
+      wake()
+      hop()
+      setTimeout(() => talk(pick(LINES.self.wakeUp)), 200)
+    }
+    if (reduce.matches) return end()
+    const anim = root.animate(arcFrames(t, pos, t.scale, 1, 10), { duration: 640, easing: EASE_OUT })
+    anim.onfinish = end
+  }
+  nap.addEventListener("click", goNap)
+  dock.addEventListener("click", wakeFromNap)
+  window.addEventListener("resize", () => {
+    if (docked) dock.hidden = false
+  })
+
   // ── 시작 ────────────────────────────────────────────────────
+  // 재워 둔 채로 떠났으면 다른 페이지에서도 계속 쉬는 중
+  try {
+    if (localStorage.getItem(DOCK_KEY)) {
+      docked = true
+      root.classList.add("is-docked", "is-sleeping")
+      showDock(false)
+    }
+  } catch {}
   restore()
   requestAnimationFrame(() => root.classList.add("is-ready"))
 })()
