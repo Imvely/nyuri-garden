@@ -39,15 +39,25 @@ def slug(path):
     return path.replace(" ", "-").lower()
 
 
+SECRET_DIRS = {"80 보안"}  # 이 폴더는 publish 가 켜져 있어도 절대 올리지 않는다
+
+
+def is_secret(text):
+    m = FM_RE.match(text)
+    return bool(m) and re.search(r"^보안:\s*true\s*$", m.group(1), re.M) is not None
+
+
 def is_publish(text):
     m = FM_RE.match(text)
+    if is_secret(text):
+        return False
     return bool(m) and re.search(r"^publish:\s*true\s*$", m.group(1), re.M) is not None
 
 
 # 볼트 안 파일 색인 (파일명 -> 경로). 옵시디언의 '가장 짧은 경로' 링크 해석용
 index = {}
 for p in vault.rglob("*"):
-    if p.is_file() and not SKIP_DIRS.intersection(p.parts):
+    if p.is_file() and not SKIP_DIRS.intersection(p.parts) and not SECRET_DIRS.intersection(p.parts):
         index.setdefault(p.name, p)
         index.setdefault(p.stem, p)
 
@@ -115,7 +125,7 @@ def copy_asset(src):
 
 
 for md in vault.rglob("*.md"):
-    if SKIP_DIRS.intersection(md.parts) or "Excalidraw" in md.parts:
+    if SKIP_DIRS.intersection(md.parts) or SECRET_DIRS.intersection(md.parts) or "Excalidraw" in md.parts:
         continue
     text = md.read_text(encoding="utf-8")
     if not is_publish(text):
