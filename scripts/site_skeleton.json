@@ -1,0 +1,27 @@
+{
+  "_설명": "블로그 뼈대. 글이 없어도 이 자리는 빈 페이지로 만든다. path 는 content/ 기준, title 은 탐색기와 페이지 제목. 보안 프로젝트는 뼈대만 두고 내용은 넣지 않는다.",
+  "pages": [
+    {"path": "연구/index.md", "title": "연구"},
+
+    {"path": "연구/얼굴 위조 방지 PAD/index.md", "title": "얼굴 위조 방지 (PAD) (보안 이슈로 비공개)"},
+    {"path": "연구/얼굴 위조 방지 PAD/00 허브.md", "title": "00 허브"},
+    {"path": "연구/얼굴 위조 방지 PAD/01 계획.md", "title": "01 계획"},
+    {"path": "연구/얼굴 위조 방지 PAD/실험/index.md", "title": "실험"},
+    {"path": "연구/얼굴 위조 방지 PAD/결과/index.md", "title": "결과"},
+    {"path": "연구/얼굴 위조 방지 PAD/개념/index.md", "title": "개념"},
+    {"path": "연구/얼굴 위조 방지 PAD/첨부/index.md", "title": "첨부"},
+
+    {"path": "연구/차량 번호판 탐지 모델/index.md", "title": "차량 번호판 탐지 모델 (보안 이슈로 비공개)"},
+    {"path": "연구/차량 번호판 탐지 모델/00 허브.md", "title": "00 허브"},
+    {"path": "연구/차량 번호판 탐지 모델/01 계획.md", "title": "01 계획"},
+    {"path": "연구/차량 번호판 탐지 모델/실험/index.md", "title": "실험"},
+    {"path": "연구/차량 번호판 탐지 모델/결과/index.md", "title": "결과"},
+    {"path": "연구/차량 번호판 탐지 모델/개념/index.md", "title": "개념"},
+    {"path": "연구/차량 번호판 탐지 모델/첨부/index.md", "title": "첨부"},
+
+    {"path": "IT 트렌드/index.md", "title": "IT 트렌드"},
+    {"path": "강의/index.md", "title": "강의"},
+    {"path": "아이디어/index.md", "title": "아이디어"},
+    {"path": "일지/index.md", "title": "일지"}
+  ]
+}

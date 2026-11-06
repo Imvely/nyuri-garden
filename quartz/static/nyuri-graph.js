@@ -49,21 +49,29 @@
 
     add("hub", { type: "hub", label: "뉴리의창고", href: "" })
     const slugs = Object.keys(index)
-    const notes = slugs.filter((s) => s !== "index" && !s.endsWith("/index") && !s.startsWith("tags/"))
+    // 내용 없는 자리표시 페이지(뼈대)는 점으로 그리지 않는다
+    const hasBody = (s) => String(index[s].content || "").trim().length > 0
+    const notes = slugs.filter((s) => s !== "index" && !s.endsWith("/index") && !s.startsWith("tags/") && hasBody(s))
+
+    // 폴더 (여러 단계면 차례로 잇는다). 글이 없는 폴더도 뼈대로 보여 준다
+    const folder = (f) => {
+      const parts = f.split("/")
+      let parent = "hub"
+      for (let i = 1; i <= parts.length; i++) {
+        const p = parts.slice(0, i).join("/")
+        const id = "folder:" + p
+        add(id, { type: "folder", label: index[p + "/index"]?.title || prettyName(parts[i - 1]), href: p + "/" })
+        link(parent, id, "tree")
+        parent = id
+      }
+      return parent
+    }
+    for (const s of slugs) if (s.endsWith("/index") && !s.startsWith("tags/")) folder(s.slice(0, -"/index".length))
 
     for (const s of notes) {
       const parts = s.split("/")
       add(s, { type: "note", label: index[s].title || prettyName(parts.at(-1)), href: s })
-      // 폴더 (여러 단계면 차례로 잇는다)
-      let parent = "hub"
-      for (let i = 1; i < parts.length; i++) {
-        const f = parts.slice(0, i).join("/")
-        const id = "folder:" + f
-        add(id, { type: "folder", label: index[f + "/index"]?.title || prettyName(parts[i - 1]), href: f + "/" })
-        link(parent, id, "tree")
-        parent = id
-      }
-      link(parent, s, "tree")
+      link(parts.length > 1 ? folder(parts.slice(0, -1).join("/")) : "hub", s, "tree")
     }
     for (const s of notes) {
       for (const t of index[s].tags || []) {
@@ -367,7 +375,7 @@
         if (isTag && view.s < 0.6 && !isFocus && !(focus && neighbors.has(n.id))) continue
         const [x, y] = P(n)
         const r = n.r * Math.min(1.25, Math.max(0.75, view.s))
-        const label = isFocus ? n.label : clip(n.label, n.type === "note" ? 22 : 14)
+        const label = isFocus ? n.label : clip(n.label, n.type === "note" ? 22 : n.type === "folder" ? 28 : 14)
         ctx.font = isTag ? `500 11.5px ${C.font}` : n.type === "note" ? `650 13.5px ${C.font}` : `600 12.5px ${C.font}`
         ctx.globalAlpha = lit(n.id) ? 1 : 0.2
         ctx.lineWidth = 4
@@ -580,7 +588,9 @@
       const counts = { note: 0, folder: 0, tag: 0 }
       G.nodes.forEach((n) => n.type in counts && counts[n.type]++)
       canvas.setAttribute("aria-label", `뉴리의창고 지식 그래프. 노트 ${counts.note}개, 폴더 ${counts.folder}개, 태그 ${counts.tag}개가 이어져 있어요.`)
-      const folder = G.nodes.find((n) => n.type === "folder")
+      // 노트가 가장 많이 달린 폴더로 안내한다
+      const noteCount = (f) => G.links.filter((l) => (l.a === f.id && byId.get(l.b)?.type === "note") || (l.b === f.id && byId.get(l.a)?.type === "note")).length
+      const folder = G.nodes.filter((n) => n.type === "folder" && noteCount(n) > 0).sort((x, y) => noteCount(y) - noteCount(x))[0]
       const more = host.querySelector(".ng-more")
       if (folder) {
         more.href = new URL(folder.href, siteRoot()).href

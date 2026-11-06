@@ -179,6 +179,8 @@ for md in vault.rglob("*.md"):
     text = LINK_RE.sub(fix_link, text)
     text = promote_h1(text)
     text = add_aliases(text, rel.with_suffix("").as_posix())
+    # 볼트 폴더 앞 정렬 번호("30 IT 트렌드")는 블로그 주소에서 뗀다
+    rel = Path(*[re.sub(r"^\d{2} ", "", part) for part in rel.parts])
     dst = content / rel
     dst.parent.mkdir(parents=True, exist_ok=True)
     dst.write_text(text, encoding="utf-8")
@@ -225,6 +227,19 @@ for folder, notes in folders.items():
     body = f'---\ntitle: "{name}"\n---\n\n' + (intro + "\n\n" if intro else "") + "\n".join(items) + "\n"
     (content / folder / "index.md").write_text(body, encoding="utf-8")
     published.append(f"{folder}/index.md")
+
+# ── 블로그 뼈대: 글이 없어도 자리는 빈 페이지로 둔다 (site_skeleton.json) ──
+_skel_file = root / "scripts" / "site_skeleton.json"
+if _skel_file.exists():
+    for page in _json.loads(_skel_file.read_text(encoding="utf-8")).get("pages", []):
+        rel = page["path"]
+        if rel in published:
+            continue
+        dst = content / rel
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        title = page["title"].replace('"', '\\"')
+        dst.write_text(f'---\ntitle: "{title}"\nplaceholder: true\n---\n', encoding="utf-8")
+        published.append(rel)
 
 # publish 가 풀린 노트는 content 에서 제거
 for md in content.rglob("*.md"):

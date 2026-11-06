@@ -47,7 +47,7 @@
     if (document.body.dataset.slug === "index") return
     if (!document.querySelector("h1.article-title")) return
     const article = document.querySelector(".center > article")
-    if (!article) return
+    if (!article || !article.textContent.trim()) return // 본문 없는 뼈대 페이지엔 붙이지 않음
 
     const url = location.href.split("#")[0]
     const title = (document.querySelector("h1.article-title")?.textContent || document.title).trim()

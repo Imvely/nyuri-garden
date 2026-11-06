@@ -158,6 +158,9 @@ plugins:
     enabled: true
   - source: "@quartz-community/explorer"
     enabled: true
+    options:
+      # 메뉴 순서: 연구, 논문 노트, IT 트렌드, 강의, 아이디어, 일지 / 프로젝트 안: 허브, 계획, 실험, 결과, 개념, 첨부
+      sortFn: "(a, b) => { const o = {'연구': 1, '논문-노트': 2, 'it-트렌드': 3, '강의': 4, '아이디어': 5, '일지': 6, '00-허브': 1, '01-계획': 2, '실험': 3, '결과': 4, '개념': 5, '첨부': 6}; const ka = o[a.slugSegment], kb = o[b.slugSegment]; if (ka && kb) return ka - kb; if (ka) return -1; if (kb) return 1; if (a.isFolder !== b.isFolder) return a.isFolder ? -1 : 1; return (a.displayName || '').localeCompare(b.displayName || '', undefined, { numeric: true, sensitivity: 'base' }) }"
     layout:
       position: left
       priority: 50
