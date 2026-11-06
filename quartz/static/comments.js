@@ -186,7 +186,16 @@
 
   function mountTop() {
     document.querySelectorAll(".nyuri-react").forEach((el) => el.remove())
-    const anchor = document.querySelector("article .content-meta, .page-header .content-meta") || document.querySelector("h1.article-title")
+    // 날짜 줄과 같은 줄 오른쪽 끝에 둔다 (제목 아래 줄이 하나 더 늘지 않게)
+    const meta = document.querySelector("article .content-meta, .page-header .content-meta")
+    let row = meta?.parentElement?.classList.contains("nyuri-meta-row") ? meta.parentElement : null
+    if (meta && !row) {
+      row = document.createElement("div")
+      row.className = "nyuri-meta-row"
+      meta.before(row)
+      row.append(meta)
+    }
+    const anchor = meta || document.querySelector("h1.article-title")
     if (!anchor) return
     const bar = document.createElement("div")
     bar.className = "nyuri-react"
@@ -194,8 +203,9 @@
     bar.setAttribute("aria-label", "이 노트의 반응")
     bar.innerHTML = `
       <button type="button" class="nyuri-like nyuri-react-btn">${HEART}<span class="nyuri-like-count"></span></button>
-      <a class="nyuri-react-btn nyuri-react-comments" href="#nc-title" data-router-ignore>${BUBBLE}<span>댓글</span><span class="nyuri-react-count"></span></a>`
-    anchor.after(bar)
+      <a class="nyuri-react-btn nyuri-react-comments" href="#nc-title" data-router-ignore>${BUBBLE}<span class="nyuri-react-count"></span></a>`
+    if (row) row.append(bar)
+    else anchor.after(bar)
     bar.querySelector(".nyuri-like").addEventListener("click", toggleLike)
     bar.querySelector(".nyuri-react-comments").addEventListener("click", (e) => {
       e.preventDefault()
