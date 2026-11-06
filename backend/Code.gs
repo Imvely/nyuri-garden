@@ -83,6 +83,7 @@ function setup() {
       "아래 링크를 내 브라우저에서 한 번 열면, 그 브라우저에서 남기는 댓글은 '뉴리'로 표시돼요.\n" +
       "이 링크는 다른 사람에게 보내지 마세요.\n\n" + link + "\n",
   })
+  Logger.log("데이터 시트: " + ss.getName() + " → " + ss.getUrl())
   Logger.log("관리자 키: " + key)
   Logger.log("주인 모드 링크: " + link)
 }
