@@ -1,13 +1,13 @@
 @use "./variables.scss" as *;
 
 // ─────────────────────────────────────────────────────────────
-// 뉴리의창고 · 따뜻한 손글씨 공부 노트
-// 제목은 손글씨(Gaegu), 본문은 Pretendard, 코드는 JetBrains Mono.
-// 프레임(제목·태그·콜아웃·여백)은 노트북 세계, 본문 칼럼은 차분하게.
-// ─────────────────────────────────────────────────────────────
-
-// 웹폰트(Gaegu, JetBrains Mono, Pretendard)는 scripts/postbuild.py 가 각 페이지 <head> 에 링크로 넣는다.
+// 뉴리의창고 · 차분한 손글씨 공부 노트
+// - 손글씨(Gaegu)는 사이트 이름 · 페이지 제목 · 큰 소제목에만
+// - 본문은 Pretendard, 넓은 칼럼, 따뜻한 중립색 + 차분한 호박색 하나
+// - 움직임은 페이지 제목의 형광펜 한 번뿐
+// 웹폰트 링크는 scripts/postbuild.py 가 각 페이지 <head> 에 넣는다
 // (Quartz 가 이 파일을 다른 CSS 뒤에 이어 붙여서 @import 는 쓸 수 없다)
+// ─────────────────────────────────────────────────────────────
 
 :root {
   --bodyFont: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
@@ -15,32 +15,26 @@
   --headerFont: "Gaegu", "Pretendard Variable", "Apple SD Gothic Neo", cursive;
   --codeFont: "JetBrains Mono", ui-monospace, "D2Coding", monospace;
 
-  // 노트 세계의 펜 색
-  --ink-amber: var(--secondary);
-  --ink-pink: var(--tertiary);
-  --paper-dot: rgba(244, 184, 96, 0.07);
-  --card: rgba(255, 244, 225, 0.035);
-  --card-line: rgba(244, 222, 190, 0.1);
-  --radius: 14px;
+  --accent: var(--secondary);
+  --surface: rgba(255, 240, 220, 0.035);
+  --line: rgba(240, 225, 200, 0.09);
+  --radius: 12px;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --measure: 42rem;
+  --measure: 52rem; // 본문 칼럼 폭
 }
 
 :root[saved-theme="light"] {
-  --paper-dot: rgba(180, 89, 15, 0.08);
-  --card: rgba(255, 255, 255, 0.6);
-  --card-line: rgba(90, 60, 30, 0.12);
+  --surface: rgba(120, 80, 30, 0.04);
+  --line: rgba(90, 60, 30, 0.12);
 }
 
-// ── 바탕: 모눈 노트처럼 아주 옅은 점 ──────────────────────────
+// ── 바탕과 브라우저 기본 요소 ────────────────────────────────
 html {
   scroll-padding-top: 1.5rem;
 }
 
 body {
   background-color: var(--light);
-  background-image: radial-gradient(var(--paper-dot) 1px, transparent 1.2px);
-  background-size: 22px 22px;
   color: var(--darkgray);
   -webkit-font-smoothing: antialiased;
   word-break: keep-all; // 한글은 단어 단위로 줄바꿈
@@ -53,7 +47,7 @@ body {
 }
 
 :focus-visible {
-  outline: 2px dashed var(--ink-amber);
+  outline: 2px solid var(--accent);
   outline-offset: 3px;
   border-radius: 6px;
 }
@@ -65,10 +59,10 @@ body {
 
 input,
 textarea {
-  caret-color: var(--ink-amber);
+  caret-color: var(--accent);
 }
 
-// ── 레이아웃: 회색 판 없애고 하나의 종이 위에 ─────────────────
+// ── 레이아웃: 회색 판 없이 한 장의 종이 ─────────────────────
 .page > #quartz-body {
   .sidebar {
     background: transparent;
@@ -84,7 +78,8 @@ textarea {
 
   .center {
     background: transparent;
-    padding-inline: clamp(1.1rem, 4vw, 3rem);
+    box-sizing: border-box;
+    padding-inline: clamp(1.1rem, 3vw, 2.25rem);
   }
 
   .center > article,
@@ -96,75 +91,24 @@ textarea {
   }
 }
 
-// 사이트 이름: 스티커처럼
 .page-title {
   font-family: var(--headerFont);
-  font-size: 2.5rem;
+  font-size: 2.2rem;
   font-weight: 700;
   line-height: 1.1;
   margin: 0;
 
   a {
     color: var(--dark);
-    display: inline-block;
-    padding: 0.1rem 0.5rem 0.2rem;
-    border-radius: 10px;
-    background: linear-gradient(transparent 58%, var(--textHighlight) 58%, var(--textHighlight) 90%, transparent 90%);
-    transform: rotate(-1.5deg);
-    transition: transform 0.4s var(--ease-out);
+    text-decoration: none;
 
     &:hover {
-      color: var(--dark);
-      transform: rotate(1deg) scale(1.03);
+      color: var(--accent);
     }
   }
 }
 
-// ── 본문 타이포그래피 ─────────────────────────────────────────
-article {
-  font-size: 1.0625rem;
-  line-height: 1.85;
-  letter-spacing: -0.003em;
-
-  p,
-  li {
-    text-wrap: pretty;
-  }
-
-  p {
-    margin-block: 0 1.05em;
-  }
-
-  ul,
-  ol {
-    padding-inline-start: 1.4rem;
-  }
-
-  li {
-    margin-block: 0.25em;
-  }
-
-  li::marker {
-    color: var(--ink-amber);
-    font-family: var(--headerFont);
-    font-weight: 700;
-  }
-
-  strong {
-    color: var(--dark);
-    font-weight: 700;
-  }
-
-  hr {
-    border: 0;
-    height: 14px;
-    margin: 2.5rem auto;
-    background: center / 120px 14px no-repeat
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 14'%3E%3Cpath d='M2 7c10-7 18 7 28 0s18 7 28 0 18 7 28 0 18 7 28 0' fill='none' stroke='%23f4b860' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
-    opacity: 0.6;
-  }
-}
-
+// ── 제목 ────────────────────────────────────────────────────
 h1,
 h2,
 h3,
@@ -172,118 +116,152 @@ h4,
 .article-title,
 article :is(h1, h2, h3, h4, h5, h6),
 .page > #quartz-body :is(h1, h2, h3, h4) {
-  font-family: var(--headerFont) !important;
   color: var(--dark);
   text-wrap: balance;
   letter-spacing: 0;
 }
 
-// 페이지 제목: 형광펜이 쓱 그어지는 한 번의 움직임
+// 손글씨는 페이지 제목과 큰 소제목에만
+h1.article-title,
+article :is(h1, h2) {
+  font-family: var(--headerFont) !important;
+}
+
+// 작은 소제목은 본문 폰트로 차분하게
+article :is(h3, h4, h5, h6) {
+  font-family: var(--bodyFont) !important;
+}
+
 h1.article-title {
-  font-size: clamp(2.5rem, 1.8rem + 2.6vw, 3.6rem);
+  font-size: clamp(2.4rem, 1.8rem + 2vw, 3.3rem);
   font-weight: 700;
   line-height: 1.12;
-  margin: 0.4rem 0 0.6rem;
-
-  span,
-  & {
-    background-image: linear-gradient(
-      100deg,
-      transparent 0.3em,
-      var(--textHighlight) 0.4em,
-      var(--textHighlight) calc(100% - 0.3em),
-      transparent calc(100% - 0.2em)
-    );
-    background-repeat: no-repeat;
-    background-position: 0 88%;
-    background-size: 100% 0.42em;
-    box-decoration-break: clone;
-    -webkit-box-decoration-break: clone;
-  }
+  margin: 0.4rem 0 0.5rem;
+  width: fit-content;
+  max-width: 100%;
+  background-image: linear-gradient(var(--textHighlight), var(--textHighlight));
+  background-repeat: no-repeat;
+  background-position: 0 86%;
+  background-size: 100% 0.36em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 @media (prefers-reduced-motion: no-preference) {
   h1.article-title {
-    animation: highlighter 0.9s 0.15s var(--ease-out) both;
+    animation: highlighter 0.8s 0.15s var(--ease-out) both;
   }
 }
 
 @keyframes highlighter {
   from {
-    background-size: 0% 0.42em;
+    background-size: 0% 0.36em;
   }
   to {
-    background-size: 100% 0.42em;
+    background-size: 100% 0.36em;
   }
 }
 
 article h1 {
-  font-size: 2.3rem;
+  font-size: 2.2rem;
   font-weight: 700;
   margin: 2.6rem 0 0.8rem;
 }
 
 article h2 {
-  font-size: 2.35rem;
+  font-size: 2.15rem;
   font-weight: 700;
   line-height: 1.2;
-  margin: 3.2rem 0 0.9rem;
-  display: flex;
-  align-items: baseline;
-  gap: 0.45rem;
-
-  // 손으로 찍은 점 하나
-  &::before {
-    content: "";
-    flex: none;
-    width: 0.42em;
-    height: 0.42em;
-    border-radius: 45% 55% 50% 50%;
-    background: var(--ink-pink);
-    transform: translateY(-0.12em) rotate(-12deg);
-  }
+  margin: 3.4rem 0 0.9rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--line);
 }
 
 article h3 {
-  font-size: 1.8rem;
+  font-size: 1.22rem;
   font-weight: 700;
-  line-height: 1.25;
-  color: var(--ink-amber);
+  line-height: 1.4;
   margin: 2.2rem 0 0.6rem;
 }
 
 article h4 {
-  font-size: 1.45rem;
+  font-size: 1.06rem;
+  font-weight: 700;
   margin: 1.8rem 0 0.4rem;
 }
 
-// 헤딩 옆 앵커 아이콘은 조용히
 article :is(h1, h2, h3, h4) a[role="anchor"] {
   opacity: 0;
 }
 
-// ── 링크: 펜으로 그은 밑줄 ────────────────────────────────────
+// ── 본문: 읽기 편하게 ───────────────────────────────────────
+article {
+  font-size: 1.075rem;
+  line-height: 1.85;
+  letter-spacing: -0.005em;
+  color: var(--darkgray);
+
+  p,
+  li {
+    text-wrap: pretty;
+  }
+
+  p {
+    margin-block: 0 1.15em;
+  }
+
+  ul,
+  ol {
+    padding-inline-start: 1.35rem;
+    margin-block: 0.4em 1.15em;
+  }
+
+  li {
+    margin-block: 0.3em;
+  }
+
+  li::marker {
+    color: var(--gray);
+  }
+
+  strong {
+    color: var(--dark);
+    font-weight: 650;
+  }
+
+  hr {
+    border: 0;
+    border-top: 1px solid var(--line);
+    margin: 2.5rem 0;
+  }
+
+  blockquote:not(.callout) {
+    border-left: 1px solid var(--line);
+    padding-left: 1rem;
+    color: var(--gray);
+  }
+}
+
+// ── 링크 ────────────────────────────────────────────────────
 a {
   font-weight: 600;
-  color: var(--ink-amber);
+  color: var(--accent);
   text-decoration-line: underline;
-  text-decoration-thickness: 1.5px;
-  text-underline-offset: 0.22em;
-  text-decoration-color: color-mix(in srgb, var(--ink-amber) 40%, transparent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.24em;
+  text-decoration-color: color-mix(in srgb, var(--accent) 35%, transparent);
   transition:
     color 0.2s ease,
-    text-decoration-color 0.2s ease,
-    background-color 0.2s ease;
+    text-decoration-color 0.2s ease;
 
   &:hover {
-    color: var(--ink-pink);
-    text-decoration-color: var(--ink-pink);
+    color: var(--tertiary);
+    text-decoration-color: currentColor;
   }
 
   &.internal {
     background-color: transparent;
     padding: 0;
-    border-radius: 4px;
   }
 }
 
@@ -296,158 +274,106 @@ a.tag-link,
   text-decoration: none;
 }
 
-// ── 메타 정보와 경로 ─────────────────────────────────────────
+// ── 메타 정보 · 경로 · 태그 ─────────────────────────────────
 .content-meta {
   color: var(--gray);
-  font-size: 0.92rem;
-  margin: 0 0 0.4rem;
+  font-size: 0.9rem;
+  margin: 0 0 0.5rem;
 }
 
 .breadcrumb-container {
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   margin: 0 0 0.6rem;
-  color: var(--gray);
 
   .breadcrumb-element p {
     color: var(--gray);
   }
 }
 
-// ── 태그: 손으로 붙인 스티커 ─────────────────────────────────
 ul.tags {
-  gap: 0.5rem;
-  margin: 0.4rem 0 2rem;
+  gap: 0.4rem;
+  margin: 0.3rem 0 2.2rem;
   padding: 0;
   flex-wrap: wrap;
 
   li {
     margin: 0;
-
-    &:nth-child(odd) a.tag-link {
-      transform: rotate(-2deg);
-    }
-    &:nth-child(even) a.tag-link {
-      transform: rotate(1.5deg);
-    }
-    &:nth-child(3n) a.tag-link {
-      background: color-mix(in srgb, var(--ink-pink) 18%, transparent);
-      color: var(--dark);
-    }
   }
 }
 
 a.tag-link,
 a.internal.tag-link {
   display: inline-block;
-  font-family: var(--headerFont);
-  font-size: 1.22rem;
-  font-weight: 700;
+  font-size: 0.82rem;
+  font-weight: 500;
   line-height: 1;
-  padding: 0.42rem 0.8rem 0.36rem;
+  padding: 0.38rem 0.6rem;
   border-radius: 999px;
-  color: var(--dark);
-  background: color-mix(in srgb, var(--ink-amber) 20%, transparent);
-  border: 1px dashed color-mix(in srgb, var(--ink-amber) 45%, transparent);
-  text-decoration: none;
-  transition: transform 0.35s var(--ease-out);
+  color: var(--gray);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease;
 
   &:hover {
     color: var(--dark);
-    transform: rotate(0deg) translateY(-2px) scale(1.06) !important;
+    border-color: color-mix(in srgb, var(--accent) 45%, transparent);
   }
 }
 
-// ── 콜아웃: 포스트잇 메모 ───────────────────────────────────
-.callout {
-  border: 1px solid color-mix(in srgb, var(--color) 28%, transparent);
-  background: color-mix(in srgb, var(--color) 9%, transparent);
+// ── 콜아웃: 모두 같은 차분한 메모 ───────────────────────────
+.callout,
+.callout[data-callout] {
+  --color: var(--accent);
+  --border: var(--line);
+  --bg: var(--surface);
+  border: 1px solid var(--line);
+  background: var(--surface);
   border-radius: var(--radius);
-  padding: 0.35rem 1.15rem 0.2rem;
+  padding: 0.3rem 1.15rem 0.15rem;
   margin: 1.6rem 0;
-  box-shadow: 0 6px 18px -12px rgba(0, 0, 0, 0.6);
-
-  &[data-callout="abstract"],
-  &[data-callout="summary"],
-  &[data-callout="tldr"] {
-    --color: #f4b860;
-  }
-  &[data-callout="tip"],
-  &[data-callout="hint"] {
-    --color: #8fd3b6;
-  }
-  &[data-callout="note"] {
-    --color: #9ec1f2;
-  }
-  &[data-callout="example"] {
-    --color: #c9a7f2;
-  }
-  &[data-callout="success"] {
-    --color: #9ed98f;
-  }
-  &[data-callout="warning"] {
-    --color: #f39aa8;
-  }
 
   .callout-title {
-    font-family: var(--headerFont);
-    font-size: 1.5rem;
+    font-family: var(--bodyFont);
+    font-size: 0.98rem;
     font-weight: 700;
-    color: var(--color);
-    padding: 0.6rem 0 0.15rem;
+    color: var(--dark);
+    padding: 0.7rem 0 0.1rem;
     gap: 0.45rem;
     align-items: center;
 
+    .callout-icon {
+      color: var(--accent);
+    }
+
     .callout-title-inner > p {
       margin: 0;
-      color: var(--color);
+      color: var(--dark);
       font-weight: 700;
     }
   }
 
-  .callout-content > :first-child {
-    margin-top: 0.15rem;
-  }
-
   .callout-content {
     color: var(--darkgray);
+
+    & > :first-child {
+      margin-top: 0.15rem;
+    }
   }
 }
 
-:root[saved-theme="light"] .callout {
-  &[data-callout="abstract"],
-  &[data-callout="summary"] {
-    --color: #b4590f;
-  }
-  &[data-callout="tip"] {
-    --color: #1f7a5a;
-  }
-  &[data-callout="note"] {
-    --color: #2c5fa8;
-  }
-  &[data-callout="example"] {
-    --color: #6d3fb0;
-  }
-  &[data-callout="success"] {
-    --color: #2f7a1f;
-  }
-  &[data-callout="warning"] {
-    --color: #b02c48;
-  }
-}
-
-// ── 그림: 사진을 노트에 붙인 느낌 ────────────────────────────
+// ── 그림 ────────────────────────────────────────────────────
 article img {
   border-radius: var(--radius);
-  box-shadow: 0 10px 30px -18px rgba(0, 0, 0, 0.7);
   background: #fff;
 }
 
-// ── 표: 둥근 카드 + 가로 스크롤 ──────────────────────────────
+// ── 표 ──────────────────────────────────────────────────────
 .table-container {
   margin: 1.4rem 0 1.8rem;
   border-radius: var(--radius);
-  border: 1px solid var(--card-line);
-  background: var(--card);
+  border: 1px solid var(--line);
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 
@@ -461,13 +387,12 @@ article img {
 
 table {
   th {
-    font-family: var(--headerFont);
-    font-size: 1.35rem;
+    font-size: 0.9rem;
     font-weight: 700;
-    color: var(--ink-amber);
+    color: var(--gray);
     text-align: left;
-    background: color-mix(in srgb, var(--ink-amber) 8%, transparent);
-    border-bottom: 1px dashed var(--card-line);
+    background: var(--surface);
+    border-bottom: 1px solid var(--line);
   }
 
   th,
@@ -478,7 +403,7 @@ table {
   }
 
   tr + tr td {
-    border-top: 1px solid var(--card-line);
+    border-top: 1px solid var(--line);
   }
 
   td {
@@ -486,108 +411,87 @@ table {
   }
 }
 
-// ── 코드 ─────────────────────────────────────────────────────
+// ── 코드 · 수식 ─────────────────────────────────────────────
 code {
   font-family: var(--codeFont);
   font-size: 0.86em;
   padding: 0.12em 0.4em;
   border-radius: 6px;
-  background: color-mix(in srgb, var(--ink-amber) 11%, transparent);
+  background: var(--surface);
+  border: 1px solid var(--line);
   color: var(--dark);
   word-break: break-word;
 }
 
 pre > code {
   background: transparent;
+  border: 0;
   padding: 0;
 }
 
 pre {
   border-radius: var(--radius);
-  border: 1px solid var(--card-line);
+  border: 1px solid var(--line);
 }
 
-// 수식
 .katex-display {
   overflow-x: auto;
   overflow-y: hidden;
   padding: 0.5rem 0;
 }
 
-// ── 사이드바 위젯: 탐색기 · 목차 · 백링크 ────────────────────
+// ── 사이드바 위젯 ───────────────────────────────────────────
 .explorer,
 .toc,
 .backlinks {
   h2,
   h3,
-  .folder-title,
-  button.title-button h2,
-  & > button h2 {
-    font-family: var(--headerFont);
-    font-size: 1.6rem;
+  & > button h2,
+  button.title-button h2 {
+    font-family: var(--bodyFont) !important;
+    font-size: 0.82rem;
     font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--gray);
+  }
+}
+
+.explorer li a {
+  display: block;
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  color: var(--darkgray);
+  font-weight: 500;
+  line-height: 1.45;
+  transition: background-color 0.2s ease;
+
+  &:hover,
+  &.active {
+    background: var(--surface);
     color: var(--dark);
   }
 }
 
-.explorer {
-  .explorer-content ul li > a,
-  li a {
-    display: block;
-    padding: 0.4rem 0.6rem;
-    border-radius: 10px;
-    color: var(--darkgray);
-    font-weight: 500;
-    line-height: 1.45;
-    transition: background-color 0.2s ease;
+.toc ul li a {
+  display: block;
+  padding: 0.28rem 0 0.28rem 0.75rem;
+  border-left: 1px solid var(--line);
+  color: var(--gray);
+  font-weight: 500;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  opacity: 1;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease;
 
-    &:hover,
-    &.active {
-      background: color-mix(in srgb, var(--ink-amber) 12%, transparent);
-      color: var(--dark);
-    }
+  &.in-view {
+    color: var(--dark);
+    border-left-color: var(--accent);
   }
-}
 
-.toc {
-  ul li a {
-    display: block;
-    padding: 0.28rem 0 0.28rem 0.8rem;
-    border-radius: 0 8px 8px 0;
-    color: var(--gray);
-    font-weight: 500;
-    font-size: 0.93rem;
-    line-height: 1.45;
-    position: relative;
-    opacity: 1;
-
-    &::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 50%;
-      width: 4px;
-      height: 4px;
-      border-radius: 50%;
-      background: var(--lightgray);
-      transform: translateY(-50%);
-      transition:
-        background-color 0.25s ease,
-        transform 0.35s var(--ease-out);
-    }
-
-    &.in-view {
-      color: var(--dark);
-
-      &::before {
-        background: var(--ink-pink);
-        transform: translateY(-50%) scale(1.8);
-      }
-    }
-
-    &:hover {
-      color: var(--ink-amber);
-    }
+  &:hover {
+    color: var(--dark);
   }
 }
 
@@ -596,12 +500,11 @@ pre {
   padding: 0.3rem 0;
 }
 
-// 검색창
 .search > .search-button {
   border-radius: 999px;
-  background: var(--card);
-  border: 1px solid var(--card-line);
-  min-height: 2.6rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  min-height: 2.5rem;
   padding-inline: 0.9rem;
 
   p {
@@ -610,31 +513,35 @@ pre {
 }
 
 .search > .search-container > .search-space {
-  border-radius: 18px;
+  border-radius: 16px;
 }
 
-// 다크모드·읽기모드 토글: 손가락으로 누르기 좋게
 .darkmode,
 .readermode {
-  min-width: 2.6rem;
-  min-height: 2.6rem;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
   border-radius: 999px;
   display: grid;
   place-items: center;
   transition: background-color 0.2s ease;
 
   &:hover {
-    background: color-mix(in srgb, var(--ink-amber) 14%, transparent);
+    background: var(--surface);
   }
 }
 
-// ── 푸터: 템플릿 문구 대신 노트 서명 ─────────────────────────
+// ── 푸터 ────────────────────────────────────────────────────
 footer {
   text-align: left;
   opacity: 1;
   margin-top: 4rem;
   padding-top: 1.4rem;
-  border-top: 1px dashed var(--card-line);
+  border-top: 1px solid var(--line);
+
+  & > * {
+    max-width: var(--measure);
+    margin-inline: auto !important;
+  }
 
   & > p {
     font-size: 0;
@@ -642,24 +549,45 @@ footer {
     &::before {
       content: "뉴리의창고 · 손으로 정리한 공부 노트";
       font-family: var(--headerFont);
-      font-size: 1.35rem;
+      font-size: 1.2rem;
       color: var(--gray);
     }
   }
 
   ul {
-    margin-top: 0.4rem;
+    margin-top: 0.3rem;
     gap: 0.9rem;
   }
 
   ul li a {
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     color: var(--gray);
   }
 }
 
-// ── 반응형 ──────────────────────────────────────────────────
-// 태블릿: 왼쪽 사이드바 + 본문, 오른쪽 위젯은 본문 아래로
+// ── 홈 ──────────────────────────────────────────────────────
+body[data-slug="index"] {
+  .content-meta {
+    display: none;
+  }
+
+  article {
+    & > p:first-of-type {
+      font-size: 1.12rem;
+    }
+
+    ul > li {
+      margin-block: 0.9rem;
+
+      & > a {
+        font-size: 1.15rem;
+        font-weight: 700;
+      }
+    }
+  }
+}
+
+// ── 태블릿: 왼쪽 메뉴 + 본문, 위젯은 본문 아래로 ─────────────
 @media all and ($tablet) {
   .page > #quartz-body {
     .sidebar.left {
@@ -667,7 +595,8 @@ footer {
     }
 
     .sidebar.right {
-      padding-inline: clamp(1.1rem, 4vw, 3rem);
+      box-sizing: border-box;
+      padding-inline: clamp(1.1rem, 3vw, 2.25rem);
       max-width: var(--measure);
       margin-inline: auto;
       flex-direction: column;
@@ -676,42 +605,68 @@ footer {
   }
 }
 
-// 모바일: 위쪽 바는 한 줄로, 본문은 화면을 넉넉하게
+// ── 모바일: 한 줄 고정 상단 바, 넉넉한 본문 ──────────────────
 @media all and ($mobile) {
   article {
     font-size: 1.03rem;
     line-height: 1.8;
   }
 
-  .page-title {
-    font-size: 2rem;
-  }
-
   h1.article-title {
-    font-size: clamp(2.3rem, 9vw, 2.9rem);
+    font-size: clamp(2.2rem, 8.5vw, 2.7rem);
   }
 
   article h2 {
-    font-size: 2rem;
+    font-size: 1.85rem;
     margin-top: 2.6rem;
-  }
-
-  article h3 {
-    font-size: 1.6rem;
   }
 
   .page > #quartz-body {
     .sidebar.left {
-      padding: 1rem 1.1rem 0.6rem;
+      box-sizing: border-box;
+      width: 100%;
+      max-width: 100vw;
+      flex-wrap: nowrap;
+      padding: 0.9rem 1.1rem 0.6rem;
       gap: 0.6rem;
       align-items: center;
       position: sticky;
       top: 0;
       z-index: 10;
-      background: color-mix(in srgb, var(--light) 88%, transparent);
-      backdrop-filter: saturate(1.2) blur(10px);
-      -webkit-backdrop-filter: saturate(1.2) blur(10px);
-      border-bottom: 1px dashed var(--card-line);
+      background: color-mix(in srgb, var(--light) 92%, transparent);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line);
+
+      & > * {
+        min-width: 0;
+      }
+
+      .page-title {
+        font-size: 1.65rem;
+        flex: none;
+      }
+
+      .flex-component {
+        flex: 1 1 auto;
+        min-width: 0;
+        gap: 0.25rem;
+      }
+
+      .search {
+        flex: 1 1 auto;
+        min-width: 0;
+
+        & > .search-button {
+          width: 100%;
+          min-width: 0;
+          padding-inline: 0.7rem;
+        }
+      }
+
+      .readermode {
+        display: none;
+      }
     }
 
     .sidebar.right {
@@ -724,27 +679,24 @@ footer {
     }
   }
 
+  .page-header,
+  article {
+    max-width: 100%;
+    min-width: 0;
+  }
+
   .callout {
     padding-inline: 0.95rem;
-    margin-inline: -0.15rem;
   }
 
   table th,
   table td {
     padding: 0.6rem 0.8rem;
-    white-space: normal;
     min-width: 6.5rem;
   }
 
   footer {
     margin-top: 2.5rem;
-  }
-}
-
-@media (hover: none) {
-  a.tag-link:hover,
-  .page-title a:hover {
-    transform: none !important;
   }
 }
 
@@ -756,105 +708,29 @@ footer {
   }
 }
 
-// ── 2차 다듬기 ───────────────────────────────────────────────
-// 형광펜은 글자 길이만큼만
-h1.article-title {
-  width: fit-content;
-  max-width: 100%;
+// 본문 글자 크기를 Quartz 기본값(문단 0.98rem)보다 확실히 크게
+article :is(p, li, td, blockquote) {
+  font-size: 1.075rem;
+  line-height: 1.85;
 }
 
-// 푸터를 본문 칼럼에 맞춰 정렬
-.page > #quartz-body > footer,
-.page > #quartz-body .page-footer,
-footer {
-  max-width: var(--measure);
-  width: 100%;
-  margin-inline: auto;
-  box-sizing: border-box;
-  padding-inline: clamp(1.1rem, 4vw, 3rem);
+article .callout .callout-content :is(p, li) {
+  font-size: 1.03rem;
 }
 
-// 홈 화면엔 읽는 시간 표시가 필요 없다
-body[data-slug="index"] .content-meta {
-  display: none;
-}
-
-// 홈의 노트 목록은 조금 더 크게
-body[data-slug="index"] article {
-  & > p:first-of-type {
-    font-size: 1.12rem;
-    color: var(--darkgray);
-  }
-
-  ul > li {
-    margin-block: 0.9rem;
-
-    & > a {
-      font-family: var(--headerFont);
-      font-size: 1.55rem;
-      font-weight: 700;
-      line-height: 1.25;
-    }
-  }
-}
-
-// 모바일 가로 넘침 방지: 여백을 너비 안으로, 상단 바는 줄어들 수 있게
-.page > #quartz-body .center {
-  box-sizing: border-box;
+article td {
+  font-size: 0.98rem;
+  line-height: 1.6;
 }
 
 @media all and ($mobile) {
-  .page > #quartz-body .sidebar.left {
-    box-sizing: border-box;
-    width: 100%;
-    max-width: 100vw;
-    flex-wrap: nowrap;
-
-    & > * {
-      min-width: 0;
-    }
-
-    .page-title {
-      font-size: 1.7rem;
-      flex: none;
-    }
-
-    .flex-component {
-      flex: 1 1 auto;
-      min-width: 0;
-      gap: 0.25rem;
-    }
-
-    .search {
-      flex: 1 1 auto;
-      min-width: 0;
-
-      & > .search-button {
-        width: 100%;
-        min-width: 0;
-        padding-inline: 0.7rem;
-      }
-    }
-
-    // 읽기 모드는 작은 화면에서 의미가 적어 숨긴다
-    .readermode {
-      display: none;
-    }
-  }
-
-  ul.tags {
-    max-width: 100%;
-  }
-
-  .page-header,
-  article {
-    max-width: 100%;
-    min-width: 0;
+  article :is(p, li) {
+    font-size: 1.03rem;
+    line-height: 1.8;
   }
 }
 
-// 푸터 내용을 본문 칼럼과 같은 선에서 시작
-footer > * {
-  max-width: var(--measure);
-  margin-inline: auto !important;
+// 표 머리글은 본문 폰트로 (Quartz 기본이 제목 폰트를 쓴다)
+table th {
+  font-family: var(--bodyFont) !important;
 }
