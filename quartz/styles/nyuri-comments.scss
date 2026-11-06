@@ -664,15 +664,3 @@
     pointer-events: none;
   }
 }
-
-// 기록 안내: 입력칸 아래 아주 작게
-.nc-privacy {
-  margin: 0;
-  font-size: 0.76rem;
-  line-height: 1.5;
-  color: var(--gray);
-}
-
-.nc-composer .nc-form:not(.is-open) > .nc-privacy {
-  display: none;
-}

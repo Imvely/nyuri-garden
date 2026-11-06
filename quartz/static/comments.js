@@ -268,7 +268,6 @@
         </div>
       </div>
       <p class="nc-status" role="status" aria-live="polite"></p>
-      ${kind === "new" && !owner ? '<p class="nc-privacy">남긴 글에는 작성 시각과 IP 앞 두 자리가 함께 보여요. 관리를 위해 전체 IP가 기록돼요.</p>' : ""}
     </form>`
   }
 
