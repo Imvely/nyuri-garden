@@ -138,23 +138,82 @@
   min-height: 3rem;
 }
 
+// 이름표 붙은 칸들 + 오른쪽 버튼 묶음. 버튼은 칸의 아래선에 맞춘다.
 .nc-row {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
+  align-items: flex-end;
+  gap: 0.6rem 0.75rem;
+}
 
-  input[type="text"] {
-    flex: 1 1 10rem;
-  }
+.nc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1 1 13rem;
+  min-width: 0;
 
-  input[type="password"] {
-    flex: 1 1 12rem;
+  input {
+    width: 100%;
+    box-sizing: border-box;
   }
 }
 
-.nc-spacer {
-  flex: 1 1 0;
+.nc-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--darkgray);
+
+  em {
+    font-style: normal;
+    font-weight: 500;
+    color: var(--gray);
+    margin-left: 0.2rem;
+  }
+}
+
+.nc-buttons {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+// 비밀번호 칸 오른쪽 눈 아이콘
+.nc-pw {
+  position: relative;
+  display: block;
+
+  input {
+    padding-right: 2.75rem !important;
+  }
+}
+
+.nc-eye {
+  position: absolute;
+  top: 50%;
+  right: 0.3rem;
+  transform: translateY(-50%);
+  width: 2.25rem;
+  height: 2.25rem;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--gray);
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease;
+
+  &:hover,
+  &[aria-pressed="true"] {
+    color: var(--dark);
+  }
+
+  &:hover {
+    background: var(--surface);
+  }
 }
 
 .nc-as-owner {
@@ -380,13 +439,15 @@
     font-size: 1.8rem;
   }
 
-  .nc-row {
-    .nc-spacer {
-      display: none;
-    }
+  .nc-field {
+    flex-basis: 100%;
+  }
 
-    .nc-submit {
-      flex: 1 1 100%;
+  .nc-buttons {
+    flex: 1 1 100%;
+
+    button {
+      flex: 1 1 0;
     }
   }
 

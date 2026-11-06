@@ -176,44 +176,97 @@
     </li>`
   }
 
+  const EYE =
+    '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>'
+  const EYE_OFF =
+    '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.9 17.9A10.4 10.4 0 0 1 12 19c-6.4 0-10-7-10-7a18.5 18.5 0 0 1 5.1-5.9"/><path d="M9.9 5.2A9.6 9.6 0 0 1 12 5c6.4 0 10 7 10 7a18.6 18.6 0 0 1-2.2 3.2"/><path d="M14.1 14.1a3 3 0 1 1-4.2-4.2"/><path d="m2 2 20 20"/></svg>'
+
+  let fieldSeq = 0
+  // 이름표가 붙은 입력칸 (이름표 + 도움말 + 칸)
+  function field({ label, hint, input }) {
+    return `<label class="nc-field">
+      <span class="nc-label">${label}${hint ? ` <em>${hint}</em>` : ""}</span>
+      ${input}
+    </label>`
+  }
+  // 비밀번호 칸 + 오른쪽 눈 아이콘(누르면 보이기/가리기)
+  function passwordInput({ autocomplete, placeholder }) {
+    const id = `nc-pw-${++fieldSeq}`
+    return `<span class="nc-pw">
+      <input id="${id}" type="password" name="password" minlength="4" autocomplete="${autocomplete}" placeholder="${placeholder}" required>
+      <button type="button" class="nc-eye" data-eye aria-controls="${id}" aria-pressed="false" aria-label="비밀번호 보기">${EYE}</button>
+    </span>`
+  }
+
   function formHTML({ kind, value = "" }) {
     const owner = !!adminKey()
     const isEdit = kind === "edit"
     const isDelete = kind === "delete"
+    const existingPw = () =>
+      field({
+        label: "비밀번호",
+        hint: "댓글을 남길 때 정한 비밀번호",
+        input: passwordInput({ autocomplete: "current-password", placeholder: "비밀번호 입력" }),
+      })
     if (isDelete) {
       return `<form class="nc-inline nc-delete" novalidate>
-        <p class="nc-confirm">이 댓글을 지울까요? 남길 때 정한 비밀번호를 적어 주세요.</p>
-        <div class="nc-row">
-          ${owner ? "" : `<input type="password" name="password" autocomplete="current-password" placeholder="비밀번호" aria-label="비밀번호" required>`}
-          <button type="submit" class="nc-danger">삭제</button>
-          <button type="button" class="nc-ghost" data-act="cancel">취소</button>
+        <p class="nc-confirm">이 댓글을 지울까요?</p>
+        <div class="nc-row nc-row-end">
+          ${owner ? "" : existingPw()}
+          <div class="nc-buttons">
+            <button type="button" class="nc-ghost" data-act="cancel">취소</button>
+            <button type="submit" class="nc-danger">삭제</button>
+          </div>
         </div>
         <p class="nc-status" role="status" aria-live="polite"></p>
       </form>`
     }
+    const who = isEdit
+      ? owner
+        ? ""
+        : existingPw()
+      : owner
+        ? `<span class="nc-as-owner"><img src="${root()}static/nyuri.svg" alt="">뉴리로 남겨요</span>`
+        : field({
+            label: "닉네임",
+            hint: "선택",
+            input: `<input type="text" name="nickname" maxlength="20" autocomplete="nickname" placeholder="비워 두면 ‘${esc(randomNick)}’(으)로 남겨져요">`,
+          }) +
+          field({
+            label: "비밀번호",
+            hint: "나중에 수정·삭제할 때 필요해요",
+            input: passwordInput({ autocomplete: "new-password", placeholder: "4자 이상" }),
+          })
     return `<form class="nc-form${kind === "reply" ? " nc-inline" : ""}${isEdit ? " nc-inline" : ""}" novalidate>
       <label class="nc-sr" for="nc-${kind}-body">${isEdit ? "고칠 내용" : kind === "reply" ? "답글" : "댓글"}</label>
       <textarea id="nc-${kind}-body" name="body" rows="${kind === "new" ? 3 : 2}" maxlength="2000" placeholder="${
         kind === "reply" ? "답글을 적어 주세요" : isEdit ? "" : "이 노트에 대한 생각이나 질문을 남겨 주세요"
       }" required>${esc(value)}</textarea>
-      <div class="nc-row">
-        ${
-          isEdit
-            ? owner
-              ? ""
-              : `<input type="password" name="password" autocomplete="current-password" placeholder="비밀번호" aria-label="비밀번호" required>`
-            : owner
-              ? `<span class="nc-as-owner"><img src="${root()}static/nyuri.svg" alt="">뉴리로 남겨요</span>`
-              : `<input type="text" name="nickname" maxlength="20" autocomplete="nickname" placeholder="${esc(randomNick)}" aria-label="닉네임 (비우면 ${esc(randomNick)})">
-                 <input type="password" name="password" minlength="4" autocomplete="new-password" placeholder="비밀번호 (수정·삭제용)" aria-label="비밀번호 (수정·삭제용)" required>`
-        }
-        <span class="nc-spacer"></span>
-        ${kind === "new" ? "" : `<button type="button" class="nc-ghost" data-act="cancel">취소</button>`}
-        <button type="submit" class="nc-submit">${isEdit ? "저장" : kind === "reply" ? "답글 남기기" : "댓글 남기기"}</button>
+      <div class="nc-row nc-row-end">
+        ${who}
+        <div class="nc-buttons">
+          ${kind === "new" ? "" : `<button type="button" class="nc-ghost" data-act="cancel">취소</button>`}
+          <button type="submit" class="nc-submit">${isEdit ? "저장" : kind === "reply" ? "답글 남기기" : "댓글 남기기"}</button>
+        </div>
       </div>
       <p class="nc-status" role="status" aria-live="polite"></p>
     </form>`
   }
+
+  // 눈 아이콘: 누르면 비밀번호 보이기/가리기 (모든 폼에 공통)
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest(".nyuri-comments [data-eye]")
+    if (!btn) return
+    e.preventDefault()
+    const input = document.getElementById(btn.getAttribute("aria-controls"))
+    if (!input) return
+    const show = input.type === "password"
+    input.type = show ? "text" : "password"
+    btn.setAttribute("aria-pressed", String(show))
+    btn.setAttribute("aria-label", show ? "비밀번호 가리기" : "비밀번호 보기")
+    btn.innerHTML = show ? EYE_OFF : EYE
+    input.focus({ preventScroll: true })
+  })
 
   function setStatus(form, text, isError) {
     const el = form.querySelector(".nc-status")
