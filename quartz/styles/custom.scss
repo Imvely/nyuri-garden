@@ -1189,6 +1189,8 @@ table th {
 
 .nyuri-locked-title {
   margin: 0 0 0.5rem !important;
+  padding: 0 !important;
+  border: 0 !important;
   font-family: var(--headerFont) !important;
   font-size: 1.85rem !important;
   line-height: 1.2;
@@ -1246,6 +1248,10 @@ table th {
 }
 
 // ── 404: 길 잃은 상자 뉴리 (비공개 안내와 같은 재질) ──
+.nyuri-lost {
+  margin-top: 3rem;
+}
+
 .nyuri-lost .nyuri-locked-art img {
   transform: rotate(-8deg);
 }

@@ -16,7 +16,9 @@
 
   const siteRoot = () => {
     const a = document.querySelector(".page-title a")
-    return a ? new URL(a.getAttribute("href"), location.href).href : location.origin + "/"
+    if (a) return new URL(a.getAttribute("href"), location.href).href
+    // 404 처럼 사이트 제목이 없는 페이지는 body 의 basepath 로
+    return location.origin + (document.body.dataset.basepath || "") + "/"
   }
 
   async function copy(text, btn) {
