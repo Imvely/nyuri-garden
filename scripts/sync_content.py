@@ -42,6 +42,10 @@ def slug(path):
 # 이 폴더들은 publish 가 켜져 있어도 절대 올리지 않는다 (보안 연구)
 SECRET_DIRS = {"80 보안", "얼굴 위조 방지 (PAD)", "차량 번호판 탐지 모델"}
 
+# 이 폴더와 계획 노트는 보안은 아니지만 블로그에 올리지 않는다 (수신함, 노트 틀, 보관)
+NEVER_DIRS = {"00 수신함", "90 템플릿", "99 보관"}
+NEVER_NAMES = {"01 계획.md"}
+
 # 볼트 경로 -> 블로그 경로: 앞 정렬 번호를 떼고, 이름이 다른 대분류는 바꾼다
 SITE_FOLDER_MAP = {"논문": "논문 노트"}
 
@@ -137,6 +141,8 @@ def copy_asset(src):
 
 for md in vault.rglob("*.md"):
     if SKIP_DIRS.intersection(md.parts) or SECRET_DIRS.intersection(md.parts) or "Excalidraw" in md.parts:
+        continue
+    if NEVER_DIRS.intersection(md.relative_to(vault).parts) or md.name in NEVER_NAMES:
         continue
     text = md.read_text(encoding="utf-8")
     if not is_publish(text):
