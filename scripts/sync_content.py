@@ -135,8 +135,8 @@ for md in vault.rglob("*.md"):
                 + "&fallback=" + quote(slug(png.relative_to(vault).as_posix()))
                 + "&back=" + quote(slug(rel.with_suffix("").as_posix()))
                 + "&title=" + quote(base))
-        # data-router-ignore: Quartz SPA 전환을 타지 않고 페이지를 새로 연다
-        return f'<a href="{link}" data-router-ignore>{label}</a>'
+        # 새 창으로 연다 (data-router-ignore: Quartz SPA 전환을 타지 않는다)
+        return f'<a href="{link}" target="_blank" rel="noopener" data-router-ignore>{label}</a>'
 
     def fix_embed(m):
         src = resolve(m.group(1))

@@ -102,6 +102,15 @@
   // 채팅창은 root(transform 으로 움직임) 밖에 둬야 모바일 하단 시트가 화면 기준으로 붙는다
   chat.setAttribute("data-persist", "")
   document.body.appendChild(chat)
+
+  // 글을 옮겨 다닐 때 사이트가 body 내용을 새 페이지로 바꿔 끼우면서 뉴리펫도 같이 빠진다.
+  // 빠지는 즉시 다시 붙여서 어느 페이지에서든 계속 보이게 한다 (위치·상태는 그대로).
+  const keepMounted = () => {
+    if (!root.isConnected) document.body.appendChild(root)
+    if (!chat.isConnected) document.body.appendChild(chat)
+  }
+  new MutationObserver(keepMounted).observe(document.body, { childList: true })
+  document.addEventListener("nav", keepMounted)
   const form = chat.querySelector(".np-form")
   const done = chat.querySelector(".np-done")
   const statusEl = chat.querySelector(".np-status")

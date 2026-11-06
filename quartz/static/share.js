@@ -98,6 +98,14 @@
   }
   new MutationObserver(explorerTitles).observe(document.documentElement, { childList: true, subtree: true })
 
+  // 마인드맵 뷰어 링크는 언제나 새 창으로
+  const viewerLinksNewTab = () =>
+    document.querySelectorAll('a[href*="static/viewer.html"]').forEach((a) => {
+      a.target = "_blank"
+      a.rel = "noopener"
+      a.setAttribute("data-router-ignore", "")
+    })
+  document.addEventListener("nav", viewerLinksNewTab)
   document.addEventListener("nav", explorerTitles)
   document.addEventListener("nav", build)
   if (document.readyState !== "loading") {
