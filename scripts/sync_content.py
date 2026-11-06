@@ -39,7 +39,18 @@ def slug(path):
     return path.replace(" ", "-").lower()
 
 
-SECRET_DIRS = {"80 보안"}  # 이 폴더는 publish 가 켜져 있어도 절대 올리지 않는다
+# 이 폴더들은 publish 가 켜져 있어도 절대 올리지 않는다 (보안 연구)
+SECRET_DIRS = {"80 보안", "얼굴 위조 방지 (PAD)", "차량 번호판 탐지 모델"}
+
+# 볼트 경로 -> 블로그 경로: 앞 정렬 번호를 떼고, 이름이 다른 대분류는 바꾼다
+SITE_FOLDER_MAP = {"논문": "논문 노트"}
+
+
+def site_path(rel):
+    parts = [re.sub(r"^\d{2} ", "", part) for part in Path(rel).parts]
+    if parts and parts[0] in SITE_FOLDER_MAP:
+        parts[0] = SITE_FOLDER_MAP[parts[0]]
+    return Path(*parts)
 
 
 def is_secret(text):
@@ -116,7 +127,7 @@ published, copied_assets = [], []
 
 
 def copy_asset(src):
-    arel = src.relative_to(vault)
+    arel = site_path(src.relative_to(vault))
     dst = content / arel
     dst.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(src, dst)
@@ -141,9 +152,9 @@ for md in vault.rglob("*.md"):
         copy_asset(png)
         copy_asset(svg)
         link = (VIEWER
-                + "?src=" + quote(slug(svg.relative_to(vault).as_posix()))
-                + "&fallback=" + quote(slug(png.relative_to(vault).as_posix()))
-                + "&back=" + quote(slug(rel.with_suffix("").as_posix()))
+                + "?src=" + quote(slug(site_path(svg.relative_to(vault)).as_posix()))
+                + "&fallback=" + quote(slug(site_path(png.relative_to(vault)).as_posix()))
+                + "&back=" + quote(slug(site_path(rel).with_suffix("").as_posix()))
                 + "&title=" + quote(base))
         # 새 창으로 연다 (data-router-ignore: Quartz SPA 전환을 타지 않는다)
         return f'<a href="{link}" target="_blank" rel="noopener" data-router-ignore>{label}</a>'
@@ -179,8 +190,8 @@ for md in vault.rglob("*.md"):
     text = LINK_RE.sub(fix_link, text)
     text = promote_h1(text)
     text = add_aliases(text, rel.with_suffix("").as_posix())
-    # 볼트 폴더 앞 정렬 번호("30 IT 트렌드")는 블로그 주소에서 뗀다
-    rel = Path(*[re.sub(r"^\d{2} ", "", part) for part in rel.parts])
+    # 볼트 폴더 앞 정렬 번호("30 IT 트렌드")는 블로그 주소에서 떼고, 대분류 이름을 맞춘다
+    rel = site_path(rel)
     dst = content / rel
     dst.parent.mkdir(parents=True, exist_ok=True)
     dst.write_text(text, encoding="utf-8")
