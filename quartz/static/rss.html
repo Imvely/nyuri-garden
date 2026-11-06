@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RSS 구독 · 뉴리의창고</title>
+<link rel="icon" href="icon.png">
+<link rel="alternate" type="application/rss+xml" title="뉴리의창고" href="../index.xml">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gaegu:wght@700&display=swap">
+<style>
+  :root { --bg:#1d1915; --ink:#f6eee1; --text:#e6dccb; --muted:#b3a690; --accent:#d9ab72; --line:rgba(240,225,200,.1); --surface:rgba(255,240,220,.04); }
+  :root[data-theme="light"] { --bg:#fbf6ec; --ink:#2b221a; --text:#43382c; --muted:#7a6a57; --accent:#a35f1f; --line:rgba(90,60,30,.12); --surface:rgba(120,80,30,.04); }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:400 17px/1.75 "Pretendard Variable", Pretendard, system-ui, sans-serif; word-break:keep-all; }
+  main { max-width: 46rem; margin: 0 auto; padding: 3rem 1.25rem 4rem; }
+  .back { display:inline-block; margin-bottom:1.6rem; color:var(--muted); font-size:.92rem; text-decoration:none; }
+  .back:hover { color:var(--ink); }
+  header { display:flex; align-items:center; gap:.9rem; }
+  header img { width:64px; height:64px; flex:none; }
+  h1 { font-family:"Gaegu", cursive; font-size:2.5rem; line-height:1.1; margin:0; color:var(--ink); }
+  .sub { margin:.3rem 0 0; color:var(--muted); }
+  .card { margin:2rem 0 2.5rem; padding:1.1rem 1.2rem; border:1px solid var(--line); background:var(--surface); border-radius:14px; }
+  .card p { margin:0 0 .7rem; }
+  .row { display:flex; gap:.5rem; flex-wrap:wrap; }
+  code { flex:1 1 16rem; min-width:0; overflow-wrap:anywhere; padding:.6rem .8rem; border-radius:10px; border:1px solid var(--line); background:var(--bg); color:var(--ink); font:500 .9rem/1.4 ui-monospace, monospace; }
+  button, .btn { display:inline-grid; place-items:center; border:0; border-radius:999px; padding:0 1.1rem; min-height:2.6rem; background:var(--accent); color:#2b1d10; font:700 .92rem/1 inherit; cursor:pointer; text-decoration:none; }
+  .btn.ghost { background:transparent; color:var(--text); border:1px solid var(--line); }
+  .help { font-size:.9rem; color:var(--muted); margin:.8rem 0 0 !important; }
+  .help a { color:var(--accent); }
+  h2 { font-family:"Gaegu", cursive; font-size:1.9rem; color:var(--ink); margin:0 0 .4rem; padding-bottom:.35rem; border-bottom:1px solid var(--line); }
+  ul { list-style:none; padding:0; margin:0; }
+  li { padding:.9rem 0; border-bottom:1px solid var(--line); }
+  li a { color:var(--accent); font-weight:700; text-decoration:underline; text-underline-offset:.22em; text-decoration-thickness:1px; }
+  time { display:block; font-size:.85rem; color:var(--muted); }
+  :focus-visible { outline:2px solid var(--accent); outline-offset:3px; border-radius:6px; }
+</style>
+<script>try{var t=localStorage.getItem("theme");if(t==="light")document.documentElement.dataset.theme="light"}catch(e){}</script>
+</head>
+<body>
+<main>
+  <a class="back" href="../">← 뉴리의창고로 돌아가기</a>
+  <header>
+    <img src="nyuri.svg" alt="">
+    <div>
+      <h1>RSS로 구독하기</h1>
+      <p class="sub">새 노트가 올라오면 RSS 리더로 바로 받아볼 수 있어요</p>
+    </div>
+  </header>
+
+  <section class="card">
+    <p>아래 주소를 복사해서 RSS 리더에 붙여 넣으세요.</p>
+    <div class="row">
+      <code id="feed-url"></code>
+      <button type="button" id="copy">주소 복사</button>
+    </div>
+    <div class="row" style="margin-top:.6rem">
+      <a class="btn ghost" id="feedly" target="_blank" rel="noopener">Feedly로 구독</a>
+      <a class="btn ghost" id="inoreader" target="_blank" rel="noopener">Inoreader로 구독</a>
+    </div>
+    <p class="help">RSS는 블로그 새 글을 한곳에 모아 보는 방법이에요. 리더 앱이 없다면 Feedly를 추천해요. 무료예요.</p>
+  </section>
+
+  <h2>최근 노트</h2>
+  <ul id="items"><li>불러오는 중…</li></ul>
+</main>
+<script>
+  // 어디서 열든 실제 사이트의 피드 주소를 보여 준다
+  var feed = "https://imvely.github.io/nyuri-garden/index.xml";
+  document.getElementById("feed-url").textContent = feed;
+  document.getElementById("feedly").href = "https://feedly.com/i/subscription/feed/" + encodeURIComponent(feed);
+  document.getElementById("inoreader").href = "https://www.inoreader.com/?add_feed=" + encodeURIComponent(feed);
+  document.getElementById("copy").addEventListener("click", function (e) {
+    var b = e.currentTarget;
+    (navigator.clipboard ? navigator.clipboard.writeText(feed) : Promise.reject()).then(function () {
+      b.textContent = "복사했어요";
+      setTimeout(function () { b.textContent = "주소 복사"; }, 1800);
+    }, function () { prompt("이 주소를 복사하세요", feed); });
+  });
+  fetch(feed).then(function (r) { return r.text(); }).then(function (xml) {
+    var doc = new DOMParser().parseFromString(xml, "application/xml");
+    var ul = document.getElementById("items");
+    ul.textContent = "";
+    Array.prototype.forEach.call(doc.querySelectorAll("item"), function (it) {
+      var link = it.querySelector("link").textContent;
+      if (/\/tags\//.test(link)) return; // 태그 모음 페이지는 빼고 노트만
+      var li = document.createElement("li");
+      var a = document.createElement("a");
+      a.href = link;
+      a.textContent = it.querySelector("title").textContent;
+      var d = new Date(it.querySelector("pubDate").textContent);
+      var time = document.createElement("time");
+      time.textContent = isNaN(d) ? "" : d.toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" });
+      li.appendChild(a); li.appendChild(time); ul.appendChild(li);
+    });
+    if (!ul.children.length) ul.innerHTML = "<li>아직 노트가 없어요.</li>";
+  }).catch(function () {
+    document.getElementById("items").innerHTML = "<li>목록을 불러오지 못했어요.</li>";
+  });
+</script>
+</body>
+</html>

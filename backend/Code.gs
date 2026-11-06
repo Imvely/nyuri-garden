@@ -1,0 +1,359 @@
+/**
+ * 뉴리의창고 백엔드 (구글 앱스 스크립트 웹 앱)
+ *
+ * 하는 일
+ *  - 글마다 좋아요 수 저장 (방문자마다 한 번)
+ *  - 댓글 · 답글 저장, 비밀번호로 수정 · 삭제 (비밀번호는 소금을 친 SHA-256 해시로만 저장)
+ *  - 주인(관리자 키 보유)이 남긴 댓글은 "뉴리"로 표시
+ *  - 뉴리펫 쪽지와 새 댓글을 주인 Gmail 로 알림
+ *
+ * 설치 방법은 backend/README.md 참고.
+ */
+
+const OWNER_EMAIL = "lim.dayeong@gmail.com"
+const SITE_NAME = "뉴리의창고"
+const MAX_BODY = 2000
+
+// ── 진입점 ────────────────────────────────────────────────────
+
+function doGet(e) {
+  try {
+    const p = (e && e.parameter) || {}
+    if (p.action === "thread") return json(thread(p.page || "", p.clientId || ""))
+    return json({ ok: true, name: SITE_NAME })
+  } catch (err) {
+    return json({ ok: false, error: String(err.message || err) })
+  }
+}
+
+function doPost(e) {
+  let body = {}
+  try {
+    body = JSON.parse((e && e.postData && e.postData.contents) || "{}")
+  } catch (err) {
+    return json({ ok: false, error: "bad_request" })
+  }
+  const lock = LockService.getScriptLock()
+  try {
+    lock.waitLock(10000)
+    switch (body.action) {
+      case "comment":
+        return json(addComment(body))
+      case "edit":
+        return json(editComment(body))
+      case "delete":
+        return json(deleteComment(body))
+      case "like":
+        return json(setLike(body))
+      case "mail":
+        return json(sendMail(body))
+      default:
+        return json({ ok: false, error: "unknown_action" })
+    }
+  } catch (err) {
+    return json({ ok: false, error: String(err.message || err) })
+  } finally {
+    try {
+      lock.releaseLock()
+    } catch (e2) {}
+  }
+}
+
+// ── 처음 한 번 실행: 시트 만들고 관리자 키 발급 ─────────────────
+
+function setup() {
+  const ss = book()
+  sheet_(ss, "comments", [
+    "id", "page", "title", "url", "parentId", "nickname", "isOwner", "body",
+    "pwHash", "salt", "createdAt", "updatedAt", "deleted",
+  ])
+  sheet_(ss, "likers", ["page", "clientId", "createdAt"])
+  const props = PropertiesService.getScriptProperties()
+  let key = props.getProperty("ADMIN_KEY")
+  if (!key) {
+    key = Utilities.getUuid().replace(/-/g, "")
+    props.setProperty("ADMIN_KEY", key)
+  }
+  const link = "https://imvely.github.io/nyuri-garden/#nyuri-admin=" + key
+  MailApp.sendEmail({
+    to: OWNER_EMAIL,
+    subject: "[" + SITE_NAME + "] 백엔드 준비 완료 · 주인 모드 링크",
+    body:
+      "뉴리의창고 댓글 · 좋아요 · 쪽지 백엔드가 준비됐어요.\n\n" +
+      "아래 링크를 내 브라우저에서 한 번 열면, 그 브라우저에서 남기는 댓글은 '뉴리'로 표시돼요.\n" +
+      "이 링크는 다른 사람에게 보내지 마세요.\n\n" + link + "\n",
+  })
+  Logger.log("관리자 키: " + key)
+  Logger.log("주인 모드 링크: " + link)
+}
+
+// ── 댓글 ─────────────────────────────────────────────────────
+
+function thread(page, clientId) {
+  const rows = readAll_("comments").filter(function (r) {
+    return r.page === page
+  })
+  const comments = rows.map(publicComment_)
+  comments.sort(function (a, b) {
+    return a.createdAt < b.createdAt ? -1 : 1
+  })
+  const likers = readAll_("likers").filter(function (r) {
+    return r.page === page
+  })
+  const liked = clientId
+    ? likers.some(function (r) {
+        return r.clientId === clientId
+      })
+    : false
+  return { ok: true, comments: comments, likes: likers.length, liked: liked }
+}
+
+function addComment(b) {
+  const text = clean_(b.body)
+  if (!text) return { ok: false, error: "empty" }
+  if (text.length > MAX_BODY) return { ok: false, error: "too_long" }
+  if (!rateOk_("comment", 20)) return { ok: false, error: "rate" }
+
+  const owner = isAdmin_(b.adminKey)
+  const password = String(b.password || "")
+  if (!owner && password.length < 4) return { ok: false, error: "short_password" }
+
+  if (b.parentId) {
+    const parent = findRow_("comments", b.parentId)
+    if (!parent || parent.data.parentId) return { ok: false, error: "not_found" } // 답글은 한 단계만
+  }
+
+  const salt = owner ? "" : Utilities.getUuid()
+  const now = new Date().toISOString()
+  const row = {
+    id: Utilities.getUuid(),
+    page: String(b.page || "").slice(0, 300),
+    title: clean_(b.title).slice(0, 200),
+    url: String(b.url || "").slice(0, 500),
+    parentId: String(b.parentId || ""),
+    nickname: owner ? "뉴리" : clean_(b.nickname).slice(0, 20) || "익명의 감자",
+    isOwner: owner,
+    body: text,
+    pwHash: owner ? "" : hash_(salt, password),
+    salt: salt,
+    createdAt: now,
+    updatedAt: "",
+    deleted: false,
+  }
+  append_("comments", row)
+
+  if (!owner) {
+    MailApp.sendEmail({
+      to: OWNER_EMAIL,
+      subject: "[" + SITE_NAME + "] 새 " + (row.parentId ? "답글" : "댓글") + ": " + row.title,
+      body:
+        row.nickname + " 님이 「" + row.title + "」에 " + (row.parentId ? "답글" : "댓글") + "을 남겼어요.\n\n" +
+        row.body + "\n\n" + (row.url || "") + "\n",
+      name: "뉴리펫",
+    })
+  }
+  return { ok: true, comment: publicComment_(row) }
+}
+
+function editComment(b) {
+  const found = findRow_("comments", b.id)
+  if (!found || truthy_(found.data.deleted)) return { ok: false, error: "not_found" }
+  if (!canTouch_(found.data, b)) return { ok: false, error: "password" }
+  const text = clean_(b.body)
+  if (!text) return { ok: false, error: "empty" }
+  if (text.length > MAX_BODY) return { ok: false, error: "too_long" }
+  found.data.body = text
+  found.data.updatedAt = new Date().toISOString()
+  write_("comments", found.row, found.data)
+  return { ok: true, comment: publicComment_(found.data) }
+}
+
+function deleteComment(b) {
+  const found = findRow_("comments", b.id)
+  if (!found || truthy_(found.data.deleted)) return { ok: false, error: "not_found" }
+  if (!canTouch_(found.data, b)) return { ok: false, error: "password" }
+  const hasReplies = readAll_("comments").some(function (r) {
+    return r.parentId === found.data.id && !truthy_(r.deleted)
+  })
+  if (hasReplies) {
+    // 답글이 달린 댓글은 내용만 지우고 자리는 남긴다
+    found.data.deleted = true
+    found.data.body = ""
+    write_("comments", found.row, found.data)
+    return { ok: true, removed: false }
+  }
+  book().getSheetByName("comments").deleteRow(found.row)
+  return { ok: true, removed: true }
+}
+
+// ── 좋아요 ───────────────────────────────────────────────────
+
+function setLike(b) {
+  const page = String(b.page || "").slice(0, 300)
+  const clientId = String(b.clientId || "").slice(0, 80)
+  if (!page || !clientId) return { ok: false, error: "bad_request" }
+  const sh = book().getSheetByName("likers")
+  const values = sh.getDataRange().getValues()
+  let at = -1
+  for (let i = 1; i < values.length; i++) {
+    if (values[i][0] === page && values[i][1] === clientId) {
+      at = i + 1
+      break
+    }
+  }
+  if (b.like && at < 0) {
+    if (!rateOk_("like", 120)) return { ok: false, error: "rate" }
+    sh.appendRow([page, clientId, new Date().toISOString()])
+  }
+  if (!b.like && at > 0) sh.deleteRow(at)
+  return thread(page, clientId)
+}
+
+// ── 뉴리펫 쪽지 → 메일 ──────────────────────────────────────
+
+function sendMail(b) {
+  const message = clean_(b.message)
+  if (!message) return { ok: false, error: "empty" }
+  if (message.length > MAX_BODY) return { ok: false, error: "too_long" }
+  if (!rateOk_("mail", 10)) return { ok: false, error: "rate" }
+  const email = String(b.email || "").trim()
+  const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  const opts = {
+    to: OWNER_EMAIL,
+    subject: "[" + SITE_NAME + "] 뉴리펫 쪽지: " + clean_(b.title).slice(0, 80),
+    body:
+      message + "\n\n" +
+      "답장 받을 이메일: " + (validEmail ? email : "(남기지 않음)") + "\n" +
+      "보낸 페이지: " + String(b.page || "") + "\n" +
+      "보낸 시각: " + Utilities.formatDate(new Date(), "Asia/Seoul", "yyyy-MM-dd HH:mm") + "\n",
+    name: "뉴리펫",
+  }
+  if (validEmail) opts.replyTo = email
+  MailApp.sendEmail(opts)
+  return { ok: true }
+}
+
+// ── 도우미 ───────────────────────────────────────────────────
+
+function json(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON)
+}
+
+function book() {
+  const props = PropertiesService.getScriptProperties()
+  const id = props.getProperty("SHEET_ID")
+  if (id) return SpreadsheetApp.openById(id)
+  const active = SpreadsheetApp.getActiveSpreadsheet()
+  if (active) {
+    props.setProperty("SHEET_ID", active.getId())
+    return active
+  }
+  const created = SpreadsheetApp.create(SITE_NAME + " 댓글")
+  props.setProperty("SHEET_ID", created.getId())
+  return created
+}
+
+function sheet_(ss, name, header) {
+  let sh = ss.getSheetByName(name)
+  if (!sh) sh = ss.insertSheet(name)
+  if (sh.getLastRow() === 0) sh.appendRow(header)
+  return sh
+}
+
+function readAll_(name) {
+  const sh = book().getSheetByName(name)
+  const v = sh.getDataRange().getValues()
+  const head = v[0]
+  return v.slice(1).map(function (r) {
+    const o = {}
+    head.forEach(function (h, i) {
+      o[h] = r[i]
+    })
+    return o
+  })
+}
+
+function findRow_(name, id) {
+  const sh = book().getSheetByName(name)
+  const v = sh.getDataRange().getValues()
+  const head = v[0]
+  for (let i = 1; i < v.length; i++) {
+    if (v[i][0] === id) {
+      const o = {}
+      head.forEach(function (h, j) {
+        o[h] = v[i][j]
+      })
+      return { row: i + 1, data: o }
+    }
+  }
+  return null
+}
+
+function append_(name, obj) {
+  const sh = book().getSheetByName(name)
+  const head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0]
+  sh.appendRow(
+    head.map(function (h) {
+      return obj[h] === undefined ? "" : obj[h]
+    }),
+  )
+}
+
+function write_(name, row, obj) {
+  const sh = book().getSheetByName(name)
+  const head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0]
+  sh.getRange(row, 1, 1, head.length).setValues([
+    head.map(function (h) {
+      return obj[h] === undefined ? "" : obj[h]
+    }),
+  ])
+}
+
+function publicComment_(r) {
+  const deleted = truthy_(r.deleted)
+  return {
+    id: String(r.id),
+    parentId: String(r.parentId || ""),
+    nickname: String(r.nickname || ""),
+    isOwner: truthy_(r.isOwner),
+    body: deleted ? "" : String(r.body || ""),
+    createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : String(r.createdAt),
+    edited: !!r.updatedAt,
+    deleted: deleted,
+  }
+}
+
+function canTouch_(row, b) {
+  if (isAdmin_(b.adminKey)) return true
+  if (truthy_(row.isOwner)) return false
+  return !!row.pwHash && hash_(row.salt, String(b.password || "")) === row.pwHash
+}
+
+function isAdmin_(key) {
+  const real = PropertiesService.getScriptProperties().getProperty("ADMIN_KEY")
+  return !!key && !!real && String(key) === real
+}
+
+function hash_(salt, password) {
+  const bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, salt + ":" + password, Utilities.Charset.UTF_8)
+  return Utilities.base64Encode(bytes)
+}
+
+function clean_(s) {
+  return String(s || "")
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "")
+    .trim()
+}
+
+function truthy_(v) {
+  return v === true || v === "TRUE" || v === "true"
+}
+
+// 아주 단순한 속도 제한: 1분에 limit 번까지
+function rateOk_(kind, limit) {
+  const cache = CacheService.getScriptCache()
+  const key = "rate:" + kind + ":" + Math.floor(Date.now() / 60000)
+  const n = Number(cache.get(key) || 0) + 1
+  cache.put(key, String(n), 120)
+  return n <= limit
+}

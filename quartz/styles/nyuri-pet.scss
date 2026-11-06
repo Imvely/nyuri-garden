@@ -1,0 +1,611 @@
+@use "./variables.scss" as *;
+
+// ═════════════════════════════════════════════════════════════
+// 뉴리펫 (quartz/static/nyuri-pet.js)
+// 움직임 원칙: 숨쉬기는 CSS 애니메이션(정해진 반복), 끌기는 JS 스프링,
+// 말풍선·채팅창은 transition(중간에 다시 눌러도 현재 값에서 이어짐)
+// ═════════════════════════════════════════════════════════════
+:root {
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --pet: 84px;
+}
+
+.nyuri-pet {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 900;
+  width: var(--pet);
+  height: var(--pet);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  will-change: transform;
+
+  &.is-ready {
+    opacity: 1;
+  }
+}
+
+.np-avatar {
+  all: unset;
+  position: relative;
+  display: block;
+  width: var(--pet);
+  height: var(--pet);
+  cursor: grab;
+  touch-action: none; // 끌기 제스처가 페이지 스크롤에 먹히지 않게
+  -webkit-tap-highlight-color: transparent;
+  border-radius: 50%;
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 4px;
+  }
+
+  svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    overflow: visible;
+  }
+}
+
+.np-float {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 90%;
+  transition: transform 0.2s var(--ease-out);
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.25));
+}
+
+.is-dragging .np-avatar {
+  cursor: grabbing;
+}
+
+// 누르는 순간 바로 반응
+.is-pressed .np-float {
+  transform: scale(0.94);
+  transition-duration: 0.12s;
+}
+
+.is-dragging .np-float {
+  transform: scale(1.06) rotate(-4deg);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .np-avatar:hover .np-float {
+    transform: translateY(-3px) scale(1.04);
+  }
+}
+
+// 숨쉬기: 몸통만 아주 살짝 위아래(그림자는 반대로 줄었다 늘었다)
+@media (prefers-reduced-motion: no-preference) {
+  .np-body {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    animation: np-breathe 3.4s ease-in-out infinite;
+  }
+
+  .np-shadow {
+    transform-box: fill-box;
+    transform-origin: 50% 50%;
+    animation: np-shadow 3.4s ease-in-out infinite;
+  }
+
+  .is-dragging .np-body,
+  .is-dragging .np-shadow,
+  .is-sleeping .np-shadow {
+    animation-play-state: paused;
+  }
+
+  .is-sleeping .np-body {
+    animation-duration: 5.5s;
+  }
+}
+
+@keyframes np-breathe {
+  0%,
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+  50% {
+    transform: translateY(-10px) scale(0.985, 1.015);
+  }
+}
+
+@keyframes np-shadow {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.86);
+    opacity: 0.7;
+  }
+}
+
+// 깜빡임
+.np-eye {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  transition: transform 0.09s ease;
+}
+
+.is-blinking .np-eye {
+  transform: scaleY(0.1);
+}
+
+// 날개 파닥
+.np-flap-l,
+.np-flap-r {
+  transform-box: fill-box;
+  transition: transform 0.35s var(--ease-out);
+}
+
+.np-flap-l {
+  transform-origin: 100% 100%;
+}
+
+.np-flap-r {
+  transform-origin: 0% 100%;
+}
+
+.is-flapping .np-flap-l {
+  transform: rotate(-14deg);
+}
+
+.is-flapping .np-flap-r {
+  transform: rotate(14deg);
+}
+
+// 졸기: 눈 감고 z
+.np-sleep-eyes {
+  opacity: 0;
+}
+
+.is-sleeping {
+  .np-eyes {
+    opacity: 0;
+  }
+  .np-sleep-eyes {
+    opacity: 1;
+  }
+}
+
+.np-zzz {
+  position: absolute;
+  right: -2px;
+  top: -6px;
+  font-family: var(--headerFont);
+  font-weight: 700;
+  font-size: 1.4rem;
+  color: var(--gray);
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .is-sleeping .np-zzz {
+    animation: np-zzz 2.6s ease-out infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .is-sleeping .np-zzz {
+    opacity: 1;
+  }
+}
+
+@keyframes np-zzz {
+  0% {
+    opacity: 0;
+    transform: translate(0, 6px) scale(0.9);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(10px, -18px) scale(1.1);
+  }
+}
+
+// ── 말풍선: 뉴리 쪽 모서리에서 커짐 ───────────────────────────
+.np-bubble {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  right: 0;
+  width: max-content;
+  max-width: min(240px, calc(100vw - 32px));
+  padding: 0.6rem 0.85rem;
+  border-radius: 16px 16px 4px 16px;
+  background: var(--dark);
+  color: var(--light);
+  font-family: var(--bodyFont);
+  font-size: 0.92rem;
+  font-weight: 600;
+  line-height: 1.45;
+  word-break: keep-all;
+  box-shadow: 0 10px 24px -10px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px) scale(0.95);
+  transform-origin: 100% 100%;
+  transition:
+    opacity 0.2s var(--ease-out),
+    transform 0.2s var(--ease-out);
+}
+
+.has-bubble .np-bubble {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.nyuri-pet[data-side="left"] .np-bubble {
+  right: auto;
+  left: 0;
+  border-radius: 16px 16px 16px 4px;
+  transform-origin: 0% 100%;
+}
+
+.nyuri-pet[data-vert="top"] .np-bubble {
+  bottom: auto;
+  top: calc(100% + 10px);
+  border-radius: 16px 4px 16px 16px;
+  transform-origin: 100% 0%;
+}
+
+.nyuri-pet[data-vert="top"][data-side="left"] .np-bubble {
+  border-radius: 4px 16px 16px 16px;
+  transform-origin: 0% 0%;
+}
+
+// ── 채팅창 ──────────────────────────────────────────────────
+.np-chat {
+  position: fixed;
+  z-index: 901;
+  width: 360px;
+  height: auto;
+  max-height: min(520px, calc(100vh - 140px));
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background: var(--light);
+  color: var(--darkgray);
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  opacity: 0;
+  transform: scale(0.95);
+  transition:
+    opacity 0.24s var(--ease-out),
+    transform 0.24s var(--ease-out);
+
+  &[hidden] {
+    display: none;
+  }
+
+  &.is-open {
+    opacity: 1;
+    transform: none;
+  }
+
+  // 모바일: 아래에서 올라오는 시트
+  &.is-sheet {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    width: auto;
+    height: auto;
+    max-height: 85vh;
+    border-radius: 20px 20px 0 0;
+    border-bottom: 0;
+    opacity: 1;
+    transform: translateY(100%);
+    transition: transform 0.42s var(--ease-drawer);
+    padding-bottom: env(safe-area-inset-bottom);
+
+    &.is-open {
+      transform: none;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .np-chat,
+  .np-chat.is-sheet {
+    transform: none;
+    transition: opacity 0.2s ease;
+    opacity: 0;
+
+    &.is-open {
+      opacity: 1;
+    }
+  }
+}
+
+.np-chat-head {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.8rem 0.8rem 0.8rem 1rem;
+  border-bottom: 1px solid var(--line);
+
+  .np-chat-face {
+    width: 38px;
+    height: 38px;
+    flex: none;
+
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  h2 {
+    flex: 1;
+    margin: 0;
+    font-family: var(--headerFont) !important;
+    font-size: 1.5rem;
+    line-height: 1.1;
+    color: var(--dark);
+    border: 0;
+    padding: 0;
+
+    &::before {
+      display: none !important;
+    }
+  }
+}
+
+.np-close {
+  all: unset;
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  color: var(--gray);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background: var(--surface);
+    color: var(--dark);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+  }
+}
+
+.np-chat-body {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 1rem 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.np-guide {
+  margin: 0;
+  font-size: 0.93rem;
+  line-height: 1.6;
+  color: var(--darkgray);
+  word-break: keep-all;
+}
+
+.np-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  &[hidden] {
+    display: none;
+  }
+
+  &.is-sending .np-send {
+    opacity: 0.6;
+    pointer-events: none;
+  }
+}
+
+.np-hp {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.np-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+
+  span {
+    font-size: 0.8rem;
+    color: var(--gray);
+    font-weight: 600;
+
+    em {
+      font-style: normal;
+      font-weight: 500;
+    }
+  }
+}
+
+.np-form input[type="email"],
+.np-form textarea {
+  font: 500 0.93rem/1.5 var(--bodyFont);
+  color: var(--dark);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.6rem 0.75rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+
+  &::placeholder {
+    color: var(--gray);
+    opacity: 0.8;
+  }
+
+  &:focus {
+    border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  }
+}
+
+.np-form textarea {
+  resize: none;
+  min-height: 6.5rem;
+}
+
+.np-status {
+  margin: 0;
+  min-height: 1.2em;
+  font-size: 0.84rem;
+  color: var(--gray);
+
+  &:empty {
+    display: none;
+  }
+
+  &.is-error {
+    color: #f0a8a8;
+  }
+
+  a {
+    font-weight: 700;
+  }
+}
+
+.np-send,
+.np-again {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 2.75rem;
+  border-radius: 999px;
+  font: 700 0.95rem/1 var(--bodyFont);
+  cursor: pointer;
+  transition: transform 0.12s var(--ease-out);
+
+  &:active {
+    transform: scale(0.97);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--dark);
+    outline-offset: 2px;
+  }
+}
+
+.np-send {
+  background: var(--accent);
+  color: #2b1d10;
+}
+
+.np-again {
+  padding: 0 1.1rem;
+  border: 1px solid var(--line);
+  color: var(--darkgray);
+  align-self: flex-start;
+}
+
+.np-done {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+
+  &[hidden] {
+    display: none;
+  }
+
+  .np-done-title {
+    margin: 0.4rem 0 0;
+    font-family: var(--headerFont);
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--dark);
+  }
+
+  .np-done-text {
+    margin: 0 0 0.6rem;
+    font-size: 0.92rem;
+    color: var(--darkgray);
+  }
+}
+
+@media all and ($mobile) {
+  :root {
+    --pet: 64px;
+  }
+
+  // iOS 는 16px 보다 작은 입력창에서 확대가 일어난다
+  .np-form input[type="email"],
+  .np-form textarea {
+    font-size: 16px;
+  }
+}
+
+// ── 깡충 · 아장아장 ─────────────────────────────────────────
+// 깡충: 웅크렸다(눌림) → 뛰어오름(늘어남) → 착지(살짝 눌림) → 원래대로
+@media (prefers-reduced-motion: no-preference) {
+  .is-hopping .np-float {
+    animation: np-hop 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  // 걷는 동안엔 몸통을 좌우로 살짝 흔든다(숨쉬기 대신)
+  .is-walking .np-body {
+    animation: np-waddle 0.42s ease-in-out infinite alternate;
+  }
+
+  .is-walking .np-shadow {
+    animation-play-state: paused;
+  }
+}
+
+@keyframes np-hop {
+  0% {
+    transform: translateY(0) scale(1, 1);
+  }
+  15% {
+    transform: translateY(2px) scale(1.08, 0.9);
+  }
+  45% {
+    transform: translateY(-22px) scale(0.94, 1.08);
+  }
+  75% {
+    transform: translateY(0) scale(1.06, 0.94);
+  }
+  100% {
+    transform: translateY(0) scale(1, 1);
+  }
+}
+
+@keyframes np-waddle {
+  from {
+    transform: rotate(-5deg) translateY(-2px);
+  }
+  to {
+    transform: rotate(5deg) translateY(0);
+  }
+}
+
+@media print {
+  .nyuri-pet,
+  .np-chat {
+    display: none !important;
+  }
+}

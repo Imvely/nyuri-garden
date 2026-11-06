@@ -1,4 +1,6 @@
 @use "./variables.scss" as *;
+@use "./nyuri-pet";
+@use "./nyuri-comments";
 
 // ─────────────────────────────────────────────────────────────
 // 뉴리의창고 · 차분한 손글씨 공부 노트
@@ -867,5 +869,16 @@ table th {
         }
       }
     }
+  }
+}
+
+// 본문 폭 더 넓히기
+:root {
+  --measure: 60rem;
+}
+
+@media all and ($desktop) {
+  .page {
+    max-width: 1680px !important;
   }
 }

@@ -52,7 +52,7 @@
     const url = location.href.split("#")[0]
     const title = (document.querySelector("h1.article-title")?.textContent || document.title).trim()
     const enc = encodeURIComponent
-    const rss = siteRoot() + "index.xml"
+    const rss = siteRoot() + "static/rss.html"
 
     const bar = document.createElement("aside")
     bar.className = "nyuri-share"

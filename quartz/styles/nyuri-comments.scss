@@ -1,0 +1,401 @@
+@use "./variables.scss" as *;
+
+// ═════════════════════════════════════════════════════════════
+// 좋아요 · 댓글 (quartz/static/comments.js)
+// 사이트의 기존 토큰만 쓴다: --line, --surface, --accent, --gray, --dark, --darkgray, --radius
+// 새 색·새 그림자 없음. 위계는 크기와 굵기, 간격으로 만든다.
+// ═════════════════════════════════════════════════════════════
+
+// ── 좋아요 ──────────────────────────────────────────────────
+.nyuri-share .nyuri-share-row .nyuri-like {
+  svg {
+    transition:
+      fill 0.2s ease,
+      transform 0.2s var(--ease-out);
+  }
+
+  .nyuri-like-count {
+    font-variant-numeric: tabular-nums;
+    color: var(--gray);
+    font-weight: 600;
+  }
+
+  &[aria-pressed="true"] {
+    color: var(--dark);
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+
+    svg {
+      fill: var(--accent);
+    }
+
+    .nyuri-like-count {
+      color: var(--dark);
+    }
+  }
+}
+
+// 누른 순간 하트만 한 번 톡 (방문자가 직접 누른 반응이라 허용)
+@media (prefers-reduced-motion: no-preference) {
+  .nyuri-like.is-pop svg {
+    animation: nc-pop 0.32s var(--ease-out);
+  }
+}
+
+@keyframes nc-pop {
+  0% {
+    transform: scale(0.85);
+  }
+  55% {
+    transform: scale(1.18);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+// ── 댓글 영역 ───────────────────────────────────────────────
+.nyuri-comments {
+  max-width: var(--measure);
+  margin: 2.6rem auto 0;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--line);
+}
+
+.nc-title {
+  font-family: var(--headerFont) !important;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--dark);
+  margin: 0 0 1rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  border: 0 !important;
+  padding: 0 !important;
+
+  &::before {
+    display: none !important; // 본문 h2 장식 상속 방지
+  }
+
+  .nc-count {
+    font-family: var(--bodyFont);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--gray);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.nc-sr {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+// ── 입력 폼 ─────────────────────────────────────────────────
+.nc-form,
+.nc-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.nc-form:not(.nc-inline) {
+  margin-bottom: 1.6rem;
+}
+
+.nc-inline {
+  margin-top: 0.7rem;
+}
+
+.nyuri-comments :is(textarea, input[type="text"], input[type="password"]) {
+  font: 500 0.95rem/1.55 var(--bodyFont);
+  color: var(--dark);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.65rem 0.8rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+  min-width: 0;
+
+  &::placeholder {
+    color: var(--gray);
+    opacity: 0.85;
+  }
+
+  &:focus {
+    border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  }
+}
+
+.nyuri-comments textarea {
+  resize: vertical;
+  min-height: 3rem;
+}
+
+.nc-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+
+  input[type="text"] {
+    flex: 1 1 10rem;
+  }
+
+  input[type="password"] {
+    flex: 1 1 12rem;
+  }
+}
+
+.nc-spacer {
+  flex: 1 1 0;
+}
+
+.nc-as-owner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--gray);
+
+  img {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+.nc-submit,
+.nc-ghost,
+.nc-danger {
+  min-height: 2.5rem;
+  padding: 0 1rem;
+  border-radius: 999px;
+  font: 700 0.9rem/1 var(--bodyFont);
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+}
+
+.nc-submit {
+  border: 0;
+  background: var(--accent);
+  color: #2b1d10;
+}
+
+.nc-ghost {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--darkgray);
+
+  &:hover {
+    color: var(--dark);
+  }
+}
+
+.nc-danger {
+  border: 1px solid color-mix(in srgb, #e08a8a 55%, transparent);
+  background: transparent;
+  color: #f0a8a8;
+}
+
+:root[saved-theme="light"] .nc-danger {
+  color: #a3322f;
+  border-color: color-mix(in srgb, #a3322f 45%, transparent);
+}
+
+.nc-status {
+  margin: 0;
+  min-height: 1.2em;
+  font-size: 0.86rem;
+  color: var(--gray);
+
+  &.is-error {
+    color: #f0a8a8;
+  }
+}
+
+:root[saved-theme="light"] .nc-status.is-error {
+  color: #a3322f;
+}
+
+.nc-confirm {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--darkgray);
+}
+
+// ── 목록 ────────────────────────────────────────────────────
+.nc-list,
+.nc-replies {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nc-list > .nc-item + .nc-item {
+  border-top: 1px solid var(--line);
+}
+
+.nc-empty {
+  padding: 1rem 0;
+  color: var(--gray);
+  font-size: 0.95rem;
+}
+
+.nc-card {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+  gap: 0.8rem;
+  padding: 1rem 0;
+}
+
+.nc-avatar {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font: 700 0.95rem/1 var(--bodyFont);
+  color: var(--dark);
+  background: var(--surface);
+  border: 1px solid var(--line);
+
+  &.is-owner {
+    border: 0;
+    background: none;
+    object-fit: contain;
+  }
+}
+
+.nc-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.45rem;
+  margin-bottom: 0.2rem;
+
+  time {
+    font-size: 0.82rem;
+    color: var(--gray);
+  }
+}
+
+.nc-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--dark);
+}
+
+.is-owner > .nc-card .nc-name {
+  font-family: var(--headerFont);
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.nc-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.18rem 0.5rem;
+  border-radius: 999px;
+  color: var(--dark);
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.nc-body {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--darkgray);
+  white-space: pre-wrap;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.is-deleted .nc-body {
+  color: var(--gray);
+  font-style: italic;
+}
+
+.nc-actions {
+  display: flex;
+  gap: 0.2rem;
+  margin: 0.35rem 0 0 -0.5rem;
+
+  button {
+    border: 0;
+    background: none;
+    padding: 0.35rem 0.5rem;
+    min-height: 2rem;
+    border-radius: 8px;
+    font: 600 0.84rem/1 var(--bodyFont);
+    color: var(--gray);
+    cursor: pointer;
+    transition:
+      color 0.2s ease,
+      background-color 0.2s ease;
+
+    &:hover {
+      color: var(--dark);
+      background: var(--surface);
+    }
+  }
+}
+
+// 답글: 한 단계 들여서 얇은 선으로 잇는다
+.nc-replies {
+  margin-left: 1.1rem;
+  padding-left: 1.4rem;
+  border-left: 1px solid var(--line);
+
+  &:empty {
+    display: none;
+  }
+
+  .nc-card {
+    padding: 0.75rem 0;
+  }
+}
+
+.nyuri-comments :focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media all and ($mobile) {
+  .nc-title {
+    font-size: 1.8rem;
+  }
+
+  .nc-row {
+    .nc-spacer {
+      display: none;
+    }
+
+    .nc-submit {
+      flex: 1 1 100%;
+    }
+  }
+
+  .nc-replies {
+    margin-left: 0.4rem;
+    padding-left: 0.9rem;
+  }
+
+  .nyuri-comments :is(textarea, input[type="text"], input[type="password"]) {
+    font-size: 16px; // iOS 확대 방지
+  }
+}
