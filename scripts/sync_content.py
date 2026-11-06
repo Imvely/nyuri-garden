@@ -100,7 +100,9 @@ for md in vault.rglob("*.md"):
                         + "&fallback=" + quote(slug(png.relative_to(vault).as_posix()))
                         + "&back=" + quote(slug(rel.with_suffix("").as_posix()))
                         + "&title=" + quote(base))
-                out += f"\n\n> [!tip] 마인드맵 크게 보기\n> [확대·축소해서 보기]({link})"
+                # data-router-ignore: Quartz SPA 전환을 타지 않고 페이지를 새로 연다
+                out += (f"\n\n> [!tip] 마인드맵 크게 보기\n> "
+                        f'<a href="{link}" data-router-ignore>확대·축소해서 보기</a>')
             return out
         if src.suffix.lower() in IMG_EXT:
             return copy_asset(src)

@@ -41,6 +41,11 @@
 </div>
 <script>
 (() => {
+  // Quartz SPA 전환으로 들어오면 주소가 아직 이전 페이지라 파라미터를 못 읽는다 → 주소 갱신 뒤 새로고침
+  if (!/\/static\/viewer\.html$/.test(location.pathname)) {
+    setTimeout(() => { if (/\/static\/viewer\.html$/.test(location.pathname)) location.reload(); }, 50);
+    return;
+  }
   const qs = new URLSearchParams(location.search);
   const siteRoot = location.href.replace(/static\/viewer\.html.*$/, "");
   const src = qs.get("src");
