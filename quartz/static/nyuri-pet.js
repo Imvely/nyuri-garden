@@ -675,6 +675,7 @@
 
   // ── 채팅 ────────────────────────────────────────────────────
   function openChat() {
+    window.NYURI?.ip?.() // 쪽지를 보낼 때 기다리지 않게 미리 받아 둔다
     if (!chat.hidden) return
     hideBubble()
     root.classList.remove("is-sleeping")
@@ -757,13 +758,23 @@
       return
     }
 
+    // 먼저 "보냈어요" 화면을 보여 주고, 실제 전송은 뒤에서 한다. 실패하면 쓰던 글과 함께 되돌린다.
     sending = true
-    form.classList.add("is-sending")
-    setStatus("보내는 중이에요…")
+    const showDone = () => {
+      textarea.value = ""
+      setStatus("")
+      form.hidden = true
+      done.hidden = false
+      done.querySelector(".np-done-text").textContent = `답장은 ${email} 로 갈 거예요.`
+      done.querySelector(".np-again").focus()
+    }
+    showDone()
+    hop()
     try {
       const r = await fetch(api, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" }, // 사전 요청 없이 보내기
+        keepalive: true, // 창을 닫거나 다른 글로 가도 끝까지 보낸다
         body: JSON.stringify({
           action: "mail",
           message,
@@ -775,22 +786,18 @@
       })
       const j = await r.json()
       if (!j.ok) throw new Error(j.error || "failed")
-      textarea.value = ""
-      setStatus("")
-      form.hidden = true
-      done.hidden = false
-      done.querySelector(".np-done-text").textContent = `답장은 ${email} 로 갈 거예요.`
-      done.querySelector(".np-again").focus()
-      hop()
     } catch {
-      setStatus("지금은 보내지 못했어요. 잠시 뒤 다시 보내거나 메일 앱을 이용해 주세요.", true)
+      done.hidden = true
+      form.hidden = false
+      textarea.value = message
+      if (chat.hidden) openChat()
+      setStatus("방금 쪽지가 전해지지 않았어요. 잠시 뒤 다시 보내거나 메일 앱을 이용해 주세요.", true)
       const a = document.createElement("a")
       a.href = mailto()
       a.textContent = " 메일 앱으로 보내기"
       statusEl.appendChild(a)
     } finally {
       sending = false
-      form.classList.remove("is-sending")
     }
   })
 

@@ -664,3 +664,102 @@
     pointer-events: none;
   }
 }
+
+// ── 글 머리의 반응 줄 ────────────────────────────────────────
+// 날짜 줄 바로 아래. 아래 공유 줄과 같은 알약 모양이지만 한 단계 작고 조용하게.
+// 하트는 바로 누르고, 댓글 수는 누르면 아래 댓글로 내려간다.
+.nyuri-react {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.1rem 0 0.75rem;
+}
+
+.nyuri-react-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  min-height: 2.25rem;
+  padding: 0 0.8rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--darkgray);
+  font: 600 0.86rem/1 var(--bodyFont);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+
+  svg {
+    flex: none;
+    color: var(--accent);
+    transition:
+      fill 0.2s ease,
+      transform 0.2s var(--ease-out);
+  }
+
+  .nyuri-like-count,
+  .nyuri-react-count {
+    font-variant-numeric: tabular-nums;
+    color: var(--dark);
+  }
+
+  // 숫자를 받기 전엔 자리를 비워 둔다 (0 으로 잘못 보이지 않게)
+  .nyuri-like-count:empty,
+  .nyuri-react-count:empty {
+    display: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      color: var(--dark);
+      border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    }
+  }
+
+  &.nyuri-like[aria-pressed="true"] {
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    border-color: var(--accent);
+
+    svg {
+      fill: var(--accent);
+    }
+  }
+}
+
+// 반응 줄에서 내려왔을 때 제목이 화면 끝에 붙지 않게
+.nyuri-comments {
+  scroll-margin-top: 1.5rem;
+}
+
+@media all and ($mobile) {
+  .nyuri-comments {
+    scroll-margin-top: 4.5rem;
+  }
+}
+
+// ── 올리는 중인 댓글 ────────────────────────────────────────
+// 바로 목록에 보이되, 서버가 받기 전까지는 살짝 옅게.
+.nc-item.is-pending > .nc-card {
+  opacity: 0.6;
+}
+
+.nc-sending {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  color: var(--gray);
+}
+
+// 반응 줄에서 내려와 제목에 초점이 갈 때 마우스 사용자에겐 테두리를 그리지 않는다
+.nc-title:focus:not(:focus-visible) {
+  outline: none;
+}

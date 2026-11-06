@@ -33,10 +33,18 @@ function doPost(e) {
   } catch (err) {
     return json({ ok: false, error: "bad_request" })
   }
+  body.meta = meta_(body)
+  // 쪽지는 시트 순서와 상관없으니 잠그지 않고 바로 보낸다
+  if (body.action === "mail") {
+    try {
+      return json(sendMail(body))
+    } catch (err) {
+      return json({ ok: false, error: String(err.message || err) })
+    }
+  }
   const lock = LockService.getScriptLock()
   try {
     lock.waitLock(10000)
-    body.meta = meta_(body)
     switch (body.action) {
       case "comment":
         return json(addComment(body))
@@ -46,8 +54,6 @@ function doPost(e) {
         return json(deleteComment(body))
       case "like":
         return json(setLike(body))
-      case "mail":
-        return json(sendMail(body))
       default:
         return json({ ok: false, error: "unknown_action" })
     }
@@ -93,23 +99,59 @@ function setup() {
 
 // ── 댓글 ─────────────────────────────────────────────────────
 
+// 글 하나의 댓글과 좋아요 목록. 시트를 읽는 대신 캐시에 담아 두고, 쓰기가 생기면 지운다.
+const THREAD_TTL = 1800 // 초. 시트를 손으로 고치면 길어야 30분 뒤 화면에 반영된다
+
 function thread(page, clientId) {
-  const rows = readAll_("comments").filter(function (r) {
-    return r.page === page
-  })
-  const comments = rows.map(publicComment_)
+  const t = threadData_(page)
+  return {
+    ok: true,
+    comments: t.comments,
+    likes: t.likers.length,
+    liked: !!clientId && t.likers.indexOf(clientId) >= 0,
+  }
+}
+
+function threadData_(page) {
+  const cache = CacheService.getScriptCache()
+  const key = threadKey_(page)
+  const hit = cache.get(key)
+  if (hit) {
+    try {
+      return JSON.parse(hit)
+    } catch (e) {}
+  }
+  const comments = readAll_("comments")
+    .filter(function (r) {
+      return r.page === page
+    })
+    .map(publicComment_)
   comments.sort(function (a, b) {
     return a.createdAt < b.createdAt ? -1 : 1
   })
-  const likers = readAll_("likers").filter(function (r) {
-    return r.page === page
-  })
-  const liked = clientId
-    ? likers.some(function (r) {
-        return r.clientId === clientId
-      })
-    : false
-  return { ok: true, comments: comments, likes: likers.length, liked: liked }
+  const likers = readAll_("likers")
+    .filter(function (r) {
+      return r.page === page
+    })
+    .map(function (r) {
+      return String(r.clientId)
+    })
+  const t = { comments: comments, likers: likers }
+  try {
+    cache.put(key, JSON.stringify(t), THREAD_TTL)
+  } catch (e) {}
+  return t
+}
+
+function threadKey_(page) {
+  const d = Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, String(page), Utilities.Charset.UTF_8)
+  return "thread:" + Utilities.base64EncodeWebSafe(d)
+}
+
+function dropThread_(page) {
+  try {
+    CacheService.getScriptCache().remove(threadKey_(page))
+  } catch (e) {}
 }
 
 function addComment(b) {
@@ -153,6 +195,7 @@ function addComment(b) {
   }
   ensureColumns_("comments", ["ip", "createdAtKst", "ipFull", "userAgent", "clientId"])
   append_("comments", row)
+  dropThread_(row.page)
   log_(row.parentId ? "답글" : "댓글", b, { id: row.id, title: row.title, url: row.url, nickname: row.nickname, owner: owner, detail: row.body })
 
   if (!owner) {
@@ -180,6 +223,7 @@ function editComment(b) {
   found.data.body = text
   found.data.updatedAt = new Date().toISOString()
   write_("comments", found.row, found.data)
+  dropThread_(found.data.page)
   if (!isAdmin_(b.adminKey)) {
     notify_(
       "댓글 수정: " + found.data.title,
@@ -208,6 +252,7 @@ function deleteComment(b) {
   const hasReplies = readAll_("comments").some(function (r) {
     return r.parentId === found.data.id && !truthy_(r.deleted)
   })
+  dropThread_(found.data.page)
   if (hasReplies) {
     // 답글이 달린 댓글은 내용만 지우고 자리는 남긴다
     found.data.deleted = true
@@ -215,7 +260,8 @@ function deleteComment(b) {
     write_("comments", found.row, found.data)
     return { ok: true, removed: false }
   }
-  book().getSheetByName("comments").deleteRow(found.row)
+  sh_("comments").deleteRow(found.row)
+  VALUES_.comments = null
   return { ok: true, removed: true }
 }
 
@@ -225,8 +271,8 @@ function setLike(b) {
   const page = String(b.page || "").slice(0, 300)
   const clientId = String(b.clientId || "").slice(0, 80)
   if (!page || !clientId) return { ok: false, error: "bad_request" }
-  const sh = book().getSheetByName("likers")
-  const values = sh.getDataRange().getValues()
+  const sh = sh_("likers")
+  const values = values_("likers")
   let at = -1
   for (let i = 1; i < values.length; i++) {
     if (values[i][0] === page && values[i][1] === clientId) {
@@ -247,7 +293,11 @@ function setLike(b) {
       userAgent: b.meta.ua,
     })
   }
-  if (!b.like && at > 0) sh.deleteRow(at)
+  if (!b.like && at > 0) {
+    sh.deleteRow(at)
+    VALUES_.likers = null
+  }
+  if ((b.like && at < 0) || (!b.like && at > 0)) dropThread_(page)
   const result = thread(page, clientId)
   if ((b.like && at < 0) || (!b.like && at > 0)) {
     log_(b.like ? "좋아요" : "좋아요 취소", b, { title: title, url: b.url, detail: "지금 좋아요 " + result.likes + "개" })
@@ -313,7 +363,6 @@ function kst_() {
 // 모든 행동을 log 탭에 한 줄씩 남긴다. 실패해도 본래 처리는 계속한다.
 function log_(action, b, f) {
   try {
-    sheet_(book(), "log", LOG_HEADER)
     const m = b.meta || {}
     append_("log", {
       time: kst_(),
@@ -353,9 +402,48 @@ function json(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON)
 }
 
+// 한 요청 안에서 재사용 (매번 openById 하면 수백 ms 씩 든다)
+let BOOK_ = null
+let PROPS_ = null
+const SHEETS_ = {}
+const HEADS_ = {}
+const VALUES_ = {}
+
+function props_() {
+  if (!PROPS_) PROPS_ = PropertiesService.getScriptProperties().getProperties()
+  return PROPS_
+}
+
+function sh_(name) {
+  if (!SHEETS_[name]) {
+    let s = book().getSheetByName(name)
+    if (!s && name === "log") s = sheet_(book(), "log", LOG_HEADER)
+    SHEETS_[name] = s
+  }
+  return SHEETS_[name]
+}
+
+function head_(name) {
+  if (!HEADS_[name]) {
+    const s = sh_(name)
+    HEADS_[name] = s.getRange(1, 1, 1, s.getLastColumn()).getValues()[0]
+  }
+  return HEADS_[name]
+}
+
+function values_(name) {
+  if (!VALUES_[name]) VALUES_[name] = sh_(name).getDataRange().getValues()
+  return VALUES_[name]
+}
+
 function book() {
+  if (!BOOK_) BOOK_ = openBook_()
+  return BOOK_
+}
+
+function openBook_() {
   const props = PropertiesService.getScriptProperties()
-  const id = props.getProperty("SHEET_ID")
+  const id = props_().SHEET_ID
   if (id) return SpreadsheetApp.openById(id)
   const active = SpreadsheetApp.getActiveSpreadsheet()
   if (active) {
@@ -375,8 +463,7 @@ function sheet_(ss, name, header) {
 }
 
 function readAll_(name) {
-  const sh = book().getSheetByName(name)
-  const v = sh.getDataRange().getValues()
+  const v = values_(name)
   const head = v[0]
   return v.slice(1).map(function (r) {
     const o = {}
@@ -388,8 +475,7 @@ function readAll_(name) {
 }
 
 function findRow_(name, id) {
-  const sh = book().getSheetByName(name)
-  const v = sh.getDataRange().getValues()
+  const v = values_(name)
   const head = v[0]
   for (let i = 1; i < v.length; i++) {
     if (v[i][0] === id) {
@@ -404,8 +490,9 @@ function findRow_(name, id) {
 }
 
 function append_(name, obj) {
-  const sh = book().getSheetByName(name)
-  const head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0]
+  const sh = sh_(name)
+  const head = head_(name)
+  VALUES_[name] = null
   sh.appendRow(
     head.map(function (h) {
       return obj[h] === undefined ? "" : obj[h]
@@ -414,8 +501,9 @@ function append_(name, obj) {
 }
 
 function write_(name, row, obj) {
-  const sh = book().getSheetByName(name)
-  const head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0]
+  const sh = sh_(name)
+  const head = head_(name)
+  VALUES_[name] = null
   sh.getRange(row, 1, 1, head.length).setValues([
     head.map(function (h) {
       return obj[h] === undefined ? "" : obj[h]
@@ -450,12 +538,22 @@ function maskIp_(raw) {
 
 // 시트 제목 줄에 칸이 없으면 맨 끝에 추가한다 (기존 시트 호환)
 function ensureColumns_(name, cols) {
-  const sh = book().getSheetByName(name)
-  const head = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0]
+  // 한 번 확인한 시트는 6시간 동안 다시 보지 않는다
+  const cache = CacheService.getScriptCache()
+  const flag = "cols:" + name + ":" + cols.join(",")
+  if (cache.get(flag)) return
+  const sh = sh_(name)
+  const head = head_(name)
   let n = head.length
+  let added = false
   cols.forEach(function (c) {
-    if (head.indexOf(c) < 0) sh.getRange(1, ++n).setValue(c)
+    if (head.indexOf(c) < 0) {
+      sh.getRange(1, ++n).setValue(c)
+      added = true
+    }
   })
+  if (added) HEADS_[name] = null
+  cache.put(flag, "1", 21600)
 }
 
 function canTouch_(row, b) {
@@ -465,7 +563,7 @@ function canTouch_(row, b) {
 }
 
 function isAdmin_(key) {
-  const real = PropertiesService.getScriptProperties().getProperty("ADMIN_KEY")
+  const real = props_().ADMIN_KEY
   return !!key && !!real && String(key) === real
 }
 

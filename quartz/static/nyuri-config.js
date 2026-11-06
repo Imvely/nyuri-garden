@@ -33,8 +33,10 @@ window.NYURI = {
     }
   }
   // 요청 본문에 덧붙일 기록 정보
+  // IP 가 늦으면(1.2초) 기다리지 않고 빈 값으로 보낸다. 보통은 페이지를 열 때 미리 받아 둔다.
+  const ipQuick = () => Promise.race([window.NYURI.ip(), new Promise((r) => setTimeout(() => r(""), 1200))])
   window.NYURI.meta = async () => ({
-    ip: await window.NYURI.ip(),
+    ip: await ipQuick(),
     ua: navigator.userAgent.slice(0, 300),
     clientId: window.NYURI.clientId(),
     referrer: document.referrer.slice(0, 300),

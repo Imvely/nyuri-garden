@@ -66,6 +66,7 @@
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" }, // CORS 사전 요청 없이
       body: JSON.stringify(body),
+      keepalive: true, // 보내는 중에 다른 글로 넘어가도 끝까지 간다
     })
     const j = await r.json()
     if (!j.ok) throw new Error(j.error || "failed")
@@ -115,46 +116,112 @@
   }
 
   // ── 좋아요 ──────────────────────────────────────────────────
-  function mountLike(row, state) {
+  // 아래 공유 줄의 버튼과 위 반응 줄의 하트가 같은 상태를 쓴다
+  const like = { likes: 0, liked: false, known: false, seq: 0 }
+  const likeLabel = () => (like.liked ? `좋아요 취소, 지금 ${like.likes}명` : `좋아요, 지금 ${like.likes}명`)
+
+  function paintLikes() {
+    document.querySelectorAll(".nyuri-like").forEach((btn) => {
+      btn.setAttribute("aria-pressed", String(like.liked))
+      btn.setAttribute("aria-label", likeLabel())
+      btn.querySelector(".nyuri-like-count").textContent = like.known ? String(like.likes) : ""
+    })
+  }
+
+  function pop() {
+    document.querySelectorAll(".nyuri-like").forEach((btn) => {
+      btn.classList.remove("is-pop")
+      void btn.offsetWidth
+      btn.classList.add("is-pop")
+    })
+  }
+
+  async function toggleLike() {
+    // 먼저 화면을 바꾸고(즉시 반응), 서버 결과로 맞춘다. 연달아 눌러도 마지막 것만 반영.
+    const prev = { likes: like.likes, liked: like.liked }
+    like.liked = !like.liked
+    like.likes = Math.max(0, like.likes + (like.liked ? 1 : -1))
+    like.known = true
+    const mine = ++like.seq
+    paintLikes()
+    saveCache()
+    if (like.liked) {
+      pop()
+      window.dispatchEvent(new CustomEvent("nyuri:liked"))
+    }
+    try {
+      const j = await post({
+        action: "like",
+        page: pageKey(),
+        title: pageTitle(),
+        url: location.href.split("#")[0],
+        clientId,
+        like: like.liked,
+      })
+      if (mine !== like.seq) return
+      like.likes = j.likes
+      like.liked = j.liked
+    } catch {
+      if (mine !== like.seq) return
+      Object.assign(like, prev)
+    }
+    paintLikes()
+    saveCache()
+  }
+
+  function mountLike(row) {
     row.querySelector(".nyuri-like")?.remove()
     const btn = document.createElement("button")
     btn.type = "button"
     btn.className = "nyuri-like"
-    const paint = () => {
-      btn.setAttribute("aria-pressed", String(state.liked))
-      btn.setAttribute("aria-label", state.liked ? `좋아요 취소 (${state.likes}명)` : `좋아요 (${state.likes}명)`)
-      btn.innerHTML = `${HEART}<span>좋아요</span><span class="nyuri-like-count">${state.likes}</span>`
-    }
-    paint()
+    btn.innerHTML = `${HEART}<span>좋아요</span><span class="nyuri-like-count"></span>`
     row.prepend(btn)
-    btn.addEventListener("click", async () => {
-      // 먼저 화면을 바꾸고(즉시 반응), 서버 결과로 맞춘다
-      const prev = { ...state }
-      state.liked = !state.liked
-      state.likes += state.liked ? 1 : -1
-      paint()
-      if (state.liked) {
-        btn.classList.remove("is-pop")
-        void btn.offsetWidth
-        btn.classList.add("is-pop")
-        window.dispatchEvent(new CustomEvent("nyuri:liked"))
-      }
-      try {
-        const j = await post({
-          action: "like",
-          page: pageKey(),
-          title: pageTitle(),
-          url: location.href.split("#")[0],
-          clientId,
-          like: state.liked,
-        })
-        state.likes = j.likes
-        state.liked = j.liked
-      } catch {
-        Object.assign(state, prev)
-      }
-      paint()
+    btn.addEventListener("click", toggleLike)
+    paintLikes()
+  }
+
+  // ── 글 머리의 반응 줄: 하트(바로 누르기) + 댓글 수(누르면 댓글로 내려가기) ──
+  const BUBBLE =
+    '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9.3 9.3 0 0 1-3.7-.8L3 21l1.7-4.6A8 8 0 0 1 3 11.5 8.6 8.6 0 0 1 12 3a8.6 8.6 0 0 1 9 8.5z"/></svg>'
+
+  function mountTop() {
+    document.querySelectorAll(".nyuri-react").forEach((el) => el.remove())
+    const anchor = document.querySelector("article .content-meta, .page-header .content-meta") || document.querySelector("h1.article-title")
+    if (!anchor) return
+    const bar = document.createElement("div")
+    bar.className = "nyuri-react"
+    bar.setAttribute("role", "group")
+    bar.setAttribute("aria-label", "이 노트의 반응")
+    bar.innerHTML = `
+      <button type="button" class="nyuri-like nyuri-react-btn">${HEART}<span class="nyuri-like-count"></span></button>
+      <a class="nyuri-react-btn nyuri-react-comments" href="#nc-title" data-router-ignore>${BUBBLE}<span>댓글</span><span class="nyuri-react-count"></span></a>`
+    anchor.after(bar)
+    bar.querySelector(".nyuri-like").addEventListener("click", toggleLike)
+    bar.querySelector(".nyuri-react-comments").addEventListener("click", (e) => {
+      e.preventDefault()
+      goToComments()
     })
+    paintLikes()
+    paintCount()
+  }
+
+  function paintCount() {
+    const link = document.querySelector(".nyuri-react-comments")
+    if (!link) return
+    const n = data.comments.filter((c) => !c.deleted).length
+    link.querySelector(".nyuri-react-count").textContent = loaded ? String(n) : ""
+    link.setAttribute("aria-label", loaded ? (n ? `댓글 ${n}개 보러 가기` : "댓글 남기러 가기") : "댓글로 가기")
+  }
+
+  function goToComments() {
+    if (!section) return
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches
+    section.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" })
+    // 댓글이 있으면 제목에, 없으면 바로 쓸 수 있게 입력칸에 초점
+    const hasAny = data.comments.some((c) => !c.deleted)
+    const target = hasAny ? section.querySelector("#nc-title") : section.querySelector(".nc-composer textarea")
+    target?.focus({ preventScroll: true })
+    history.replaceState(history.state, "", "#nc-title")
   }
 
   // ── 댓글 ────────────────────────────────────────────────────
@@ -165,13 +232,13 @@
 
   function itemHTML(c, isReply) {
     const name = c.isOwner ? "뉴리" : c.nickname
-    const actions = c.deleted
+    const actions = c.deleted || c.pending
       ? ""
       : `<div class="nc-actions">
           ${isReply ? "" : `<button type="button" data-act="reply" aria-expanded="false">답글</button>`}
           ${c.isOwner && !adminKey() ? "" : `<button type="button" data-act="edit" aria-expanded="false">수정</button><button type="button" data-act="delete" aria-expanded="false">삭제</button>`}
         </div>`
-    return `<li class="nc-item${c.isOwner ? " is-owner" : ""}${c.deleted ? " is-deleted" : ""}" data-id="${esc(c.id)}">
+    return `<li class="nc-item${c.isOwner ? " is-owner" : ""}${c.deleted ? " is-deleted" : ""}${c.pending ? " is-pending" : ""}" data-id="${esc(c.id)}"${c.pending ? ' aria-busy="true"' : ""}>
       <article class="nc-card${c.isOwner ? " has-face" : ""}">
         ${avatar(c)}
         <div class="nc-main">
@@ -185,7 +252,7 @@
             </span>
           </header>
           <p class="nc-body">${c.deleted ? "삭제된 댓글이에요." : esc(c.body)}</p>
-          ${actions}
+          ${c.pending ? '<p class="nc-sending">올리는 중이에요</p>' : actions}
           <div class="nc-slot"></div>
         </div>
       </article>
@@ -293,10 +360,60 @@
   }
 
   let data = { comments: [] }
+  let loaded = false
   let section = null
   let readingObserver = null
 
+  // 이 브라우저에 지난번 목록을 담아 두고, 다음 방문 땐 그걸 먼저 보여 준다
+  const cacheKey = () => "nyuri-thread:" + pageKey()
+  function saveCache() {
+    if (!loaded) return
+    store.set(
+      cacheKey(),
+      JSON.stringify({
+        comments: data.comments.filter((c) => !c.pending),
+        likes: like.likes,
+        liked: like.liked,
+      }),
+    )
+  }
+  function readCache() {
+    try {
+      return JSON.parse(store.get(cacheKey()) || "null")
+    } catch {
+      return null
+    }
+  }
+
   function render() {
+    // 열려 있던 칸 기억
+    const open = section.querySelector(".nc-slot form")
+    let keep = null
+    if (open) {
+      const slot = open.closest(".nc-slot")
+      keep = {
+        id: open.closest(".nc-item")?.dataset.id,
+        kind: slot.dataset.kind,
+        values: [...open.querySelectorAll("textarea, input:not([type=hidden])")].map((el) => el.value),
+        focus: open.contains(document.activeElement) ? [...open.querySelectorAll("textarea, input")].indexOf(document.activeElement) : -1,
+      }
+    }
+    drawList()
+    paintCount()
+    if (keep && keep.id) {
+      const li = section.querySelector(`li[data-id="${CSS.escape(keep.id)}"]`)
+      const trigger = li?.querySelector(`:scope > .nc-card .nc-actions [data-act="${keep.kind}"]`)
+      if (li && trigger) {
+        openInline(li, keep.kind, trigger, true)
+        const form = li.querySelector(":scope > .nc-card .nc-slot form")
+        const els = [...form.querySelectorAll("textarea, input:not([type=hidden])")]
+        keep.values.forEach((v, i) => els[i] && (els[i].value = v))
+        if (keep.focus >= 0) form.querySelectorAll("textarea, input")[keep.focus]?.focus({ preventScroll: true })
+      }
+    }
+  }
+
+  function drawList() {
     const list = section.querySelector(".nc-list")
     const tops = data.comments.filter((c) => !c.parentId)
     const visible = data.comments.filter((c) => !c.deleted).length
@@ -327,50 +444,132 @@
     if (!owner && (kind === "edit" || kind === "delete") && !password)
       return setStatus(form, "비밀번호를 적어 주세요.", true)
 
-    const btn = form.querySelector('button[type="submit"]')
-    btn.disabled = true
-    setStatus(form, kind === "delete" ? "지우는 중이에요…" : "남기는 중이에요…")
-    try {
-      if (kind === "new" || kind === "reply") {
+    // 실패하면 이 글을 다시 열어 쓰던 내용과 이유를 보여 준다
+    const fail = (e, snapshot) => {
+      data.comments = snapshot
+      render()
+      if (kind === "new") {
+        const f = section.querySelector(".nc-composer .nc-form")
+        f.classList.add("is-open")
+        f.querySelector("textarea").value = body
+        const n = f.querySelector('input[name="nickname"]')
+        if (n && nickInput && nickInput.value) n.value = nickInput.value
+        setStatus(f, errText(e), true)
+        f.querySelector("textarea").focus({ preventScroll: true })
+        return
+      }
+      const li = section.querySelector(`li[data-id="${CSS.escape(target)}"]`)
+      const trigger = li?.querySelector(`:scope > .nc-card .nc-actions [data-act="${kind}"]`)
+      if (!li || !trigger) return
+      openInline(li, kind, trigger, true)
+      const f = li.querySelector(":scope > .nc-card .nc-slot form")
+      const ta = f.querySelector("textarea")
+      if (ta) ta.value = body
+      setStatus(f, errText(e), true)
+      ;(f.querySelector('input[name="password"]') || ta)?.focus({ preventScroll: true })
+    }
+
+    const snapshot = data.comments.map((c) => ({ ...c }))
+
+    if (kind === "new" || kind === "reply") {
+      const ip = (await Promise.race([window.NYURI?.ip?.() || "", new Promise((r) => setTimeout(() => r(""), 0))])) || ""
+      const temp = {
+        id: "tmp-" + Math.random().toString(36).slice(2),
+        parentId: kind === "reply" ? target : "",
+        nickname: owner ? "뉴리" : nickname.slice(0, 20),
+        isOwner: !!owner,
+        body,
+        createdAt: new Date().toISOString(),
+        edited: false,
+        deleted: false,
+        ip: owner ? "" : maskIp(ip),
+        pending: true,
+      }
+      data.comments.push(temp)
+      if (kind === "new") {
+        form.reset()
+        form.classList.remove("is-open")
+        setStatus(form, "")
+        // 다음 댓글은 또 다른 이름으로
+        const n = form.querySelector('input[name="nickname"]')
+        if (n) {
+          const next = makeNick()
+          n.dataset.nick = next
+          n.placeholder = `비워 두면 ‘${next}’(으)로 남겨져요`
+        }
+      } else closeInline()
+      render()
+      try {
         const j = await post({
           action: "comment",
           page: pageKey(),
           title: pageTitle(),
           url: location.href.split("#")[0],
-          parentId: kind === "reply" ? target : "",
+          parentId: temp.parentId,
           nickname,
           body,
           password,
           adminKey: owner,
         })
-        data.comments.push(j.comment)
-        if (kind === "new") {
-          form.reset()
-          // 다음 댓글은 또 다른 이름으로
-          const n = form.querySelector('input[name="nickname"]')
-          if (n) {
-            const next = makeNick()
-            n.dataset.nick = next
-            n.placeholder = `비워 두면 ‘${next}’(으)로 남겨져요`
-          }
+        // 그 사이 목록을 새로 받아 이미 들어와 있으면 임시 댓글만 뺀다
+        if (data.comments.some((c) => c.id === j.comment.id)) data.comments = data.comments.filter((c) => c.id !== temp.id)
+        else {
+          const i = data.comments.findIndex((c) => c.id === temp.id)
+          if (i >= 0) data.comments[i] = j.comment
+          else data.comments.push(j.comment)
         }
-      } else if (kind === "edit") {
+        render()
+        saveCache()
+      } catch (e) {
+        fail(e, snapshot)
+      }
+      return
+    }
+
+    const c = data.comments.find((x) => x.id === target)
+    if (!c) return
+    closeInline()
+    if (kind === "edit") {
+      Object.assign(c, { body, edited: true, pending: true })
+      render()
+      try {
         const j = await post({ action: "edit", id: target, body, password, adminKey: owner })
-        Object.assign(
-          data.comments.find((c) => c.id === target),
-          j.comment,
-        )
-      } else if (kind === "delete") {
-        const j = await post({ action: "delete", id: target, password, adminKey: owner })
-        if (j.removed) data.comments = data.comments.filter((c) => c.id !== target)
-        else Object.assign(data.comments.find((c) => c.id === target), { deleted: true, body: "" })
+        Object.assign(data.comments.find((x) => x.id === target) || c, j.comment, { pending: false })
+        render()
+        saveCache()
+      } catch (e) {
+        fail(e, snapshot)
+      }
+      return
+    }
+
+    // 삭제: 답글이 남아 있으면 자리만 남기고, 아니면 바로 목록에서 뺀다
+    const hasReplies = data.comments.some((r) => r.parentId === target && !r.deleted)
+    if (hasReplies) Object.assign(c, { deleted: true, body: "" })
+    else data.comments = data.comments.filter((x) => x.id !== target && x.parentId !== target)
+    render()
+    try {
+      const j = await post({ action: "delete", id: target, password, adminKey: owner })
+      if (j.removed) data.comments = data.comments.filter((x) => x.id !== target)
+      else {
+        const cur = data.comments.find((x) => x.id === target)
+        if (cur) Object.assign(cur, { deleted: true, body: "" })
+        else data.comments = snapshot.map((x) => (x.id === target ? { ...x, deleted: true, body: "" } : x))
       }
       render()
-      if (kind === "new") setStatus(section.querySelector(".nc-form"), "댓글을 남겼어요.")
+      saveCache()
     } catch (e) {
-      btn.disabled = false
-      setStatus(form, errText(e), true)
+      fail(e, snapshot)
     }
+  }
+
+  // 화면에 미리 보여 줄 때 쓰는 IP 가리기 (서버와 같은 규칙)
+  function maskIp(raw) {
+    const s = String(raw || "")
+    const v4 = s.match(/^(\d{1,3})\.(\d{1,3})\./)
+    if (v4) return `${v4[1]}.${v4[2]}.xx.xx`
+    const v6 = s.match(/^([0-9a-f]{1,4}):([0-9a-f]{1,4}):/i)
+    return v6 ? `${v6[1]}:${v6[2]}:xx:xx` : ""
   }
 
   function closeInline() {
@@ -378,14 +577,15 @@
     section.querySelectorAll(".nc-actions [aria-expanded]").forEach((b) => b.setAttribute("aria-expanded", "false"))
   }
 
-  function openInline(li, kind, trigger) {
-    const already = trigger && trigger.getAttribute("aria-expanded") === "true"
+  function openInline(li, kind, trigger, restoring) {
+    const already = !restoring && trigger && trigger.getAttribute("aria-expanded") === "true"
     closeInline()
     if (already) return // 같은 버튼을 다시 누르면 닫기
     const id = li.dataset.id
     const c = data.comments.find((x) => x.id === id)
     const slot = li.querySelector(":scope > .nc-card .nc-slot")
     slot.innerHTML = formHTML({ kind, value: kind === "edit" ? c.body : "" })
+    slot.dataset.kind = kind
     trigger?.setAttribute("aria-expanded", "true")
     const form = slot.querySelector("form")
     form.addEventListener("submit", (e) => {
@@ -396,7 +596,7 @@
       closeInline()
       trigger?.focus()
     })
-    ;(form.querySelector("textarea") || form.querySelector("input"))?.focus()
+    if (!restoring) (form.querySelector("textarea") || form.querySelector("input"))?.focus()
   }
 
   // 새 댓글 입력칸: 처음엔 한 줄로 접혀 있다가, 누르면 닉네임·비밀번호까지 펼친다
@@ -423,7 +623,7 @@
     // 대화를 먼저, 입력칸은 그 아래에
     section.innerHTML = `
       <header class="nc-head">
-        <h2 id="nc-title" class="nc-title">댓글</h2>
+        <h2 id="nc-title" class="nc-title" tabindex="-1">댓글</h2>
         <span class="nc-count" aria-label="댓글 수"></span>
       </header>
       <ol class="nc-list" aria-live="polite"><li class="nc-empty">댓글을 불러오는 중이에요…</li></ol>
@@ -455,15 +655,36 @@
     readingObserver.observe(section)
 
     const page = pageKey()
+    window.NYURI?.ip?.() // 글을 남길 때 기다리지 않게 미리 받아 둔다
+    loaded = false
+    like.known = false
+    like.seq = 0
+    data = { comments: [] }
+    mountLike(share.querySelector(".nyuri-share-row"))
+    mountTop()
+    const cached = readCache()
+    if (cached) {
+      data = { comments: cached.comments || [] }
+      Object.assign(like, { likes: cached.likes || 0, liked: !!cached.liked, known: true })
+      loaded = true
+      render()
+      paintLikes()
+    }
     try {
       const j = await get({ action: "thread", page, clientId })
       if (page !== pageKey()) return // 그 사이 다른 페이지로 이동
-      data = { comments: j.comments || [] }
+      // 그 사이 남긴(아직 올리는 중인) 댓글은 지우지 않는다
+      const pending = data.comments.filter((c) => c.pending && String(c.id).startsWith("tmp-"))
+      data = { comments: (j.comments || []).concat(pending) }
+      loaded = true
+      if (!like.seq) Object.assign(like, { likes: j.likes || 0, liked: !!j.liked, known: true })
       render()
-      mountLike(share.querySelector(".nyuri-share-row"), { likes: j.likes || 0, liked: !!j.liked })
+      paintLikes()
+      saveCache()
     } catch {
-      section.querySelector(".nc-list").innerHTML =
-        '<li class="nc-empty">댓글을 불러오지 못했어요. 새로고침해 주세요.</li>'
+      if (!cached)
+        section.querySelector(".nc-list").innerHTML =
+          '<li class="nc-empty">댓글을 불러오지 못했어요. 새로고침해 주세요.</li>'
     }
   }
 
