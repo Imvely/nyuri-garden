@@ -111,24 +111,71 @@
       b.querySelector("span").remove()
       el.after(b)
     })
-    // 페이지 제목: 이름만 남기고 아래에 상태 한 줄
+    // 비공개 프로젝트 안의 페이지인지: 제목이나 상단 경로에 표시가 있으면 (바꾸기 전에 본다)
     const h1 = document.querySelector("h1.article-title")
+    const crumbs = [...document.querySelectorAll(".breadcrumb-element a, .breadcrumb-element p")]
+    if ((h1 && splitPrivate(h1.textContent) !== null) || crumbs.some((c) => splitPrivate(c.textContent) !== null))
+      document.body.dataset.private = "1"
+
+    // 페이지 제목: 이름만 남긴다 (상태는 아래 안내 화면이 알린다)
     const hName = h1 ? splitPrivate(h1.textContent) : null
-    if (h1 && hName !== null) {
-      h1.textContent = hName
-      if (!h1.nextElementSibling?.classList.contains("nyuri-private-note")) {
-        const note = document.createElement("p")
-        note.className = "nyuri-private-note"
-        note.innerHTML = `${LOCK}<span>보안 이슈로 비공개</span>`
-        h1.after(note)
-      }
-    }
+    if (h1 && hName !== null) h1.textContent = hName
     // 상단 경로와 폴더 목록
     document.querySelectorAll(".breadcrumb-element a, .breadcrumb-element p, .page-listing a").forEach((a) => {
       const name = splitPrivate(a.textContent)
       if (name === null || a.children.length) return
       a.textContent = name
       if (a.closest(".page-listing")) a.after(badge("is-inline"))
+    })
+    if (document.body.dataset.private) mountLocked()
+    polishListing()
+  }
+
+  // 비공개 안내 화면: 잠긴 상자 뉴리 + 한 줄 설명. 본문 자리에 놓는다
+  function mountLocked() {
+    if (document.querySelector(".nyuri-locked")) return
+    const article = document.querySelector(".center article")
+    if (!article) return
+    const box = document.createElement("section")
+    box.className = "nyuri-locked"
+    box.setAttribute("aria-label", "보안 이슈로 비공개")
+    box.innerHTML = `
+      <div class="nyuri-locked-art" aria-hidden="true">
+        <img src="${siteRoot()}static/nyuri.svg" alt="">
+        <span class="nyuri-locked-lock"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+      </div>
+      <h2 class="nyuri-locked-title">보안 이슈로 비공개</h2>
+      <p class="nyuri-locked-sub">발표 전이라 잠시 닫아 두었어요.</p>`
+    const listing = document.querySelector(".center .page-listing")
+    if (listing) {
+      // 항목이 하나도 없는 폴더는 "0건" 목록 대신 안내만
+      if (!listing.querySelector("li")) listing.classList.add("is-empty")
+      listing.before(box)
+    } else article.after(box)
+  }
+
+  // 폴더 목록: 날짜는 한 줄(2026.11.06), 폴더와 글을 아이콘으로 구분
+  const ICON_FOLDER =
+    '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>'
+  const ICON_NOTE =
+    '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h7l5 5v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg>'
+  function polishListing() {
+    document.querySelectorAll(".page-listing .section-li > .section").forEach((sec) => {
+      if (sec.dataset.polished) return
+      sec.dataset.polished = "1"
+      const t = sec.querySelector("time")
+      if (t?.getAttribute("datetime")) {
+        const d = new Date(t.getAttribute("datetime"))
+        if (!isNaN(d)) t.textContent = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`
+      }
+      const a = sec.querySelector(".desc h3 a")
+      if (!a) return
+      const isFolder = /\/$/.test(a.getAttribute("href") || "")
+      sec.classList.add(isFolder ? "is-folder" : "is-note")
+      const ic = document.createElement("span")
+      ic.className = "nyuri-row-icon"
+      ic.innerHTML = isFolder ? ICON_FOLDER : ICON_NOTE
+      a.before(ic)
     })
   }
 
