@@ -931,11 +931,79 @@ table th {
     letter-spacing: 0;
   }
 
+  // 비공개 프로젝트 폴더: 이름은 한 줄로 줄이고, 비공개 표시는 늘 보이게 옆에 둔다
+  .folder-container > div {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .folder-container .has-private {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-width: 0;
+    flex: 1 1 auto;
+
+    .folder-title {
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
   // 폴더 안의 노트는 얇은 세로선으로 묶는다
   .folder-outer > ul,
   .folder-outer ul {
     margin-left: 0.55rem !important;
     padding-left: 0.5rem !important;
     border-left: 1px solid var(--line);
+  }
+}
+
+// ── 비공개 표시 (share.js 가 "(보안 이슈로 비공개)" 제목을 바꿔 붙인다) ──
+// 강조색 대신 회색 알약: 메뉴에서 튀지 않고, 자물쇠와 글자로 상태를 함께 알린다
+.nyuri-private {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.22rem;
+  padding: 0.12rem 0.42rem 0.12rem 0.36rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--gray) 9%, transparent);
+  color: var(--gray);
+  font: 600 0.68rem/1 var(--bodyFont);
+  letter-spacing: 0;
+  white-space: nowrap;
+
+  svg {
+    flex: none;
+  }
+
+  &.is-icon {
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    padding: 0;
+  }
+
+  &.is-inline {
+    margin-left: 0.45rem;
+    vertical-align: 0.12em;
+  }
+}
+
+.nyuri-private-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.2rem 0 0.4rem;
+  color: var(--gray);
+  font-size: 0.9rem;
+
+  svg {
+    width: 13px;
+    height: 13px;
   }
 }

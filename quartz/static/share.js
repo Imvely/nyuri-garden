@@ -82,7 +82,58 @@
   }
 
   // 탐색기: 한 줄로 줄인 제목은 마우스를 올리면 전체 제목이 보이게
+  // 비공개 프로젝트: 제목 끝 "(보안 이슈로 비공개)" 를 떼고 작은 표시로 바꾼다
+  const PRIVATE = "(보안 이슈로 비공개)"
+  const LOCK =
+    '<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>'
+  const splitPrivate = (t) => {
+    t = (t || "").trim()
+    return t.endsWith(PRIVATE) ? t.slice(0, -PRIVATE.length).trim() : null
+  }
+  const badge = (cls) => {
+    const b = document.createElement("span")
+    b.className = "nyuri-private" + (cls ? " " + cls : "")
+    b.title = "보안 이슈로 비공개"
+    b.innerHTML = `${LOCK}<span>비공개</span>`
+    return b
+  }
+  function privateLabels() {
+    // 탐색기 폴더: 이름은 한 줄(넘치면 말줄임), 표시는 늘 보이게 옆에
+    document.querySelectorAll(".explorer .folder-title").forEach((el) => {
+      const name = splitPrivate(el.textContent)
+      if (name === null) return
+      el.textContent = name
+      el.parentElement.classList.add("has-private")
+      el.parentElement.title = name + " (보안 이슈로 비공개)"
+      // 메뉴는 폭이 좁아 자물쇠만 (글자는 툴팁과 스크린리더로)
+      const b = badge("is-icon")
+      b.setAttribute("aria-label", "보안 이슈로 비공개")
+      b.querySelector("span").remove()
+      el.after(b)
+    })
+    // 페이지 제목: 이름만 남기고 아래에 상태 한 줄
+    const h1 = document.querySelector("h1.article-title")
+    const hName = h1 ? splitPrivate(h1.textContent) : null
+    if (h1 && hName !== null) {
+      h1.textContent = hName
+      if (!h1.nextElementSibling?.classList.contains("nyuri-private-note")) {
+        const note = document.createElement("p")
+        note.className = "nyuri-private-note"
+        note.innerHTML = `${LOCK}<span>보안 이슈로 비공개</span>`
+        h1.after(note)
+      }
+    }
+    // 상단 경로와 폴더 목록
+    document.querySelectorAll(".breadcrumb-element a, .breadcrumb-element p, .page-listing a").forEach((a) => {
+      const name = splitPrivate(a.textContent)
+      if (name === null || a.children.length) return
+      a.textContent = name
+      if (a.closest(".page-listing")) a.after(badge("is-inline"))
+    })
+  }
+
   function titleExplorer() {
+    privateLabels()
     document.querySelectorAll(".explorer a.nav-file-title").forEach((a) => {
       if (!a.title) a.title = a.textContent.trim()
     })

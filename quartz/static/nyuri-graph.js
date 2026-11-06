@@ -60,7 +60,9 @@
       for (let i = 1; i <= parts.length; i++) {
         const p = parts.slice(0, i).join("/")
         const id = "folder:" + p
-        add(id, { type: "folder", label: index[p + "/index"]?.title || prettyName(parts[i - 1]), href: p + "/" })
+        const raw = index[p + "/index"]?.title || prettyName(parts[i - 1])
+        const secret = raw.endsWith("(보안 이슈로 비공개)")
+        add(id, { type: "folder", label: secret ? raw.replace("(보안 이슈로 비공개)", "").trim() : raw, secret, href: p + "/" })
         link(parent, id, "tree")
         parent = id
       }
@@ -383,6 +385,12 @@
         ctx.strokeText(label, x, y + r + 6)
         ctx.fillStyle = isFocus ? C.accent : isTag ? C.gray : n.type === "note" ? C.strong : C.text
         ctx.fillText(label, x, y + r + 6)
+        if (n.secret) {
+          ctx.font = `600 10.5px ${C.font}`
+          ctx.strokeText("비공개", x, y + r + 22)
+          ctx.fillStyle = C.gray
+          ctx.fillText("비공개", x, y + r + 22)
+        }
       }
       ctx.globalAlpha = 1
     }
