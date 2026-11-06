@@ -852,3 +852,9 @@ body[data-slug="index"] article {
     min-width: 0;
   }
 }
+
+// 푸터 내용을 본문 칼럼과 같은 선에서 시작
+footer > * {
+  max-width: var(--measure);
+  margin-inline: auto !important;
+}
