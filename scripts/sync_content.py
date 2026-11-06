@@ -63,6 +63,24 @@ def resolve(name):
     return None
 
 
+def promote_h1(text):
+    """본문 첫 '# 제목' 을 페이지 제목(title 속성)으로 올리고 본문에서는 뺀다.
+
+    title 속성이 이미 있으면 건드리지 않는다. 제목이 두 번 보이는 것을 막는다.
+    """
+    m = FM_RE.match(text)
+    if not m or re.search(r"^title:", m.group(1), re.M):
+        return text
+    body = text[m.end():]
+    h = re.search(r"^# (.+?)\s*$", body, re.M)
+    if not h:
+        return text
+    title = h.group(1).strip().replace('"', '\\"')
+    fm = m.group(1) + f'\ntitle: "{title}"'
+    body = body[: h.start()] + body[h.end():].lstrip("\n")
+    return f"---\n{fm}\n---\n" + body
+
+
 published, copied_assets = [], []
 
 
@@ -128,6 +146,7 @@ for md in vault.rglob("*.md"):
 
     text = EMBED_RE.sub(fix_embed, text)
     text = LINK_RE.sub(fix_link, text)
+    text = promote_h1(text)
     dst = content / rel
     dst.parent.mkdir(parents=True, exist_ok=True)
     dst.write_text(text, encoding="utf-8")

@@ -1,5 +1,5 @@
 ---
-title: "Interpretable Face Anti-Spoofing: Enhancing Generalization with Multimodal Large Language Models"
+paper: "Interpretable Face Anti-Spoofing: Enhancing Generalization with Multimodal Large Language Models"
 arxiv: "2501.01720"
 url: https://arxiv.org/abs/2501.01720
 authors:
@@ -24,10 +24,8 @@ status: 정리완료
 publish: true
 share_link: https://share.note.sx/8n0wmqpw
 share_updated: 2026-11-05T18:10:19+09:00
+title: "I-FAS: 해석 가능한 얼굴 위조 방지"
 ---
-
-# I-FAS: 해석 가능한 얼굴 위조 방지
-
 > [!abstract] 한 줄 요약
 > 얼굴 위조 방지(FAS)를 "진짜/가짜" 이진 분류가 아니라 **멀티모달 LLM이 답하는 VQA 문제**로 바꿨다. 모델이 "No, 이건 화면을 다시 찍은 사진이다"처럼 **판단 + 이유**를 함께 말하게 만들었더니, 한 번도 본 적 없는 환경·공격 유형에서도 훨씬 잘 버틴다.
 
