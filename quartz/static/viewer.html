@@ -231,7 +231,7 @@
   });
   if (qs.get("title")) {
     document.getElementById("title").textContent = qs.get("title");
-    document.title = qs.get("title") + " · 뉴리의창고";
+    document.title = qs.get("title") + " | 뉴리의창고";
   }
   if (!src) { msgText.textContent = "보여 줄 그림이 지정되지 않았어요. 노트에서 마인드맵 링크를 다시 눌러 주세요."; return; }
   const url = new URL(src, siteRoot).href;

@@ -520,12 +520,16 @@
 .nc-composer .nc-form {
   gap: 0;
 
+  // 접힌 칸은 둥근 한 줄 입력칸처럼
   textarea {
-    min-height: 2.75rem;
-    max-height: 2.75rem;
+    min-height: 3rem;
+    max-height: 3rem;
     overflow: hidden;
+    padding: 0.72rem 1.1rem;
+    border-radius: 999px;
     transition:
       max-height 0.25s var(--ease-out),
+      border-radius 0.25s var(--ease-out),
       border-color 0.2s ease,
       box-shadow 0.2s ease;
   }
@@ -540,9 +544,11 @@
     gap: 0.75rem;
 
     textarea {
-      min-height: 6rem;
+      min-height: 6.5rem;
       max-height: 16rem;
       overflow: auto;
+      padding: 0.8rem 0.95rem;
+      border-radius: 14px;
     }
 
     > .nc-row {
@@ -656,6 +662,25 @@
 
   .nyuri-comments :is(textarea, input[type="text"], input[type="password"]) {
     font-size: 16px; // iOS 확대 방지
+  }
+
+  // 손가락으로 쓰기 좋게: 칸과 버튼을 넉넉히
+  .nyuri-comments :is(input[type="text"], input[type="password"]) {
+    min-height: 2.9rem;
+  }
+
+  .nc-composer .nc-form.is-open .nc-buttons button,
+  .nc-inline .nc-buttons button {
+    min-height: 2.9rem;
+  }
+
+  // 펼치면 얼굴은 위에 작게 두고 쓰는 칸을 넓게
+  .nc-composer:has(.nc-form.is-open) {
+    grid-template-columns: minmax(0, 1fr);
+
+    .nc-composer-face {
+      display: none;
+    }
   }
 
   // 모바일에선 댓글 보는 동안 더 작고 흐리게 (사라지지는 않는다)

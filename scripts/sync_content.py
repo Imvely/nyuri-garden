@@ -169,7 +169,7 @@ for md in vault.rglob("*.md"):
             if png is None:
                 return f"> [!note] 그림 `{base}.png` 이 아직 없음"
             out = copy_asset(png)
-            a = viewer_anchor(src, "확대·축소해서 보기")
+            a = viewer_anchor(src, "크게 열어 보기")
             if a:
                 out += f"\n\n> [!tip] 마인드맵 크게 보기\n> {a}"
             return out
@@ -184,7 +184,7 @@ for md in vault.rglob("*.md"):
         if src is None or not src.name.endswith(".excalidraw.md"):
             return m.group(0)
         label = alias or src.name[: -len(".excalidraw.md")]
-        return viewer_anchor(src, label + " (확대·축소)") or label
+        return viewer_anchor(src, label + " (크게 보기)") or label
 
     text = EMBED_RE.sub(fix_embed, text)
     text = LINK_RE.sub(fix_link, text)

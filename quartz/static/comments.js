@@ -335,14 +335,14 @@
           }) +
           field({
             label: "비밀번호",
-            hint: "나중에 수정·삭제할 때 필요해요",
+            hint: "나중에 고치거나 지울 때 필요해요",
             input: passwordInput({ autocomplete: "new-password", placeholder: "4자 이상" }),
           })
     return `<form class="nc-form${kind === "reply" ? " nc-inline" : ""}${isEdit ? " nc-inline" : ""}" novalidate>
       <label class="nc-sr" for="nc-${kind}-body">${isEdit ? "고칠 내용" : kind === "reply" ? "답글" : "댓글"}</label>
       <textarea id="nc-${kind}-body" name="body" rows="${kind === "new" ? 3 : 2}" maxlength="2000" placeholder="${
-        kind === "reply" ? "답글을 적어 주세요" : isEdit ? "" : "이 노트에 대한 생각이나 궁금한 점을 남겨 주세요"
-      }" required>${esc(value)}</textarea>
+        kind === "reply" ? "답글을 적어 주세요" : isEdit ? "" : "한마디 남겨 주세요"
+      }"${kind === "new" ? ' data-full="이 노트에 대한 생각이나 궁금한 점을 적어 주세요"' : ""} required>${esc(value)}</textarea>
       <div class="nc-row nc-row-end">
         ${who}
         <div class="nc-buttons">
@@ -618,11 +618,19 @@
   // 새 댓글 입력칸: 처음엔 한 줄로 접혀 있다가, 누르면 닉네임·비밀번호까지 펼친다
   function wireComposer(form) {
     const ta = form.querySelector("textarea")
-    const open = () => form.classList.add("is-open")
+    // 접혀 있을 땐 짧은 안내, 펼치면 자세한 안내 (좁은 화면에서 잘리지 않게)
+    const short = ta.placeholder
+    const open = () => {
+      form.classList.add("is-open")
+      if (ta.dataset.full) ta.placeholder = ta.dataset.full
+    }
     form.addEventListener("focusin", open)
     form.addEventListener("focusout", () => {
       setTimeout(() => {
-        if (!form.contains(document.activeElement) && !ta.value.trim()) form.classList.remove("is-open")
+        if (!form.contains(document.activeElement) && !ta.value.trim()) {
+          form.classList.remove("is-open")
+          ta.placeholder = short
+        }
       }, 120)
     })
   }

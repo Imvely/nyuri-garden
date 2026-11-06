@@ -62,11 +62,11 @@
     bar.innerHTML = `
       <p class="nyuri-share-label">이 노트가 도움이 됐다면</p>
       <div class="nyuri-share-row">
-        <button type="button" data-act="share" data-icon="share">${svg("share")}<span>공유하기</span></button>
-        <button type="button" data-act="copy" data-icon="link">${svg("link")}<span>링크 복사</span></button>
-        <a href="https://twitter.com/intent/tweet?text=${enc(title)}&url=${enc(url)}" target="_blank" rel="noopener" data-router-ignore>${svg("x")}<span>X</span></a>
-        <a href="https://www.facebook.com/sharer/sharer.php?u=${enc(url)}" target="_blank" rel="noopener" data-router-ignore>${svg("facebook")}<span>페이스북</span></a>
-        <a href="${rss}" target="_blank" rel="noopener" data-router-ignore class="rss">${svg("rss")}<span>RSS 구독</span></a>
+        <button type="button" data-act="share" data-icon="share" data-short="공유">${svg("share")}<span>공유하기</span></button>
+        <button type="button" data-act="copy" data-icon="link" data-short="링크" aria-label="링크 복사">${svg("link")}<span>링크 복사</span></button>
+        <a href="https://twitter.com/intent/tweet?text=${enc(title)}&url=${enc(url)}" target="_blank" rel="noopener" data-router-ignore data-short="X" aria-label="X에 공유">${svg("x")}<span>X</span></a>
+        <a href="https://www.facebook.com/sharer/sharer.php?u=${enc(url)}" target="_blank" rel="noopener" data-router-ignore data-short="페이스북" aria-label="페이스북에 공유">${svg("facebook")}<span>페이스북</span></a>
+        <a href="${rss}" target="_blank" rel="noopener" data-router-ignore class="rss" data-short="RSS" aria-label="RSS 구독">${svg("rss")}<span>RSS 구독</span></a>
       </div>`
     article.after(bar)
 
