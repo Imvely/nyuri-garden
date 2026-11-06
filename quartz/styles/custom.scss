@@ -1168,6 +1168,13 @@ table th {
     width: 100%;
     height: 100%;
     opacity: 0.92;
+    // 본문 이미지 카드 스타일이 붙지 않게
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: none !important;
+    box-shadow: none !important;
   }
 }
 
