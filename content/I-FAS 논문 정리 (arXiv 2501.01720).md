@@ -143,6 +143,6 @@ $$
 
 ## 관련
 
-- 마인드맵: [[I-FAS 마인드맵.excalidraw]]
+- 마인드맵: <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=%EC%B2%A8%EB%B6%80/i-fas/i-fas-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=%EC%B2%A8%EB%B6%80/i-fas/i-fas-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=i-fas-%EB%85%BC%EB%AC%B8-%EC%A0%95%EB%A6%AC-%28arxiv-2501.01720%29&title=I-FAS%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" data-router-ignore>I-FAS 마인드맵 (확대·축소)</a>
 - 원문: https://arxiv.org/abs/2501.01720
 - 키워드: #FAS #MLLM #VQA #도메인일반화

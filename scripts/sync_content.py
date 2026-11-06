@@ -20,6 +20,7 @@ content.mkdir(exist_ok=True)
 
 FM_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.S)
 EMBED_RE = re.compile(r"!\[\[([^\]|#]+)(?:[#|][^\]]*)?\]\]")
+LINK_RE = re.compile(r"(?<!!)\[\[([^\]|#]+?)(?:#[^\]|]*)?(?:\|([^\]]*))?\]\]")
 IMG_EXT = {".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp"}
 SKIP_DIRS = {".obsidian", ".git", ".claude", ".trash"}
 
@@ -82,33 +83,51 @@ for md in vault.rglob("*.md"):
         continue
     rel = md.relative_to(vault)
 
-    def fix_embed(m, rel=rel):
+    def viewer_anchor(src, label, rel=rel):
+        """Excalidraw 파일 → 확대·축소 뷰어 <a> 태그. SVG/PNG 가 없으면 None."""
+        base = src.name[: -len(".excalidraw.md")]
+        png, svg = resolve(base + ".png"), resolve(base + ".svg")
+        if png is None or svg is None:
+            return None
+        copy_asset(png)
+        copy_asset(svg)
+        link = (VIEWER
+                + "?src=" + quote(slug(svg.relative_to(vault).as_posix()))
+                + "&fallback=" + quote(slug(png.relative_to(vault).as_posix()))
+                + "&back=" + quote(slug(rel.with_suffix("").as_posix()))
+                + "&title=" + quote(base))
+        # data-router-ignore: Quartz SPA 전환을 타지 않고 페이지를 새로 연다
+        return f'<a href="{link}" data-router-ignore>{label}</a>'
+
+    def fix_embed(m):
         src = resolve(m.group(1))
         if src is None:
             return m.group(0)
         if src.name.endswith(".excalidraw.md"):
             base = src.name[: -len(".excalidraw.md")]
-            png, svg = resolve(base + ".png"), resolve(base + ".svg")
+            png = resolve(base + ".png")
             if png is None:
                 return f"> [!note] 그림 `{base}.png` 이 아직 없음"
             out = copy_asset(png)
-            if svg is not None:
-                srel = svg.relative_to(vault).as_posix()
-                copy_asset(svg)
-                link = (VIEWER
-                        + "?src=" + quote(slug(srel))
-                        + "&fallback=" + quote(slug(png.relative_to(vault).as_posix()))
-                        + "&back=" + quote(slug(rel.with_suffix("").as_posix()))
-                        + "&title=" + quote(base))
-                # data-router-ignore: Quartz SPA 전환을 타지 않고 페이지를 새로 연다
-                out += (f"\n\n> [!tip] 마인드맵 크게 보기\n> "
-                        f'<a href="{link}" data-router-ignore>확대·축소해서 보기</a>')
+            a = viewer_anchor(src, "확대·축소해서 보기")
+            if a:
+                out += f"\n\n> [!tip] 마인드맵 크게 보기\n> {a}"
             return out
         if src.suffix.lower() in IMG_EXT:
             return copy_asset(src)
         return m.group(0)
 
+    def fix_link(m):
+        """임베드가 아닌 [[그림.excalidraw|별칭]] 링크 → 뷰어 링크 (없으면 글자만)."""
+        target, alias = m.group(1), m.group(2)
+        src = resolve(target)
+        if src is None or not src.name.endswith(".excalidraw.md"):
+            return m.group(0)
+        label = alias or src.name[: -len(".excalidraw.md")]
+        return viewer_anchor(src, label + " (확대·축소)") or label
+
     text = EMBED_RE.sub(fix_embed, text)
+    text = LINK_RE.sub(fix_link, text)
     dst = content / rel
     dst.parent.mkdir(parents=True, exist_ok=True)
     dst.write_text(text, encoding="utf-8")
