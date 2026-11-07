@@ -21,6 +21,7 @@ import urllib.parse
 from pathlib import Path
 
 SITE_NAME = "뉴리의창고"
+INDEXNOW_KEY = "94136374f4584429ff18ff38a2a85261"  # IndexNow 키 (공개 값). scripts/indexnow_submit.py 가 쓴다
 SITE_DESC = "AI와 IT 소식을 골라 정리하고, 무료로 직접 해 본 기록과 읽은 논문을 손으로 정리하는 개인 블로그예요."
 AUTHOR = "뉴리"
 PRIVATE = ("연구/", "강의/", "아이디어/", "일지/")
@@ -233,4 +234,5 @@ def process(out: Path, base: str, posts: dict, intros: dict, git_modified):
         lines.append("")
     lines += ["## 더 보기", "", f"- [RSS]({base}index.xml)", f"- [사이트맵]({base}sitemap.xml)", ""]
     (out / "llms.txt").write_text("\n".join(lines), encoding="utf-8")
+    (out / f"{INDEXNOW_KEY}.txt").write_text(INDEXNOW_KEY, encoding="utf-8")  # IndexNow 키 파일
     return n
