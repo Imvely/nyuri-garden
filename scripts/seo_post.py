@@ -63,7 +63,7 @@ def rss_xml(base, posts, git_modified=None):
     if items:
         out.append(f"<lastBuildDate>{rfc822(items[0]['added'])}</lastBuildDate>")
     for p in items:
-        url = urllib.parse.quote(abs_url(base, p["slug"]), safe=":/()")  # 사이트맵과 같은 인코딩
+        url = abs_url(base, p["slug"])  # abs_url 이 이미 사이트맵과 같은 인코딩을 한다
         out.append(f"<item><title>{esc(p['title'])}</title><link>{url}</link><guid isPermaLink=\"true\">{url}</guid>"
                    f"<category>{esc(CAT_NAMES[p['cat']])}</category>"
                    f"<description>{esc(p['summary'] or '')}</description><pubDate>{rfc822(p['added'])}</pubDate></item>")
