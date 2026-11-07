@@ -160,6 +160,11 @@ def process(out: Path, base: str, posts: dict, intros: dict, git_modified):
             extra += "".join(f'<meta property="article:tag" content="{esc(t)}"/>' for t in post["tags"])
             h = h.replace("</head>", extra + "</head>", 1)
         elif slug == "index":
+            ver = Path(__file__).with_name("site_verification.json")
+            if ver.exists():
+                for k, v in json.loads(ver.read_text(encoding="utf-8")).items():
+                    if v and not k.startswith("_"):
+                        h = h.replace("</head>", f'<meta name="{esc(k)}" content="{esc(v)}"/></head>', 1)
             h = h.replace("</head>", jsonld({
                 "@context": "https://schema.org", "@graph": [
                     {"@type": "WebSite", "name": SITE_NAME, "url": base, "inLanguage": "ko-KR", "description": SITE_DESC},

@@ -1,0 +1,6 @@
+{
+  "_설명": "검색엔진 사이트 소유 확인 코드. Search Console 'HTML 태그' 방식의 content 값만 적는다. 값이 있으면 scripts/seo_post.py 가 홈(index.html) head 에 meta 태그로 넣는다.",
+  "google-site-verification": "",
+  "naver-site-verification": "",
+  "msvalidate.01": ""
+}
