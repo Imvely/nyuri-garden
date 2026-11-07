@@ -58,7 +58,8 @@ def img_size(p: Path):
 
 def set_meta(h, attr, key, value):
     """<meta attr="key" content=...> 의 content 를 바꾸고, 없으면 head 끝에 넣는다"""
-    pat = re.compile(r'<meta\s+(?:name|property)="' + re.escape(key) + r'"\s+content="[^"]*"\s*/?>')
+    # content 값이 빈 형태(<meta name="description" content/>)도 잡는다
+    pat = re.compile(r'<meta\s+(?:name|property)="' + re.escape(key) + r'"\s+content(?:="[^"]*")?\s*/?>')
     tag = f'<meta {attr}="{key}" content="{esc(value)}"/>'
     if pat.search(h):
         return pat.sub(lambda m: tag, h, count=1)

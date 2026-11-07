@@ -373,6 +373,7 @@ a.internal.tag-link {
 article img {
   border-radius: var(--radius);
   background: #fff;
+  height: auto; // scripts/seo_post.py 가 width, height 속성을 실제 크기로 넣는다 (자리 확보용, 비율은 유지)
 }
 
 // ── 표 ──────────────────────────────────────────────────────
