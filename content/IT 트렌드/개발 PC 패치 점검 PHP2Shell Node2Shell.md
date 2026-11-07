@@ -12,7 +12,7 @@ title: "내 개발 PC는 안전할까: PHP2Shell, Node2Shell, Fragnesia 버전�
 > [!abstract] 한 줄 요약
 > 10월 하순, AI의 도움으로 찾은 PHP 취약점(PHP2Shell)과 Brotli 압축 해제 결함(Node2Shell), 리눅스 커널 권한 상승(Fragnesia)이 차례로 CISA의 실제 악용 목록(KEV)에 올랐다. 내 노트북을 점검해 보니 Node, Bun, WSL 커널이 해당해서 올렸고, Git for Windows 안의 curl과 오래된 PHP 7.4는 남았다. Node는 고친 뒤에도 Brotli 버전 표기가 그대로라서 버전 숫자만 보고 판단하면 틀린다.
 
-![[IT 트렌드/첨부/패치 점검/패치 점검 마인드맵.png]]
+![[IT 트렌드/첨부/패치 점검/패치 점검 마인드맵.webp]]
 
 > [!tip] 마인드맵 크게 보기
 > <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=it-%ED%8A%B8%EB%A0%8C%EB%93%9C/%EC%B2%A8%EB%B6%80/%ED%8C%A8%EC%B9%98-%EC%A0%90%EA%B2%80/%ED%8C%A8%EC%B9%98-%EC%A0%90%EA%B2%80-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=it-%ED%8A%B8%EB%A0%8C%EB%93%9C/%EC%B2%A8%EB%B6%80/%ED%8C%A8%EC%B9%98-%EC%A0%90%EA%B2%80/%ED%8C%A8%EC%B9%98-%EC%A0%90%EA%B2%80-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=it-%ED%8A%B8%EB%A0%8C%EB%93%9C/%EA%B0%9C%EB%B0%9C-pc-%ED%8C%A8%EC%B9%98-%EC%A0%90%EA%B2%80-php2shell-node2shell&title=%ED%8C%A8%EC%B9%98%20%EC%A0%90%EA%B2%80%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>

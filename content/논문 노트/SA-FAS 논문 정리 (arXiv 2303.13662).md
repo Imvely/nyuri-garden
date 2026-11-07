@@ -25,7 +25,7 @@ title: "SA-FAS: 도메인은 나누고, 방향은 맞추기"
 > [!abstract] 한 줄 요약
 > 기존 도메인 일반화 FAS는 데이터셋마다 다른 흔적을 특징에서 지우려 했다. SA-FAS는 반대로 도메인마다 특징이 따로 뭉치게 두고, 진짜에서 위조로 넘어가는 방향만 모든 도메인에서 같게 맞춘다. 이 생각을 IRM 문제로 정리하고 projected gradient로 풀어서 OCIM 네 과제 모두에서 HTER를 가장 낮게 만들었다.
 
-![[논문 노트/첨부/SA-FAS/SA-FAS 마인드맵.png]]
+![[논문 노트/첨부/SA-FAS/SA-FAS 마인드맵.webp]]
 
 > [!tip] 마인드맵 크게 보기
 > <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/sa-fas/sa-fas-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/sa-fas/sa-fas-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/sa-fas-%EB%85%BC%EB%AC%B8-%EC%A0%95%EB%A6%AC-%28arxiv-2303.13662%29&title=SA-FAS%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>
@@ -64,7 +64,7 @@ title: "SA-FAS: 도메인은 나누고, 방향은 맞추기"
 
 두 성질이 함께 있으면 도메인 차이는 진짜와 위조를 가르는 경계와 나란한 방향으로만 나타난다. 그래서 경계 하나를 모든 도메인이 같이 쓸 수 있고, 처음 보는 도메인에도 그 경계가 통한다. 정리하면 특징은 도메인마다 다르게, 분류기는 도메인과 상관없이 같게 배운다. 저자들은 이 논문이 다루는 공격을 인쇄와 재생 공격으로 한정했다.
 
-![[논문 노트/첨부/SA-FAS/fig2-objectives.png]]
+![[논문 노트/첨부/SA-FAS/fig2-objectives.webp]]
 *원문 그림 2. 학습 목표에 따라 달라지는 특징 공간. (a) ERM, (b) ERM+SupCon, (c) SA-FAS. 원은 진짜, 엑스는 위조, 색은 도메인이다. 출처: Sun et al., CVPR 2023*
 
 ERM만 쓰면 모든 도메인이 섞인 채 하나의 경계에 맞춰진다(a). SupCon을 더하면 도메인별로 뭉치기는 하지만, 뭉친 덩어리가 아무 데나 놓일 수 있어 도메인마다 최적 경계가 달라진다(b). 분리만으로는 부족하다는 뜻이다. SA-FAS는 여기에 정렬을 더해 도메인별 경계를 하나로 맞춘다(c).
@@ -289,7 +289,7 @@ $$
 
 학습 중 여러 시점을 점으로 찍어 보면 두 점수 모두 테스트 AUC와 양의 상관을 보였다(원문 그림 5). PG-IRM을 쓰면 정렬 점수와 AUC가 함께 올랐고, SupCon을 쓰면 분리 점수가 올라 분류에 도움이 됐다.
 
-![[논문 노트/첨부/SA-FAS/fig6-umap.png]]
+![[논문 노트/첨부/SA-FAS/fig6-umap.webp]]
 *원문 그림 6. SA-FAS로 학습한 ResNet-18 끝에서 두 번째 층 특징의 UMAP. 점선은 학습 샘플로 구한 결정 경계다. 출처: Sun et al., CVPR 2023*
 
 UMAP으로 보면 진짜와 위조를 가르는 경계가 학습 도메인 전체에서 일관되고, 처음 보는 도메인에도 그대로 통한다. C 평가에서는 CASIA 샘플 일부가 고해상도인 OULU 쪽에, 일부는 저해상도인 MSU나 REPLAY 쪽에 놓였다. CASIA에 저해상도와 고해상도 이미지가 섞여 있다는 사실과 맞는다. 도메인 차이(해상도)가 경계와 상관없는 방향으로 드러난 셈이다.

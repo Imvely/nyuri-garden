@@ -33,7 +33,7 @@ aliases:
 > [!abstract] 한 줄 요약
 > 얼굴 위조 방지(FAS)를 "진짜/가짜" 이진 분류가 아니라 **멀티모달 LLM이 답하는 VQA 문제**로 바꿨다. 모델이 "No, 이건 화면을 다시 찍은 사진이다"처럼 **판단 + 이유**를 함께 말하게 만들었더니, 한 번도 본 적 없는 환경·공격 유형에서도 훨씬 잘 버틴다.
 
-![[논문 노트/첨부/I-FAS/I-FAS 마인드맵.png]]
+![[논문 노트/첨부/I-FAS/I-FAS 마인드맵.webp]]
 
 > [!tip] 마인드맵 크게 보기
 > <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/i-fas/i-fas-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/i-fas/i-fas-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/i-fas-%EB%85%BC%EB%AC%B8-%EC%A0%95%EB%A6%AC-%28arxiv-2501.01720%29&title=I-FAS%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>
@@ -140,8 +140,8 @@ $$
 
 | | |
 | --- | --- |
-| ![[논문 노트/첨부/I-FAS/fig2-overview.png]] 그림 2. 전체 구조 | ![[논문 노트/첨부/I-FAS/fig3-scf-captions.png]] 그림 3. 일반 캡션 vs 스푸프 인식 캡션 |
-| ![[논문 노트/첨부/I-FAS/fig4-responses.png]] 그림 4. 모델 응답 예시 | ![[논문 노트/첨부/I-FAS/fig1-one-to-eleven.png]] 그림 1. One-to-Eleven 비교 |
+| ![[논문 노트/첨부/I-FAS/fig2-overview.png]] 그림 2. 전체 구조 | ![[논문 노트/첨부/I-FAS/fig3-scf-captions.webp]] 그림 3. 일반 캡션 vs 스푸프 인식 캡션 |
+| ![[논문 노트/첨부/I-FAS/fig4-responses.webp]] 그림 4. 모델 응답 예시 | ![[논문 노트/첨부/I-FAS/fig1-one-to-eleven.png]] 그림 1. One-to-Eleven 비교 |
 
 ## 관련
 

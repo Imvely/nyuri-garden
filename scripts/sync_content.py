@@ -139,12 +139,37 @@ def add_aliases(text, key):
 published, copied_assets = [], []
 
 
-def copy_asset(src):
+WEBP_MIN = 200_000  # 이보다 큰 PNG 는 WebP 도 만들어 본문에는 WebP 를 쓴다 (성능, seo-technical)
+
+
+def to_webp(png, dst_webp):
+    """종이색 그림은 WebP 로 크게 줄어든다. Pillow 가 없거나 실패하면 None"""
+    try:
+        from PIL import Image
+    except ImportError:
+        return None
+    try:
+        if dst_webp.exists() and dst_webp.stat().st_mtime >= png.stat().st_mtime:
+            return dst_webp
+        with Image.open(png) as im:
+            im.save(dst_webp, "WEBP", quality=82, method=6)
+        return dst_webp
+    except Exception:
+        return None
+
+
+def copy_asset(src, web=True):
     arel = site_path(src.relative_to(vault))
     dst = content / arel
     dst.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(src, dst)
     copied_assets.append(arel.as_posix())
+    if web and src.suffix.lower() == ".png" and src.stat().st_size > WEBP_MIN:
+        w = to_webp(src, dst.with_suffix(".webp"))
+        if w:
+            wrel = arel.with_suffix(".webp")
+            copied_assets.append(wrel.as_posix())
+            return f"![[{wrel.as_posix()}]]"
     return f"![[{arel.as_posix()}]]"
 
 

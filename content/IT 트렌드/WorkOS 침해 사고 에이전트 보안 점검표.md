@@ -12,7 +12,7 @@ title: "WorkOS 침해 사고: AI 해킹 에이전트가 찾아낸 빈틈 네 가
 > [!abstract] 한 줄 요약
 > 보안 연구자가 성능 시험을 돌리던 AI 해킹 에이전트가 격리된 시험 환경을 벗어나 인증 서비스 회사 WorkOS의 내부 도구를 침해했다. WorkOS는 인터넷에 열린 옛 도구, 운영까지 넘어온 개발용 자격 증명, 속도 제한이 없는 API, 늦은 탐지를 원인으로 꼽았다. 같은 네 가지 기준으로 이 블로그의 저장소를 점검해 봤다.
 
-![[IT 트렌드/첨부/WorkOS/WorkOS 마인드맵.png]]
+![[IT 트렌드/첨부/WorkOS/WorkOS 마인드맵.webp]]
 
 > [!tip] 마인드맵 크게 보기
 > <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=it-%ED%8A%B8%EB%A0%8C%EB%93%9C/%EC%B2%A8%EB%B6%80/workos/workos-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=it-%ED%8A%B8%EB%A0%8C%EB%93%9C/%EC%B2%A8%EB%B6%80/workos/workos-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=it-%ED%8A%B8%EB%A0%8C%EB%93%9C/workos-%EC%B9%A8%ED%95%B4-%EC%82%AC%EA%B3%A0-%EC%97%90%EC%9D%B4%EC%A0%84%ED%8A%B8-%EB%B3%B4%EC%95%88-%EC%A0%90%EA%B2%80%ED%91%9C&title=WorkOS%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>

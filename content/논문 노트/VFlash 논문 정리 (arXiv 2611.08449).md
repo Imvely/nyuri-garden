@@ -17,7 +17,7 @@ title: "VFlash: 모양을 아는 시각 계획은 여러 칸을 한 번에 채�
 > [!abstract] 한 줄 요약
 > 로봇용 VLM은 궤적과 박스를 좌표 토큰 하나씩 생성해서, 계획이 자세할수록 느려진다. VFlash는 도구 호출로 계획의 종류와 길이를 먼저 정하고, 작은 드래프터가 그 모양 전체를 한 번의 순전파로 채운다. 대상 모델과 토큰이 같은지 확인하지 않고 모양만 맞으면 받아들이는데, 3D 궤적 오차는 오히려 대상 모델보다 18~61% 줄었다.
 
-![[논문 노트/첨부/VFlash/VFlash 마인드맵.png]]
+![[논문 노트/첨부/VFlash/VFlash 마인드맵.webp]]
 
 > [!tip] 마인드맵 크게 보기
 > <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/vflash/vflash-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/vflash/vflash-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/vflash-%EB%85%BC%EB%AC%B8-%EC%A0%95%EB%A6%AC-%28arxiv-2611.08449%29&title=VFlash%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>
@@ -157,7 +157,7 @@ LIBERO 계열에서는 기준 대비 이득이 LIBERO 0.8점, LIBERO-Plus 1.9점
 
 **지연 시간.** 원문 그림 1에 Thor와 Spark 결과가 있다.
 
-![[논문 노트/첨부/VFlash/fig1-overview.png]]
+![[논문 노트/첨부/VFlash/fig1-overview.webp]]
 *원문 그림 1. 시각 계획의 모양, VFlash의 경로별 처리, Jetson Thor와 DGX Spark의 지연 시간과 3D 정확도. 출처: Chou et al., arXiv 2611.08449 (2026)*
 
 MolmoSpaces 한 단계(전처리, 비전, 프리필, 디코딩, 행동 모델) 시간을 원문 표 11에서 옮겼다. 줄어든 시간은 거의 모두 디코딩에서 나왔다.

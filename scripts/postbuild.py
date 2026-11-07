@@ -126,7 +126,8 @@ for folder, hide_tags in LIST_FOLDERS.items():
         minutes = max(1, round(chars / 500))
         items.append({"slug": slug, "title": f.get("title") or idx[slug].get("title") or md.stem,
                       "summary": f.get("summary", ""), "tags": tags, "created": f.get("created", ""),
-                      "venue": f.get("venue", ""), "added": added, "minutes": minutes})
+                      "venue": f.get("venue", ""), "added": added, "minutes": minutes,
+                      "file": str(md), "paper_url": f.get("url", "") if folder == "논문 노트" else "", "paper_title": f.get("paper", "")})
         idx[slug]["added"] = added  # 탐색기 정렬용 (quartz.config.yaml 의 explorer mapFn)
     if items:
         key = slug_of.get(f"{folder}/index.md", "")
@@ -219,6 +220,27 @@ for s, p in posts.items():
 meta = {s: {"title": p["title"], "minutes": p.get("minutes", 0), "pillar": p["pillar"], "cat": p["cat"], "added": p["added"]} for s, p in posts.items()}
 (out / "static" / "nyuri-related.json").write_text(json.dumps({"posts": meta, "related": related}, ensure_ascii=False), encoding="utf-8")
 print("related data:", len(related), "posts")
+
+# ── SEO, AI 검색 준비, 성능 (scripts/seo_post.py) ──
+import seo_post  # noqa: E402
+
+SITE = "https://" + re.search(r"^\s*baseUrl:\s*(\S+)", (repo / "quartz.config.yaml").read_text(encoding="utf-8"), re.M).group(1).strip("/") + "/"
+intros_raw = json.loads((repo / "scripts" / "folder_intros.json").read_text(encoding="utf-8"))
+intros = {"it-트렌드": intros_raw.get("IT 트렌드", ""), "논문-노트": intros_raw.get("논문 노트", "")}
+
+
+def git_modified(path):
+    if not path:
+        return ""
+    try:
+        o = subprocess.run(["git", "log", "-1", "--format=%cI", "--", path], cwd=repo, capture_output=True, text=True, encoding="utf-8").stdout.strip()
+        return o
+    except Exception:
+        return ""
+
+
+seo_posts = {s: {**p, "slug": s} for s, p in posts.items()}
+print("seo pages:", seo_post.process(out, SITE, seo_posts, intros, git_modified))
 (out / "static" / "contentIndex.json").write_text(json.dumps(idx, ensure_ascii=False), encoding="utf-8")
 print("list data:", {k: len(v) for k, v in lists.items()})
 

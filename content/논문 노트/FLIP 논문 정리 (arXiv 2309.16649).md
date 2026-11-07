@@ -24,7 +24,7 @@ title: "FLIP: 문장을 기준점으로 삼는 얼굴 위조 판별"
 > [!abstract] 한 줄 요약
 > 얼굴 위조 방지(FAS) 모델의 출발점을 ImageNet 대신 CLIP 이미지 인코더로 바꾸기만 해도 처음 보는 데이터셋에서 더 잘 버틴다. 여기에 진짜와 위조를 설명하는 문장 여러 개의 평균을 분류 기준으로 쓰고, 이미지 두 장과 문장 두 개 사이의 일관성까지 학습시키면 세 가지 평가 방식 모두에서 기존 방법보다 평균 HTER가 낮아진다.
 
-![[논문 노트/첨부/FLIP/FLIP 마인드맵.png]]
+![[논문 노트/첨부/FLIP/FLIP 마인드맵.webp]]
 
 > [!tip] 마인드맵 크게 보기
 > <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/flip/flip-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/flip/flip-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/flip-%EB%85%BC%EB%AC%B8-%EC%A0%95%EB%A6%AC-%28arxiv-2309.16649%29&title=FLIP%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>
@@ -287,7 +287,7 @@ M, C, I, O를 합친 뒤 80%-20%로 나눴다. Replay는 진짜와 인쇄로 학
 
 ### 5.9 모델이 어디를 보나
 
-![[논문 노트/첨부/FLIP/fig3-attention.png]]
+![[논문 노트/첨부/FLIP/fig3-attention.webp]]
 *원문 그림 3. Protocol 1 위조 이미지에서 FLIP-MCL의 attention map. 출처: Srivatsan et al., ICCV 2023*
 
 Protocol 1에서는 종이 질감(M), 종이 테두리(C), 모아레 무늬(I, O)에 주의가 몰린다. Protocol 2에서는 화면 테두리와 반사(W), 인쇄한 천의 주름(C), 눈과 코를 오려 낸 부분(S)을 본다. 틀린 사례도 함께 보였다. 어두운 조명, 피부색이 어두운 얼굴, 심한 화소 깨짐, 큰 자세 변화가 있는 진짜 얼굴은 위조로 분류되기도 했다. 고해상도 위조는 진짜로 분류되는 경우가 있었다.

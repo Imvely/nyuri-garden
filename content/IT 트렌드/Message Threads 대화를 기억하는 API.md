@@ -12,7 +12,7 @@ title: "Message Threads: 대화를 서버가 잠깐 기억하는 Claude API, 요
 > [!abstract] 한 줄 요약
 > Anthropic이 11월 2일 Messages API에 `thread` 매개변수를 베타로 붙였다. 첫 요청에 대화 전체를 보내면 다음부터는 새 메시지와 직전 응답 id만 보내면 된다. API 키 없이 가짜 서버로 공식 SDK의 요청을 가로채 보니, 30턴 대화의 요청 본문 합계가 매번 전체를 보낼 때의 약 9%였다. 모델이 읽는 토큰과 가격은 그대로이고, 회사가 밝힌 첫 토큰 35% 단축은 재 보지 못했다.
 
-![[IT 트렌드/첨부/Message Threads/Message Threads 마인드맵.png]]
+![[IT 트렌드/첨부/Message Threads/Message Threads 마인드맵.webp]]
 
 > [!tip] 마인드맵 크게 보기
 > <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=it-%ED%8A%B8%EB%A0%8C%EB%93%9C/%EC%B2%A8%EB%B6%80/message-threads/message-threads-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=it-%ED%8A%B8%EB%A0%8C%EB%93%9C/%EC%B2%A8%EB%B6%80/message-threads/message-threads-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=it-%ED%8A%B8%EB%A0%8C%EB%93%9C/message-threads-%EB%8C%80%ED%99%94%EB%A5%BC-%EA%B8%B0%EC%96%B5%ED%95%98%EB%8A%94-api&title=Message%20Threads%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>

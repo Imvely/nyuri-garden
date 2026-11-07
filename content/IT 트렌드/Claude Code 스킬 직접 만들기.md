@@ -12,7 +12,7 @@ title: "Claude Code 스킬 직접 만들기: 블로그 글 작업을 스킬 하�
 > [!abstract] 한 줄 요약
 > 이 블로그의 IT 트렌드 글은 조사부터 그림, 문장 다듬기, 게시까지 Claude Code 스킬로 돌아간다. 스킬은 `SKILL.md` 한 장에서 시작하고, 앞머리의 설명 한 줄이 언제 쓰일지를 정한다. 하루 동안 받은 피드백이 스킬 파일의 규칙으로 쌓이는 과정을 기록했다.
 
-![[IT 트렌드/첨부/스킬 만들기/스킬 만들기 마인드맵.png]]
+![[IT 트렌드/첨부/스킬 만들기/스킬 만들기 마인드맵.webp]]
 
 > [!tip] 마인드맵 크게 보기
 > <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=it-%ED%8A%B8%EB%A0%8C%EB%93%9C/%EC%B2%A8%EB%B6%80/%EC%8A%A4%ED%82%AC-%EB%A7%8C%EB%93%A4%EA%B8%B0/%EC%8A%A4%ED%82%AC-%EB%A7%8C%EB%93%A4%EA%B8%B0-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=it-%ED%8A%B8%EB%A0%8C%EB%93%9C/%EC%B2%A8%EB%B6%80/%EC%8A%A4%ED%82%AC-%EB%A7%8C%EB%93%A4%EA%B8%B0/%EC%8A%A4%ED%82%AC-%EB%A7%8C%EB%93%A4%EA%B8%B0-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=it-%ED%8A%B8%EB%A0%8C%EB%93%9C/claude-code-%EC%8A%A4%ED%82%AC-%EC%A7%81%EC%A0%91-%EB%A7%8C%EB%93%A4%EA%B8%B0&title=%EC%8A%A4%ED%82%AC%20%EB%A7%8C%EB%93%A4%EA%B8%B0%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>

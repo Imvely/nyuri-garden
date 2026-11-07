@@ -12,7 +12,7 @@ title: "AI 메모리 쏠림이 휴대폰을 밀어냈다: 퀄컴, 애플, SK하�
 > [!abstract] 한 줄 요약
 > 10월 말부터 11월 초 사이 나온 실적 발표를 나란히 놓으면 한 방향이 보인다. SK하이닉스와 삼성은 HBM이 다 팔렸다고 했다. 퀄컴은 메모리 탓에 휴대폰 칩 매출이 26% 줄었다며 전 제품 가격을 올린다고 했다. 애플은 메모리 값이 "전례 없다"며 다음 분기 마진을 낮춰 잡았다.
 
-![[IT 트렌드/첨부/메모리 쏠림/메모리 쏠림 마인드맵.png]]
+![[IT 트렌드/첨부/메모리 쏠림/메모리 쏠림 마인드맵.webp]]
 
 > [!tip] 마인드맵 크게 보기
 > <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=it-%ED%8A%B8%EB%A0%8C%EB%93%9C/%EC%B2%A8%EB%B6%80/%EB%A9%94%EB%AA%A8%EB%A6%AC-%EC%8F%A0%EB%A6%BC/%EB%A9%94%EB%AA%A8%EB%A6%AC-%EC%8F%A0%EB%A6%BC-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=it-%ED%8A%B8%EB%A0%8C%EB%93%9C/%EC%B2%A8%EB%B6%80/%EB%A9%94%EB%AA%A8%EB%A6%AC-%EC%8F%A0%EB%A6%BC/%EB%A9%94%EB%AA%A8%EB%A6%AC-%EC%8F%A0%EB%A6%BC-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=it-%ED%8A%B8%EB%A0%8C%EB%93%9C/ai-%EB%A9%94%EB%AA%A8%EB%A6%AC-%EC%8F%A0%EB%A6%BC%EA%B3%BC-%EC%B9%A9-%EC%A3%BC%EA%B0%80-%EA%B8%89%EB%9D%BD&title=%EB%A9%94%EB%AA%A8%EB%A6%AC%20%EC%8F%A0%EB%A6%BC%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>

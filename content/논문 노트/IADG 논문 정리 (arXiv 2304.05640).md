@@ -27,7 +27,7 @@ title: "IADG: 데이터셋 라벨 대신 샘플 하나 단위로 맞추기"
 > [!abstract] 한 줄 요약
 > 기존 도메인 일반화 FAS는 "이 샘플은 어느 데이터셋에서 왔나"라는 라벨에 기대어 데이터셋끼리 분포를 맞췄다. IADG는 이 라벨을 쓰지 않는다. 샘플마다 특징 채널 사이의 상관(공분산) 가운데 스타일에 민감한 자리만 골라 지운다. 이때 진짜는 많이, 위조는 조금만 지운다. 네 가지 교차 데이터셋 평가 모두에서 비교 방법 가운데 가장 낮은 HTER를 냈다.
 
-![[논문 노트/첨부/IADG/IADG 마인드맵.png]]
+![[논문 노트/첨부/IADG/IADG 마인드맵.webp]]
 
 > [!tip] 마인드맵 크게 보기
 > <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/iadg/iadg-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/iadg/iadg-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/iadg-%EB%85%BC%EB%AC%B8-%EC%A0%95%EB%A6%AC-%28arxiv-2304.05640%29&title=IADG%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>
@@ -63,7 +63,7 @@ title: "IADG: 데이터셋 라벨 대신 샘플 하나 단위로 맞추기"
 
 ## 3. 방법
 
-![[논문 노트/첨부/IADG/fig2-overview.png]]
+![[논문 노트/첨부/IADG/fig2-overview.webp]]
 *원문 그림 2. 전체 구조. DKG, CSA, AIAW 세 모듈로 이루어진다. 출처: Zhou et al., CVPR 2023*
 
 계산 순서대로 DKG, CSA, AIAW가 이어진다. DKG가 샘플마다 다른 특징을 뽑으면 CSA가 그 특징에 새 스타일을 입힌 사본을 만들고, AIAW가 원본과 사본 양쪽에서 스타일에 민감한 공분산을 누른다.
@@ -278,7 +278,7 @@ M과 I로만 학습하고 C, O로 평가했다.
 
 스타일 증강은 CSA로 바꿨을 때, 커널은 정적과 동적을 함께 쓸 때 가장 좋았다.
 
-![[논문 노트/첨부/IADG/fig6-cov-gradcam.png]]
+![[논문 노트/첨부/IADG/fig6-cov-gradcam.webp]]
 *원문 그림 6. 촬영 기기와 환경별 공분산과 Grad-CAM. AIAW를 쓰면 공분산 대부분이 지워지고 일부만 크게 남으며, 장면이 바뀌어도 얼굴에 주의가 모인다. 출처: Zhou et al., CVPR 2023*
 
 ### 5.6 특징이 어떻게 놓이나

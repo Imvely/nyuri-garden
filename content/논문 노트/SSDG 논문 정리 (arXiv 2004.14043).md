@@ -25,7 +25,7 @@ title: "SSDG: 진짜는 모으고, 위조는 흩어 두기"
 > [!abstract] 한 줄 요약
 > 얼굴 위조 방지(FAS) 모델을 여러 데이터셋으로 학습할 때, 진짜 얼굴만 데이터셋 구분 없이 한 무리로 모으고 위조 얼굴은 데이터셋마다 따로 흩어 둔다. 진짜와 위조를 똑같이 다루던 기존 도메인 일반화보다, 처음 보는 데이터셋에서 진짜와 위조를 훨씬 잘 가른다.
 
-![[논문 노트/첨부/SSDG/SSDG 마인드맵.png]]
+![[논문 노트/첨부/SSDG/SSDG 마인드맵.webp]]
 
 > [!tip] 마인드맵 크게 보기
 > <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/ssdg/ssdg-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/ssdg/ssdg-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/ssdg-%EB%85%BC%EB%AC%B8-%EC%A0%95%EB%A6%AC-%28arxiv-2004.14043%29&title=SSDG%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>
@@ -142,7 +142,7 @@ $\mathcal{L}_{Cls}$ 는 진짜와 위조 이진 분류의 교차 엔트로피, $
 
 BDG-M의 네 과제 평균 HTER는 23.09%로 MADDG(23.05%)와 거의 같았다. 둘 다 진짜와 위조를 똑같이 모으려 했기 때문이라고 저자들은 본다. 같은 조건에서 단측으로 바꾸기만 해도 모든 과제에서 좋아졌다.
 
-![[논문 노트/첨부/SSDG/fig5-tsne.png]]
+![[논문 노트/첨부/SSDG/fig5-tsne.webp]]
 *원문 그림 5. C 평가 과제에서 특징을 t-SNE로 그린 모습. SSDG-R(오른쪽)은 위조가 더 넓게 흩어지고 진짜는 더 촘촘하다. 출처: Jia et al., CVPR 2020*
 
 ### 5.3 구성 요소를 하나씩 빼 보면 (원문 표 1, SSDG-R)

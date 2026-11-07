@@ -15,7 +15,7 @@ title: "AI 뉴스 가장 빨리 보는 곳: 국내외 출처 지도와 매일 �
 > [!info] 마지막 확인: 2026년 11월 7일
 > 피드 주소와 서비스 정책이 자주 바뀐다. 한 달에 한 번 주소를 다시 열어 보고 이 글을 고친다.
 
-![[IT 트렌드/첨부/출처지도/출처지도 마인드맵.png]]
+![[IT 트렌드/첨부/출처지도/출처지도 마인드맵.webp]]
 
 > [!tip] 마인드맵 크게 보기
 > <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=it-%ED%8A%B8%EB%A0%8C%EB%93%9C/%EC%B2%A8%EB%B6%80/%EC%B6%9C%EC%B2%98%EC%A7%80%EB%8F%84/%EC%B6%9C%EC%B2%98%EC%A7%80%EB%8F%84-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=it-%ED%8A%B8%EB%A0%8C%EB%93%9C/%EC%B2%A8%EB%B6%80/%EC%B6%9C%EC%B2%98%EC%A7%80%EB%8F%84/%EC%B6%9C%EC%B2%98%EC%A7%80%EB%8F%84-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=it-%ED%8A%B8%EB%A0%8C%EB%93%9C/ai-%EC%86%8C%EC%8B%9D-%EC%B6%9C%EC%B2%98-%EC%A7%80%EB%8F%84&title=%EC%B6%9C%EC%B2%98%EC%A7%80%EB%8F%84%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>

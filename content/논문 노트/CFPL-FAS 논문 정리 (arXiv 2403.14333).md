@@ -28,7 +28,7 @@ title: "CFPL-FAS: 클래스 이름 없이 배우는 프롬프트"
 > [!abstract] 한 줄 요약
 > CLIP 위에 작은 트랜스포머 두 개(CQF, SQF)를 얹어 이미지의 내용과 스타일에서 프롬프트를 만든다. 이 프롬프트를 글 인코더에 통과시켜 얻은 값으로 이미지 특징의 채널을 키우거나 줄인 뒤 진짜와 위조를 가른다. OCIM 네 과제에서 평균 HTER 3.60%를 기록했다.
 
-![[논문 노트/첨부/CFPL-FAS/CFPL-FAS 마인드맵.png]]
+![[논문 노트/첨부/CFPL-FAS/CFPL-FAS 마인드맵.webp]]
 
 > [!tip] 마인드맵 크게 보기
 > <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/cfpl-fas/cfpl-fas-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/cfpl-fas/cfpl-fas-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/cfpl-fas-%EB%85%BC%EB%AC%B8-%EC%A0%95%EB%A6%AC-%28arxiv-2403.14333%29&title=CFPL-FAS%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>

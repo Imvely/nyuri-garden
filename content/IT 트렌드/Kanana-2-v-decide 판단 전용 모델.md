@@ -12,7 +12,7 @@ title: "카카오 Kanana-2-v-decide: 답 대신 판단만 하는 3.67B 모델을
 > [!abstract] 한 줄 요약
 > 카카오가 11월 6일 공개한 Kanana-2-v-decide는 글을 쓰지 않고, 고르기와 예 아니오와 점수 질문에 확률로만 답하는 모델이다. 그래픽카드 없는 노트북에서 돌려 보니 모델 카드 예제는 정확히 맞혔고, 이 블로그 글 네 편 중 세 편의 분야를 맞혔다. 한 번 묻는 데는 30초에서 90초가 걸렸다.
 
-![[IT 트렌드/첨부/Kanana decide/Kanana decide 마인드맵.png]]
+![[IT 트렌드/첨부/Kanana decide/Kanana decide 마인드맵.webp]]
 
 > [!tip] 마인드맵 크게 보기
 > <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=it-%ED%8A%B8%EB%A0%8C%EB%93%9C/%EC%B2%A8%EB%B6%80/kanana-decide/kanana-decide-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=it-%ED%8A%B8%EB%A0%8C%EB%93%9C/%EC%B2%A8%EB%B6%80/kanana-decide/kanana-decide-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=it-%ED%8A%B8%EB%A0%8C%EB%93%9C/kanana-2-v-decide-%ED%8C%90%EB%8B%A8-%EC%A0%84%EC%9A%A9-%EB%AA%A8%EB%8D%B8&title=Kanana%20decide%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>
