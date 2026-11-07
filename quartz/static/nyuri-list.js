@@ -37,6 +37,43 @@
     } catch {}
     return null
   }
+  const saveCount = (slug, c) => {
+    counts.set(slug, c)
+    try {
+      sessionStorage.setItem("nyuri-count:" + slug, JSON.stringify(c))
+    } catch {}
+  }
+  // 여러 글을 한 번에 (백엔드 action=counts). 예전 백엔드면 null 을 돌려주고 글마다 부르는 방식으로 넘어간다
+  let batchSupported = true
+  const fetchMany = async (slugs) => {
+    const api = window.NYURI && window.NYURI.api
+    if (!api || !batchSupported || !slugs.length) return null
+    try {
+      const u = new URL(api)
+      u.searchParams.set("action", "counts")
+      u.searchParams.set("pages", slugs.map(pageKey).join(","))
+      try {
+        if (window.NYURI.clientId) u.searchParams.set("clientId", window.NYURI.clientId())
+      } catch {}
+      const j = await (await fetch(u)).json()
+      if (!j || !j.ok || !j.counts) {
+        batchSupported = false
+        return null
+      }
+      const liked = new Set(j.liked || [])
+      const out = {}
+      for (const slug of slugs) {
+        const k = pageKey(slug)
+        const v = j.counts[k] || { likes: 0, comments: 0 }
+        out[slug] = { likes: v.likes || 0, comments: v.comments || 0, liked: liked.has(k), at: Date.now() }
+        saveCount(slug, out[slug])
+      }
+      return out
+    } catch {
+      return null
+    }
+  }
+  window.NYURI_COUNTS = { readCount, fetchMany, fetchCount: (s) => fetchCount(s) } // 관련 글(nyuri-related.js)도 같이 쓴다
   const fetchCount = (slug) => {
     const api = window.NYURI && window.NYURI.api
     if (!api) return Promise.resolve(null)
@@ -376,7 +413,13 @@
     function loadCounts(targets) {
       const todo = targets.filter((it) => !readCount(it.slug))
       if (!todo.length) return
-      Promise.all(todo.map((it) => fetchCount(it.slug).then((c) => paint(it.slug, c)))).then(() => {
+      fetchMany(todo.map((it) => it.slug))
+        .then((many) =>
+          many
+            ? todo.forEach((it) => paint(it.slug, many[it.slug]))
+            : Promise.all(todo.map((it) => fetchCount(it.slug).then((c) => paint(it.slug, c)))),
+        )
+        .then(() => {
         if (state.sort === "popular" && !sortedWithCounts) {
           sortedWithCounts = true
           render(false)

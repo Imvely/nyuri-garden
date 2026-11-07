@@ -20,6 +20,7 @@ function doGet(e) {
   try {
     const p = (e && e.parameter) || {}
     if (p.action === "thread") return json(thread(p.page || "", p.clientId || ""))
+    if (p.action === "counts") return json(counts(p.pages || "", p.clientId || ""))
     return json({ ok: true, name: SITE_NAME })
   } catch (err) {
     return json({ ok: false, error: String(err.message || err) })
@@ -34,6 +35,14 @@ function doPost(e) {
     return json({ ok: false, error: "bad_request" })
   }
   body.meta = meta_(body)
+  // 방문 기록은 잠그지 않고 한 줄만 붙인다 (요청이 많아도 댓글 처리를 막지 않게)
+  if (body.action === "track") {
+    try {
+      return json(track(body))
+    } catch (err) {
+      return json({ ok: false, error: String(err.message || err) })
+    }
+  }
   // 쪽지는 시트 순서와 상관없으니 잠그지 않고 바로 보낸다
   if (body.action === "mail") {
     try {
@@ -150,8 +159,144 @@ function threadKey_(page) {
 
 function dropThread_(page) {
   try {
-    CacheService.getScriptCache().remove(threadKey_(page))
+    CacheService.getScriptCache().removeAll([threadKey_(page), COUNTS_KEY])
   } catch (e) {}
+}
+
+// ── 여러 글의 좋아요, 댓글 수를 한 번에 (카테고리 목록, 관련 글) ─────
+const COUNTS_KEY = "counts:all"
+const COUNTS_TTL = 300 // 초. 좋아요, 댓글이 바뀌면 dropThread_ 가 바로 지운다
+
+function countsData_() {
+  const cache = CacheService.getScriptCache()
+  const hit = cache.get(COUNTS_KEY)
+  if (hit) {
+    try {
+      return JSON.parse(hit)
+    } catch (e) {}
+  }
+  const data = { counts: {}, likers: {} }
+  readAll_("likers").forEach(function (r) {
+    const p = String(r.page)
+    ;(data.likers[p] = data.likers[p] || []).push(String(r.clientId))
+  })
+  readAll_("comments").forEach(function (r) {
+    if (truthy_(r.deleted)) return
+    const p = String(r.page)
+    data.counts[p] = data.counts[p] || { likes: 0, comments: 0 }
+    data.counts[p].comments++
+  })
+  Object.keys(data.likers).forEach(function (p) {
+    data.counts[p] = data.counts[p] || { likes: 0, comments: 0 }
+    data.counts[p].likes = data.likers[p].length
+  })
+  try {
+    cache.put(COUNTS_KEY, JSON.stringify(data), COUNTS_TTL)
+  } catch (e) {}
+  return data
+}
+
+// pages: 쉼표로 이은 글 키 (비우면 전체). clientId 가 있으면 내가 누른 글 목록도 준다
+function counts(pages, clientId) {
+  const d = countsData_()
+  const want = String(pages || "")
+    .split(",")
+    .map(function (s) {
+      return s.trim()
+    })
+    .filter(Boolean)
+    .slice(0, 200)
+  const keys = want.length ? want : Object.keys(d.counts)
+  const out = {}
+  const liked = []
+  keys.forEach(function (k) {
+    out[k] = d.counts[k] || { likes: 0, comments: 0 }
+    if (clientId && (d.likers[k] || []).indexOf(String(clientId)) >= 0) liked.push(k)
+  })
+  return { ok: true, counts: out, liked: liked }
+}
+
+// ── 방문 분석: views 시트에 한 줄씩 (IP 는 받지 않는다) ─────────────
+const VIEWS_HEADER = [
+  "time", "day", "event", "page", "title", "channel", "refHost",
+  "utmSource", "utmMedium", "utmCampaign", "device", "visitor", "newVisitor",
+  "depth", "seconds", "target", "position", "reason",
+]
+const TRACK_EVENTS = { page_view: 1, page_leave: 1, related_click: 1 }
+
+function track(b) {
+  if (!TRACK_EVENTS[b.event]) return { ok: false, error: "bad_event" }
+  if (isAdmin_(b.adminKey)) return { ok: true, skipped: "owner" } // 주인 방문은 세지 않는다
+  if (!rateOk_("track", 600)) return { ok: false, error: "rate" }
+  const s = function (v, n) {
+    return clean_(v).slice(0, n || 120)
+  }
+  const num = function (v, max) {
+    const x = Number(v)
+    return isFinite(x) ? Math.max(0, Math.min(max, Math.round(x))) : ""
+  }
+  let sh = book().getSheetByName("views")
+  if (!sh) sh = sheet_(book(), "views", VIEWS_HEADER)
+  SHEETS_.views = sh
+  append_("views", {
+    time: kst_(),
+    day: Utilities.formatDate(new Date(), "Asia/Seoul", "yyyy-MM-dd"),
+    event: b.event,
+    page: s(b.page, 300),
+    title: s(b.title, 200),
+    channel: s(b.channel, 20),
+    refHost: s(b.refHost, 100),
+    utmSource: s(b.utmSource, 60),
+    utmMedium: s(b.utmMedium, 60),
+    utmCampaign: s(b.utmCampaign, 80),
+    device: s(b.device, 10),
+    visitor: s(b.visitor, 16),
+    newVisitor: b.newVisitor ? "TRUE" : "",
+    depth: num(b.depth, 100),
+    seconds: num(b.seconds, 7200),
+    target: s(b.target, 300),
+    position: num(b.position, 20),
+    reason: s(b.reason, 30),
+  })
+  return { ok: true }
+}
+
+// 처음 한 번 실행: views 시트와 대시보드 시트를 만든다 (편집기에서 setupAnalytics 실행)
+function setupAnalytics() {
+  const ss = book()
+  sheet_(ss, "views", VIEWS_HEADER)
+  let d = ss.getSheetByName("대시보드")
+  if (!d) d = ss.insertSheet("대시보드")
+  d.clear()
+  const V = "views!"
+  const cells = [
+    ["A1", "최근 30일 (주인 방문 제외, 한국 시각)"],
+    ["A2", "날짜"], ["B2", "조회"], ["C2", "방문자"], ["D2", "새 방문자"],
+    ["A3", "=ARRAYFORMULA(TEXT(SEQUENCE(30,1,TODAY()-29,1),\"yyyy-mm-dd\"))"],
+    ["B3", "=ARRAYFORMULA(IF(A3:A32=\"\",,COUNTIFS(" + V + "B:B,A3:A32," + V + "C:C,\"page_view\")))"],
+    ["C3", "=MAP(A3:A32,LAMBDA(d,IFERROR(COUNTUNIQUEIFS(" + V + "L:L," + V + "B:B,d," + V + "C:C,\"page_view\"),0)))"],
+    ["D3", "=ARRAYFORMULA(IF(A3:A32=\"\",,COUNTIFS(" + V + "B:B,A3:A32," + V + "C:C,\"page_view\"," + V + "M:M,TRUE)))"],
+    ["F1", "글별 조회 (전체 기간)"],
+    ["F2", "=QUERY(" + V + "A:R,\"select E, count(C) where C = 'page_view' and E <> '' group by E order by count(C) desc limit 30 label E '글', count(C) '조회'\",1)"],
+    ["I1", "유입 경로"],
+    ["I2", "=QUERY(" + V + "A:R,\"select F, count(C) where C = 'page_view' group by F order by count(C) desc label F '경로', count(C) '조회'\",1)"],
+    ["L1", "어디서 왔나 (외부 사이트)"],
+    ["L2", "=QUERY(" + V + "A:R,\"select G, count(C) where C = 'page_view' and G <> '' and F <> 'internal' group by G order by count(C) desc limit 30 label G '사이트', count(C) '조회'\",1)"],
+    ["O1", "얼마나 읽었나 (떠날 때 기준)"],
+    ["O2", "=QUERY(" + V + "A:R,\"select E, avg(N), avg(O), count(C) where C = 'page_leave' and E <> '' group by E order by count(C) desc limit 30 label E '글', avg(N) '평균 스크롤 %', avg(O) '평균 읽은 초', count(C) '떠난 수'\",1)"],
+    ["T1", "다음에 읽을 글 클릭"],
+    ["T2", "=QUERY(" + V + "A:R,\"select R, Q, count(C) where C = 'related_click' group by R, Q order by count(C) desc label R '이유', Q '순서', count(C) '클릭'\",1)"],
+    ["W1", "기기"],
+    ["W2", "=QUERY(" + V + "A:R,\"select K, count(C) where C = 'page_view' group by K label K '기기', count(C) '조회'\",1)"],
+  ]
+  cells.forEach(function (c) {
+    const r = d.getRange(c[0])
+    if (String(c[1]).charAt(0) === "=") r.setFormula(c[1])
+    else r.setValue(c[1])
+  })
+  d.getRange("A1:W1").setFontWeight("bold")
+  d.setFrozenRows(2)
+  Logger.log("views, 대시보드 시트 준비 완료: " + ss.getUrl())
 }
 
 function addComment(b) {

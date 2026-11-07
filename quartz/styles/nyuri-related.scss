@@ -1,0 +1,62 @@
+// 글 페이지 오른쪽(모바일은 본문 뒤) '이 글을 언급한 글', '다음에 읽을 글' (static/nyuri-related.js)
+// 같은 사이드바의 목차와 같은 문법: 왼쪽 1px 선, 마우스를 올리면 선이 호박색. 강조색은 이유 문구에만
+
+.backlinks.nyuri-related {
+  h3 + .nyuri-related-list + h3 {
+    margin-top: 1.5rem;
+  }
+}
+
+.nyuri-related-list {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    margin: 0;
+  }
+}
+
+.backlinks.nyuri-related .nyuri-related-link {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.42rem 0 0.42rem 0.75rem;
+  border-left: 1px solid var(--line);
+  color: var(--darkgray);
+  background: none;
+  text-decoration: none;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease;
+
+  &:hover,
+  &:focus-visible {
+    border-left-color: var(--secondary);
+    color: var(--dark);
+  }
+}
+
+.nyuri-related-title {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 0.9rem;
+  font-weight: 550;
+  line-height: 1.45;
+}
+
+.nyuri-related-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  color: var(--gray);
+  font-size: 0.76rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.nyuri-related-reason {
+  color: var(--secondary);
+  font-weight: 600;
+}

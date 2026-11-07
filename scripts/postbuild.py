@@ -36,8 +36,10 @@ SNIPPET = (
     '<script src="__ROOT__static/comments.js" defer></script>'
     '<script src="__ROOT__static/nyuri-graph.js" defer></script>'
     '<script src="__ROOT__static/nyuri-list.js" defer></script>'
+    '<script src="__ROOT__static/nyuri-analytics.js" defer></script>'
+    '<script src="__ROOT__static/nyuri-related.js" defer></script>'
 )
-MARKER = "static/nyuri-list.js"
+MARKER = "static/nyuri-related.js"
 OLD_SNIPPET = '<script>try{if(!localStorage.getItem("theme"))localStorage.setItem("theme","dark")}catch(e){}</script>'
 
 out = Path(sys.argv[1] if len(sys.argv) > 1 else "public")
@@ -130,6 +132,93 @@ for folder, hide_tags in LIST_FOLDERS.items():
         key = slug_of.get(f"{folder}/index.md", "")
         lists[key or folder] = items
 (out / "static" / "nyuri-list.json").write_text(json.dumps(lists, ensure_ascii=False), encoding="utf-8")
+
+# ── 관련 글 (static/nyuri-related.json, 글 페이지의 백링크 칸을 static/nyuri-related.js 가 바꿔 그린다) ──
+# 기획: 볼트 00 수신함/reports/블로그 백링크와 관련 글 노출 기획.md. 공개 글만 후보, 인기 점수와 다양성 규칙은 화면에서
+import math
+from datetime import datetime, timezone
+
+posts = {}
+for key, items in lists.items():
+    cat = key.split("/")[0]
+    for it in items:
+        posts[it["slug"]] = {**it, "cat": cat, "ltags": [t.lower() for t in idx[it["slug"]].get("tags", [])]}
+
+PILLARS = [  # 앞에서부터 처음 맞는 것 하나
+    ("trend", lambda p: {"주간트렌드", "출처지도"} & set(p["ltags"])),
+    ("security", lambda p: "ai보안" in p["ltags"]),
+    ("laptop", lambda p: "써본기록" in p["ltags"] and {"오픈모델", "국내ai", "claude"} & set(p["ltags"])),
+    ("agent", lambda p: {"ai에이전트", "개발도구"} & set(p["ltags"])),
+    ("money", lambda p: {"반도체", "ai인프라"} & set(p["ltags"])),
+    ("paper", lambda p: p["cat"] == "논문-노트"),
+]
+SKIP_TAGS = {"it트렌드", "논문"}
+HALF_TAGS = {"써본기록", "해설"}
+HUB_TAGS = {"출처지도"}
+for p in posts.values():
+    p["pillar"] = next((name for name, f in PILLARS if f(p)), "other")
+
+
+def tag_score(a, b):
+    w = lambda t: 0.5 if t in HALF_TAGS else 1.0
+    A = set(a["ltags"]) - SKIP_TAGS
+    B = set(b["ltags"]) - SKIP_TAGS
+    union = sum(w(t) for t in A | B)
+    return 25 * sum(w(t) for t in A & B) / union if union else 0
+
+
+def manual_links(slug):
+    """본문 '함께 보면 좋은 글' 절에 이미 손으로 넣은 글 (두 번 권하지 않는다)"""
+    md = content / idx[slug]["filePath"]
+    t = md.read_text(encoding="utf-8") if md.exists() else ""
+    m = re.search(r"^## 함께 (?:보면|읽으면) 좋은 (?:글|논문)\s*$(.*?)(?=^## |\Z)", t, re.M | re.S)
+    names = re.findall(r"\[\[([^\]|#]+)", m.group(1)) if m else []
+    out_ = set()
+    for n in names:
+        for s, q in posts.items():
+            if idx[s]["filePath"].endswith("/" + n.strip() + ".md"):
+                out_.add(s)
+    return out_
+
+
+now = datetime.now(timezone.utc)
+weekly = sorted([s for s, p in posts.items() if "주간트렌드" in p["ltags"]], key=lambda s: posts[s]["added"])
+related = {}
+for s, p in posts.items():
+    inbound = [o for o in posts if o != s and s in idx[o].get("links", [])]
+    mentions = sorted(inbound, key=lambda o: posts[o]["added"], reverse=True)[:3]
+    manual = manual_links(s)
+    cands = []
+    for o, q in posts.items():
+        if o == s or o in mentions or o in manual:
+            continue
+        reasons = {}
+        if s in idx[o].get("links", []):
+            reasons["mention"] = 30
+        if s in weekly and o in weekly and abs(weekly.index(s) - weekly.index(o)) == 1:
+            reasons["series"] = 25
+        if q["pillar"] == p["pillar"] and p["pillar"] != "other":
+            reasons["pillar"] = 20
+        ts = tag_score(p, q)
+        if ts:
+            reasons["tags"] = round(ts, 1)
+        if HUB_TAGS & set(q["ltags"]):
+            reasons["hub"] = 8
+        try:
+            days = (now - datetime.fromisoformat(q["added"].replace("Z", "+00:00"))).total_seconds() / 86400
+        except Exception:
+            days = 365
+        reasons["fresh"] = round(10 * 0.5 ** (max(0, days) / 30), 1)
+        if q["cat"] != p["cat"]:
+            reasons["cross"] = 5
+        cands.append({"slug": o, "base": round(sum(reasons.values()), 1), "why": reasons, "days": round(days, 1)})
+    cands.sort(key=lambda c: posts[c["slug"]]["added"], reverse=True)  # 동점이면 최신 글이 앞
+    cands.sort(key=lambda c: -c["base"])
+    related[s] = {"mentions": mentions, "cands": cands[:12], "pillar": p["pillar"], "cat": p["cat"]}
+
+meta = {s: {"title": p["title"], "minutes": p.get("minutes", 0), "pillar": p["pillar"], "cat": p["cat"], "added": p["added"]} for s, p in posts.items()}
+(out / "static" / "nyuri-related.json").write_text(json.dumps({"posts": meta, "related": related}, ensure_ascii=False), encoding="utf-8")
+print("related data:", len(related), "posts")
 (out / "static" / "contentIndex.json").write_text(json.dumps(idx, ensure_ascii=False), encoding="utf-8")
 print("list data:", {k: len(v) for k, v in lists.items()})
 
