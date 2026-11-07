@@ -218,6 +218,10 @@ def process(out: Path, base: str, posts: dict, intros: dict, git_modified):
             path = loc.split("/nyuri-garden/", 1)[-1]
             return "" if path.startswith(NOINDEX_PREFIX) or path in ("404", "404.html") else m.group(0)
         s = re.sub(r"<url>.*?</url>", keep, s, flags=re.S)
+        # Search Console 이 '알 수 없음'으로 두는 일을 줄이려고 XML 선언을 붙이고 lastmod 는 날짜만 (seo-sitemap)
+        s = re.sub(r"<lastmod>(\d{4}-\d{2}-\d{2})T[^<]*</lastmod>", r"<lastmod>\1</lastmod>", s)
+        if not s.lstrip().startswith("<?xml"):
+            s = '<?xml version="1.0" encoding="UTF-8"?>\n' + s.lstrip()
         sm.write_text(s, encoding="utf-8")
 
     # ── robots.txt, llms.txt ──
