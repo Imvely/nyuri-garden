@@ -336,3 +336,78 @@
   border-style: dashed;
   color: var(--gray);
 }
+
+// ── 카드 메타: 읽는 시간, 좋아요, 댓글, 새 글 ──
+.nyuri-list-meta {
+  flex-wrap: wrap;
+  row-gap: 0.2rem;
+}
+
+.nyuri-list-minutes {
+  padding-left: 0.6rem;
+  border-left: 1px solid var(--line);
+}
+
+.nyuri-list-new {
+  color: var(--secondary);
+  font-weight: 650;
+}
+
+.nyuri-list-stats {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: auto;
+  transition: opacity 0.3s ease;
+
+  &.is-loading {
+    opacity: 0.35;
+  }
+
+  &.is-failed {
+    display: none;
+  }
+}
+
+.nyuri-list-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 2rem;
+  color: var(--gray);
+
+  &.is-mine {
+    color: var(--secondary);
+
+    .nyuri-list-lineicon {
+      fill: currentColor;
+    }
+  }
+}
+
+.nyuri-list-lineicon {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.nyuri-list-stat-n {
+  font-variant-numeric: tabular-nums;
+}
+
+// ── 왼쪽 탐색기: 공개 카테고리의 '전체 n개 보기' (mapFn 이 만드는 마지막 줄, 주소가 폴더로 끝난다) ──
+.explorer-content .folder-outer ul li > a[href$="/"] {
+  color: var(--secondary);
+  opacity: 1;
+  font-size: 0.82rem;
+  font-weight: 600;
+
+  &:hover {
+    color: var(--tertiary);
+  }
+}

@@ -10,10 +10,59 @@
   const PER_PAGE = 8
   const SORTS = [
     ["new", "최신순"],
+    ["popular", "인기순"],
     ["old", "오래된순"],
     ["title", "제목순"],
   ]
+  const NEW_DAYS = 3 // 이 날수 안에 올린 글은 '새 글'
   let dataPromise = null
+
+  // ── 좋아요, 댓글 수: 글마다 쓰는 댓글 백엔드(thread)를 그대로 부른다 (comments.js 와 같은 키 규칙) ──
+  const KEY_ALIASES = [["논문-노트/", "논문/"]]
+  const pageKey = (slug) => {
+    for (const [now, first] of KEY_ALIASES) if (slug.startsWith(now)) return first + slug.slice(now.length)
+    return slug
+  }
+  const COUNT_TTL = 10 * 60 * 1000
+  const counts = new Map() // slug -> { likes, comments, liked }
+  const inflight = new Map()
+  const readCount = (slug) => {
+    if (counts.has(slug)) return counts.get(slug)
+    try {
+      const c = JSON.parse(sessionStorage.getItem("nyuri-count:" + slug) || "null")
+      if (c && Date.now() - c.at < COUNT_TTL) {
+        counts.set(slug, c)
+        return c
+      }
+    } catch {}
+    return null
+  }
+  const fetchCount = (slug) => {
+    const api = window.NYURI && window.NYURI.api
+    if (!api) return Promise.resolve(null)
+    if (inflight.has(slug)) return inflight.get(slug)
+    const u = new URL(api)
+    u.searchParams.set("action", "thread")
+    u.searchParams.set("page", pageKey(slug))
+    try {
+      if (window.NYURI.clientId) u.searchParams.set("clientId", window.NYURI.clientId())
+    } catch {}
+    const p = fetch(u)
+      .then((r) => r.json())
+      .then((j) => {
+        if (!j || !j.ok) return null
+        const c = { likes: j.likes || 0, comments: (j.comments || []).length, liked: !!j.liked, at: Date.now() }
+        counts.set(slug, c)
+        try {
+          sessionStorage.setItem("nyuri-count:" + slug, JSON.stringify(c))
+        } catch {}
+        return c
+      })
+      .catch(() => null)
+      .finally(() => inflight.delete(slug))
+    inflight.set(slug, p)
+    return p
+  }
 
   const siteRoot = () => {
     const a = document.querySelector("a.page-title, .page-title a")
@@ -51,6 +100,19 @@
   const ICON_SEARCH = "M10.5 4a6.5 6.5 0 1 0 4.1 11.5l4.2 4.2 1.1-1.1-4.2-4.2A6.5 6.5 0 0 0 10.5 4Zm0 1.6a4.9 4.9 0 1 1 0 9.8 4.9 4.9 0 0 1 0-9.8Z"
   const ICON_PREV = "M14.6 6.4 9 12l5.6 5.6-1.1 1.1L6.8 12l6.7-6.7Z"
   const ICON_NEXT = "M9.4 6.4 15 12l-5.6 5.6 1.1 1.1 6.7-6.7-6.7-6.7Z"
+  // comments.js 와 같은 선 아이콘 (하트, 말풍선)
+  const lineIcon = (d) => {
+    const s = document.createElementNS("http://www.w3.org/2000/svg", "svg")
+    s.setAttribute("viewBox", "0 0 24 24")
+    s.setAttribute("aria-hidden", "true")
+    s.setAttribute("class", "nyuri-list-lineicon")
+    const p = document.createElementNS("http://www.w3.org/2000/svg", "path")
+    p.setAttribute("d", d)
+    s.append(p)
+    return s
+  }
+  const D_HEART = "M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21.2l7.8-7.7 1-1.1a5.5 5.5 0 0 0 0-7.8z"
+  const D_BUBBLE = "M21 11.5a8.4 8.4 0 0 1-9 8.4 9.3 9.3 0 0 1-3.7-.8L3 21l1.7-4.6A8 8 0 0 1 3 11.5 8.6 8.6 0 0 1 12 3a8.6 8.6 0 0 1 9 8.5z"
 
   const norm = (s) => String(s || "").toLowerCase().normalize("NFC")
   const fmtDate = (iso) => {
@@ -180,18 +242,40 @@
       })
       const byAdded = (a, b) => (a.added < b.added ? 1 : a.added > b.added ? -1 : 0)
       if (state.sort === "new") out.sort(byAdded)
-      else if (state.sort === "old") out.sort((a, b) => -byAdded(a, b))
+      else if (state.sort === "popular") {
+        const likes = (it) => (counts.get(it.slug) || {}).likes ?? -1
+        out.sort((a, b) => likes(b) - likes(a) || byAdded(a, b))
+      } else if (state.sort === "old") out.sort((a, b) => -byAdded(a, b))
       else out.sort((a, b) => a.title.localeCompare(b.title, "ko", { numeric: true }))
       return out
     }
 
     function card(it) {
       const href = new URL(it.slug, base).pathname
+      const isNew = Date.now() - new Date(it.added).getTime() < NEW_DAYS * 864e5
+      const c = readCount(it.slug)
+      const stat = (cls, d, n, label) =>
+        el(
+          "span",
+          { class: "nyuri-list-stat " + cls, "data-slug": it.slug, "aria-label": n == null ? false : `${label} ${n}개` },
+          lineIcon(d),
+          el("span", { class: "nyuri-list-stat-n" }, n == null ? "" : String(n)),
+        )
+      const heart = stat("is-likes", D_HEART, c && c.likes, "좋아요")
+      if (c && c.liked) heart.classList.add("is-mine")
       const meta = el(
         "p",
         { class: "nyuri-list-meta" },
+        isNew ? el("span", { class: "nyuri-list-new" }, "새 글") : null,
         el("time", { datetime: it.added.slice(0, 10) }, fmtDate(it.added)),
         it.venue ? el("span", { class: "nyuri-list-venue" }, it.venue) : null,
+        it.minutes ? el("span", { class: "nyuri-list-minutes" }, `${it.minutes}분 읽기`) : null,
+        el(
+          "span",
+          { class: "nyuri-list-stats" + (c ? "" : " is-loading") },
+          heart,
+          stat("is-comments", D_BUBBLE, c && c.comments, "댓글"),
+        ),
       )
       const tags = it.tags.length
         ? el(
@@ -259,6 +343,7 @@
 
       list.replaceChildren(...shown.map(card))
       empty.hidden = rows.length > 0
+      loadCounts(state.sort === "popular" ? items : shown)
 
       pager.replaceChildren()
       pager.hidden = pages <= 1
@@ -275,7 +360,32 @@
       if (scroll) root.scrollIntoView({ block: "start", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" })
     }
 
+    // 보이는 글(인기순이면 전체)의 좋아요, 댓글 수를 받아 카드에 채운다
+    let sortedWithCounts = false
+    function paint(slug, c) {
+      root.querySelectorAll(`.nyuri-list-stat[data-slug="${CSS.escape(slug)}"]`).forEach((s) => {
+        const isLikes = s.classList.contains("is-likes")
+        const n = c ? (isLikes ? c.likes : c.comments) : null
+        s.querySelector(".nyuri-list-stat-n").textContent = n == null ? "" : String(n)
+        if (n != null) s.setAttribute("aria-label", `${isLikes ? "좋아요" : "댓글"} ${n}개`)
+        if (isLikes) s.classList.toggle("is-mine", !!(c && c.liked))
+        s.parentElement.classList.remove("is-loading")
+        if (!c) s.parentElement.classList.add("is-failed")
+      })
+    }
+    function loadCounts(targets) {
+      const todo = targets.filter((it) => !readCount(it.slug))
+      if (!todo.length) return
+      Promise.all(todo.map((it) => fetchCount(it.slug).then((c) => paint(it.slug, c)))).then(() => {
+        if (state.sort === "popular" && !sortedWithCounts) {
+          sortedWithCounts = true
+          render(false)
+        }
+      })
+    }
+
     function update(patch, scroll = false) {
+      if (patch.sort && patch.sort !== state.sort) sortedWithCounts = false
       Object.assign(state, patch)
       render(scroll)
     }

@@ -118,13 +118,19 @@ for folder, hide_tags in LIST_FOLDERS.items():
         built = idx[slug].get("tags") or [x.lower() for x in fm_tags]  # 빌드 색인의 태그가 기준
         tags = [case.get(x, x) for x in built if x not in hide_tags]
         added = first_added(md) or (f.get("created", "") + "T23:59:59+09:00")
+        # 읽는 시간: 본문 글자 수(공백 제외) / 분당 500자, 표와 그림이 많아도 최소 1분
+        text = idx[slug].get("content", "")
+        chars = len(re.sub(r"\s+", "", text))
+        minutes = max(1, round(chars / 500))
         items.append({"slug": slug, "title": f.get("title") or idx[slug].get("title") or md.stem,
                       "summary": f.get("summary", ""), "tags": tags, "created": f.get("created", ""),
-                      "venue": f.get("venue", ""), "added": added})
+                      "venue": f.get("venue", ""), "added": added, "minutes": minutes})
+        idx[slug]["added"] = added  # 탐색기 정렬용 (quartz.config.yaml 의 explorer mapFn)
     if items:
         key = slug_of.get(f"{folder}/index.md", "")
         lists[key or folder] = items
 (out / "static" / "nyuri-list.json").write_text(json.dumps(lists, ensure_ascii=False), encoding="utf-8")
+(out / "static" / "contentIndex.json").write_text(json.dumps(idx, ensure_ascii=False), encoding="utf-8")
 print("list data:", {k: len(v) for k, v in lists.items()})
 
 # RSS 피드에는 스타일시트를 붙이지 않는다.
