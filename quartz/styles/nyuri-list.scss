@@ -1,0 +1,338 @@
+// 공개 카테고리 첫 화면의 글 목록 (static/nyuri-list.js 가 그린다)
+// 사이트 색과 선을 그대로 쓰고, 강조는 호박색 하나만. 상자 대신 구분선으로 나눈다.
+
+.nyuri-list {
+  margin-top: 1.4rem;
+  scroll-margin-top: 1.5rem;
+
+  button {
+    font: inherit;
+    cursor: pointer;
+  }
+}
+
+.nyuri-list-icon {
+  width: 1.05em;
+  height: 1.05em;
+  flex: none;
+  fill: currentColor;
+}
+
+// ── 도구 줄: 찾기와 정렬 ──
+.nyuri-list-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+}
+
+.nyuri-list-searchwrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1 1 16rem;
+  max-width: 24rem;
+  height: 2.5rem;
+  padding: 0 0.95rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--gray);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+
+  &:focus-within {
+    border-color: color-mix(in srgb, var(--secondary) 55%, transparent);
+    background: var(--light);
+    color: var(--secondary);
+  }
+}
+
+.nyuri-list-search {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--dark);
+  font: 400 0.95rem/1 var(--bodyFont);
+  caret-color: var(--secondary);
+
+  &::placeholder {
+    color: var(--gray);
+    opacity: 1;
+  }
+
+  &::-webkit-search-cancel-button {
+    filter: grayscale(1);
+    opacity: 0.6;
+  }
+}
+
+.nyuri-list-sorts {
+  display: flex;
+  gap: 0.15rem;
+}
+
+.nyuri-list-sort {
+  padding: 0.35rem 0.6rem;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--gray);
+  font-size: 0.88rem !important;
+  text-decoration: underline 2px transparent;
+  text-underline-offset: 0.45em;
+  transition: color 0.2s ease, text-decoration-color 0.2s ease;
+
+  &[aria-pressed="true"] {
+    color: var(--dark);
+    font-weight: 650;
+    text-decoration-color: var(--secondary);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      color: var(--secondary);
+    }
+  }
+}
+
+// ── 태그로 거르기 ──
+.nyuri-list-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.9rem;
+}
+
+.nyuri-list-tag {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  padding: 0.28rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: none;
+  color: var(--darkgray);
+  font-size: 0.82rem !important;
+  line-height: 1.3;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+
+  &[aria-pressed="true"] {
+    border-color: transparent;
+    background: color-mix(in srgb, var(--secondary) 16%, transparent);
+    color: var(--tertiary);
+    font-weight: 600;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover:not([aria-pressed="true"]) {
+      border-color: color-mix(in srgb, var(--secondary) 45%, transparent);
+      color: var(--secondary);
+    }
+  }
+}
+
+.nyuri-list-tag-count {
+  color: var(--gray);
+  font-size: 0.74rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.nyuri-list-status {
+  margin: 1.3rem 0 0.2rem !important;
+  color: var(--gray);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+
+// ── 글 목록: 날짜, 제목, 한 줄 설명, 태그 ──
+.nyuri-list-items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+
+.nyuri-list-item {
+  position: relative;
+  margin: 0 !important;
+  padding: 1.15rem 0.2rem 1.1rem;
+  border-bottom: 1px solid var(--line);
+
+  h3 {
+    margin: 0.3rem 0 0;
+    font: 650 1.06rem/1.45 var(--bodyFont) !important;
+    text-wrap: balance;
+
+    a {
+      color: var(--dark);
+      background: none !important;
+      text-decoration: none;
+
+      @media (hover: hover) and (pointer: fine) {
+        &:hover {
+          color: var(--secondary);
+        }
+      }
+    }
+  }
+}
+
+.nyuri-list-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 !important;
+  color: var(--gray);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.nyuri-list-venue {
+  padding-left: 0.6rem;
+  border-left: 1px solid var(--line);
+}
+
+.nyuri-list-summary {
+  margin: 0.35rem 0 0 !important;
+  color: var(--gray);
+  font-size: 0.94rem;
+  line-height: 1.65;
+}
+
+.nyuri-list-cardtags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.7rem;
+  margin: 0.5rem 0 0 !important;
+  padding: 0 !important;
+  list-style: none;
+
+  li {
+    margin: 0 !important;
+  }
+
+  button {
+    padding: 0.1rem 0;
+    border: 0;
+    background: none;
+    color: var(--gray);
+    font-size: 0.8rem !important;
+
+    &[aria-pressed="true"] {
+      color: var(--secondary);
+      font-weight: 600;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        color: var(--secondary);
+      }
+    }
+  }
+}
+
+// ── 결과 없음 ──
+.nyuri-list-empty {
+  padding: 2.2rem 0.2rem;
+  border-bottom: 1px solid var(--line);
+  color: var(--gray);
+
+  &[hidden] {
+    display: none;
+  }
+
+  p {
+    margin: 0 0 0.8rem !important;
+  }
+}
+
+.nyuri-list-reset {
+  padding: 0.4rem 0.95rem;
+  border: 1px solid color-mix(in srgb, var(--secondary) 45%, transparent);
+  border-radius: 999px;
+  background: none;
+  color: var(--secondary);
+  font-size: 0.86rem !important;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: color-mix(in srgb, var(--secondary) 10%, transparent);
+    }
+  }
+}
+
+// ── 페이지 나누기 ──
+.nyuri-list-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  margin-top: 1.6rem;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.nyuri-list-page {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.4rem;
+  height: 2.4rem;
+  padding: 0 0.5rem;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--darkgray);
+  font-size: 0.9rem !important;
+  font-variant-numeric: tabular-nums;
+  transition: background-color 0.2s ease, color 0.2s ease;
+
+  &[aria-current="page"] {
+    background: var(--secondary);
+    color: var(--light);
+    font-weight: 650;
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover:not(:disabled):not([aria-current="page"]) {
+      background: color-mix(in srgb, var(--secondary) 10%, transparent);
+      color: var(--secondary);
+    }
+  }
+}
+
+.nyuri-list-gap {
+  padding: 0 0.2rem;
+  color: var(--gray);
+}
+
+@media (max-width: 640px) {
+  .nyuri-list-searchwrap {
+    max-width: none;
+    flex-basis: 100%;
+  }
+
+  .nyuri-list-sorts {
+    margin-left: -0.6rem;
+  }
+}
+
+.nyuri-list-tag[hidden] {
+  display: none;
+}
+
+.nyuri-list-more {
+  border-style: dashed;
+  color: var(--gray);
+}

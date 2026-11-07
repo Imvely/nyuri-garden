@@ -232,6 +232,7 @@ def fm_value(text, key):
     return v.replace('\\"', '"')
 
 
+NEWEST_FIRST = {"IT 트렌드", "논문 노트"}
 folders = {}
 for rel in published:
     p = Path(rel)
@@ -240,7 +241,15 @@ for rel in published:
 
 for folder, notes in folders.items():
     items = []
-    for p in sorted(notes, key=lambda x: x.as_posix()):
+    # 공개 카테고리(IT 트렌드, 논문 노트)는 최신 글이 위로. 나머지 폴더는 예전처럼 이름순
+    if folder in NEWEST_FIRST:
+        def _key(x):
+            tx = (content / x).read_text(encoding="utf-8")
+            return (fm_value(tx, "created"), fm_value(tx, "date") or fm_value(tx, "published"), x.as_posix())
+        ordered = sorted(notes, key=_key, reverse=True)
+    else:
+        ordered = sorted(notes, key=lambda x: x.as_posix())
+    for p in ordered:
         text = (content / p).read_text(encoding="utf-8")
         title = fm_value(text, "title") or p.stem
         summary = fm_value(text, "summary")

@@ -35,8 +35,9 @@ SNIPPET = (
     '<script src="__ROOT__static/nyuri-pet.js" defer></script>'
     '<script src="__ROOT__static/comments.js" defer></script>'
     '<script src="__ROOT__static/nyuri-graph.js" defer></script>'
+    '<script src="__ROOT__static/nyuri-list.js" defer></script>'
 )
-MARKER = "static/nyuri-graph.js"
+MARKER = "static/nyuri-list.js"
 OLD_SNIPPET = '<script>try{if(!localStorage.getItem("theme"))localStorage.setItem("theme","dark")}catch(e){}</script>'
 
 out = Path(sys.argv[1] if len(sys.argv) > 1 else "public")
@@ -57,6 +58,74 @@ for f in out.rglob("*.html"):
     f.write_text(s.replace("<head>", "<head>" + SNIPPET.replace("__ROOT__", root), 1), encoding="utf-8")
     n += 1
 print(f"head snippet injected into {n} pages")
+
+# ── 공개 카테고리 목록 데이터 (static/nyuri-list.json) ──
+# 정렬, 찾기, 태그 거르기, 페이지 나누기는 static/nyuri-list.js 가 이 파일로 한다.
+# 비공개 폴더(연구, 강의, 아이디어, 일지)는 넣지 않는다.
+import json, re, subprocess
+LIST_FOLDERS = {"IT 트렌드": ["it트렌드"], "논문 노트": ["논문"]}
+FM_RE = re.compile(r"^---\s*\n(.*?)\n---\s*\n", re.S)
+repo = Path(__file__).resolve().parent.parent
+content = repo / "content"
+
+
+def fm(text):
+    m = FM_RE.match(text)
+    data = {}
+    if not m:
+        return data
+    last = None
+    for line in m.group(1).splitlines():
+        li = re.match(r"^\s+-\s+(.+)$", line)  # 여러 줄 목록 (tags:\n  - a)
+        if li and last:
+            item = li.group(1).strip().strip("\"'")
+            data[last] = (data[last].rstrip("]") + ", " + item + "]") if data[last] else "[" + item + "]"
+            continue
+        mm = re.match(r"^([A-Za-z_가-힣]+):\s*(.*)$", line)
+        if mm:
+            last = mm.group(1)
+            v = mm.group(2).strip()
+            if len(v) >= 2 and v[0] == v[-1] and v[0] in "\"'":
+                v = v[1:-1]
+            data[mm.group(1)] = v
+    return data
+
+
+def first_added(path):
+    try:
+        out = subprocess.run(["git", "log", "--diff-filter=A", "--follow", "--format=%cI", "--", str(path)],
+                             cwd=repo, capture_output=True, text=True, encoding="utf-8").stdout.split()
+        return out[-1] if out else ""
+    except Exception:
+        return ""
+
+
+idx = json.loads((out / "static" / "contentIndex.json").read_text(encoding="utf-8"))
+slug_of = {v.get("filePath"): k for k, v in idx.items()}
+lists = {}
+for folder, hide_tags in LIST_FOLDERS.items():
+    items = []
+    for md in sorted((content / folder).glob("*.md")):
+        if md.name == "index.md":
+            continue
+        rel = md.relative_to(content).as_posix()
+        slug = slug_of.get(rel)
+        if not slug:
+            continue  # 빌드에 없는 글(초안, 암호 글)은 넣지 않는다
+        f = fm(md.read_text(encoding="utf-8"))
+        fm_tags = [x.strip() for x in f.get("tags", "").strip("[]").split(",") if x.strip()]
+        case = {x.lower(): x for x in fm_tags}
+        built = idx[slug].get("tags") or [x.lower() for x in fm_tags]  # 빌드 색인의 태그가 기준
+        tags = [case.get(x, x) for x in built if x not in hide_tags]
+        added = first_added(md) or (f.get("created", "") + "T23:59:59+09:00")
+        items.append({"slug": slug, "title": f.get("title") or idx[slug].get("title") or md.stem,
+                      "summary": f.get("summary", ""), "tags": tags, "created": f.get("created", ""),
+                      "venue": f.get("venue", ""), "added": added})
+    if items:
+        key = slug_of.get(f"{folder}/index.md", "")
+        lists[key or folder] = items
+(out / "static" / "nyuri-list.json").write_text(json.dumps(lists, ensure_ascii=False), encoding="utf-8")
+print("list data:", {k: len(v) for k, v in lists.items()})
 
 # RSS 피드에는 스타일시트를 붙이지 않는다.
 # (Chrome 이 XSLT 지원을 없애는 중이라 경고 배너가 뜬다. 사람이 보는 안내는 static/rss.html)
