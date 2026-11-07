@@ -29,6 +29,20 @@ NOINDEX_PREFIX = PRIVATE + ("tags/",)
 CAT_NAMES = {"it-트렌드": "IT 트렌드", "논문-노트": "논문 노트"}
 
 
+AI_BOTS = ("OAI-SearchBot", "ChatGPT-User", "GPTBot", "Claude-SearchBot", "ClaudeBot", "PerplexityBot", "Google-Extended", "Bingbot", "Yeti")
+
+
+def robots_txt(base):
+    """검색 엔진과 AI 검색 크롤러 모두 허용, 비공개 폴더는 제외.
+    이름을 따로 적은 봇은 '*' 묶음 규칙을 읽지 않으므로(RFC 9309) 한 묶음에 함께 적는다.
+    도메인 맨 위 robots.txt(Imvely/imvely.github.io 저장소)도 같은 내용을 쓴다."""
+    return ("# 뉴리의창고. 검색 엔진과 AI 검색 크롤러(geo-crawlers 기준) 모두 허용, 비공개 폴더는 제외\n"
+            + "".join(f"User-agent: {b}\n" for b in ("*",) + AI_BOTS)
+            + "".join(f"Disallow: /nyuri-garden/{urllib.parse.quote(p)}\n" for p in PRIVATE)
+            + "Allow: /\n\n"
+            + f"Sitemap: {base}sitemap.xml\n")
+
+
 def esc(s):
     return htmlmod.escape(str(s or ""), quote=True)
 
@@ -225,13 +239,7 @@ def process(out: Path, base: str, posts: dict, intros: dict, git_modified):
         sm.write_text(s, encoding="utf-8")
 
     # ── robots.txt, llms.txt ──
-    (out / "robots.txt").write_text(
-        "# 뉴리의창고 (GitHub Pages 프로젝트 사이트). 검색 엔진과 AI 검색 크롤러 모두 허용, 비공개 폴더는 제외\n"
-        "User-agent: *\n" + "".join(f"Disallow: /nyuri-garden/{urllib.parse.quote(p)}\n" for p in PRIVATE) +
-        "Allow: /nyuri-garden/\n\n"
-        "# AI 검색과 답변 인용용 크롤러 (geo-crawlers 기준): 허용\n" +
-        "".join(f"User-agent: {b}\nAllow: /nyuri-garden/\n\n" for b in ("OAI-SearchBot", "ChatGPT-User", "GPTBot", "Claude-SearchBot", "ClaudeBot", "PerplexityBot", "Google-Extended", "Bingbot", "Yeti")) +
-        f"Sitemap: {base}sitemap.xml\n", encoding="utf-8")
+    (out / "robots.txt").write_text(robots_txt(base), encoding="utf-8")
     lines = [f"# {SITE_NAME}", "", f"> {SITE_DESC}", "",
              "주인이 직접 써 본 기록과 공식 출처를 근거로 쓴 한국어 IT 블로그다. 글마다 출처, 그림, 마인드맵이 있다.", ""]
     for cat, name in CAT_NAMES.items():
