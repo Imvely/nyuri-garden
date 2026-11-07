@@ -43,6 +43,32 @@ def robots_txt(base):
             + f"Sitemap: {base}sitemap.xml\n")
 
 
+def rss_xml(base, posts, git_modified=None):
+    """Quartz 기본 RSS 는 최근 수정순 10개라 태그 쪽(noindex)만 담겼다. 공개 글만 새 글 순으로 다시 쓴다.
+    Google Search Console 사이트맵, 네이버 서치어드바이저 RSS 제출에 쓴다."""
+    from email.utils import format_datetime
+    from datetime import datetime, timezone
+
+    def rfc822(d):
+        try:
+            return format_datetime(datetime.fromisoformat(str(d)[:10]).replace(tzinfo=timezone.utc))
+        except ValueError:
+            return ""
+    items = sorted([p for p in posts.values() if p["cat"] in CAT_NAMES], key=lambda p: p["added"], reverse=True)
+    out = ['<?xml version="1.0" encoding="UTF-8"?>',
+           '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel>',
+           f"<title>{esc(SITE_NAME)}</title>", f"<link>{base}</link>",
+           f"<description>{esc(SITE_DESC)}</description>", "<language>ko-KR</language>",
+           f'<atom:link href="{base}index.xml" rel="self" type="application/rss+xml"/>']
+    if items:
+        out.append(f"<lastBuildDate>{rfc822(items[0]['added'])}</lastBuildDate>")
+    for p in items:
+        url = urllib.parse.quote(abs_url(base, p["slug"]), safe=":/()")  # 사이트맵과 같은 인코딩
+        out.append(f"<item><title>{esc(p['title'])}</title><link>{url}</link><guid isPermaLink=\"true\">{url}</guid>"
+                   f"<category>{esc(CAT_NAMES[p['cat']])}</category>"
+                   f"<description>{esc(p['summary'] or '')}</description><pubDate>{rfc822(p['added'])}</pubDate></item>")
+    out.append("</channel></rss>")
+    return "\n".join(out) + "\n"
 def esc(s):
     return htmlmod.escape(str(s or ""), quote=True)
 
@@ -251,6 +277,7 @@ def process(out: Path, base: str, posts: dict, intros: dict, git_modified):
         lines.append("")
     lines += ["## 더 보기", "", f"- [RSS]({base}index.xml)", f"- [사이트맵]({base}sitemap.xml)", ""]
     (out / "llms.txt").write_text("\n".join(lines), encoding="utf-8")
+    (out / "index.xml").write_text(rss_xml(base, posts), encoding="utf-8")
     (out / f"{INDEXNOW_KEY}.txt").write_text(INDEXNOW_KEY, encoding="utf-8")  # IndexNow 키 파일
     # 검색엔진 소유 확인 파일(구글 HTML 파일 방식 등): scripts/verification/ 의 파일을 사이트 경로 바로 아래로 그대로 복사
     vdir = Path(__file__).with_name("verification")
