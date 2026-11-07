@@ -240,4 +240,10 @@ def process(out: Path, base: str, posts: dict, intros: dict, git_modified):
     lines += ["## 더 보기", "", f"- [RSS]({base}index.xml)", f"- [사이트맵]({base}sitemap.xml)", ""]
     (out / "llms.txt").write_text("\n".join(lines), encoding="utf-8")
     (out / f"{INDEXNOW_KEY}.txt").write_text(INDEXNOW_KEY, encoding="utf-8")  # IndexNow 키 파일
+    # 검색엔진 소유 확인 파일(구글 HTML 파일 방식 등): scripts/verification/ 의 파일을 사이트 경로 바로 아래로 그대로 복사
+    vdir = Path(__file__).with_name("verification")
+    if vdir.is_dir():
+        for vf in vdir.iterdir():
+            if vf.is_file():
+                (out / vf.name).write_bytes(vf.read_bytes())
     return n
