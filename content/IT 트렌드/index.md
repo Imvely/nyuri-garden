@@ -19,3 +19,5 @@ AI와 IT 소식을 골라 정리하고, 무료로 직접 해 볼 수 있는 건 
   AI 수요가 메모리를 빨아들이면서 퀄컴 휴대폰 칩 매출이 26% 줄고 애플 마진도 내려간 한 주를, 실적 발표에서 회사들이 직접 한 말로 정리하고 IT와 AI에 미칠 영향을 짚은 해설이에요.
 - [[IT 트렌드/Message Threads 대화를 기억하는 API|Message Threads: 대화를 서버가 잠깐 기억하는 Claude API, 요청은 얼마나 줄어드나]]
   Claude API에 생긴 Message Threads 베타를 공식 문서로 정리하고, API 키 없이 가짜 서버로 SDK 요청을 가로채 요청 크기와 재전송 동작을 확인한 기록이에요.
+- [[IT 트렌드/개발 PC 패치 점검 PHP2Shell Node2Shell|내 개발 PC는 안전할까: PHP2Shell, Node2Shell, Fragnesia 버전만 확인하는 30분 점검]]
+  AI가 찾아낸 PHP 취약점과 Brotli, 리눅스 커널 결함이 실제 공격에 쓰인 2주를 정리하고, 내 개발 PC의 Node, Bun, PowerShell, Git, WSL 버전을 직접 점검하고 올린 기록이에요.
