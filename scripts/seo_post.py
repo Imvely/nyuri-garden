@@ -43,9 +43,10 @@ def robots_txt(base):
             + f"Sitemap: {base}sitemap.xml\n")
 
 
-def rss_xml(base, posts, git_modified=None):
+def rss_xml(base, posts, name="index.xml", utm=""):
     """Quartz 기본 RSS 는 최근 수정순 10개라 태그 쪽(noindex)만 담겼다. 공개 글만 새 글 순으로 다시 쓴다.
-    Google Search Console 사이트맵, 네이버 서치어드바이저 RSS 제출에 쓴다."""
+    index.xml 은 꼬리표 없이 검색엔진 제출용(Search Console 사이트맵, 네이버 RSS). feed.xml 은 구독자용으로 글 주소에 utm 꼬리표를 붙여
+    방문 분석 시트에서 RSS 유입을 따로 센다. 쪽마다 있는 RSS 자동 발견 링크는 feed.xml 을 가리킨다."""
     from email.utils import format_datetime
     from datetime import datetime, timezone
 
@@ -59,12 +60,13 @@ def rss_xml(base, posts, git_modified=None):
            '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel>',
            f"<title>{esc(SITE_NAME)}</title>", f"<link>{base}</link>",
            f"<description>{esc(SITE_DESC)}</description>", "<language>ko-KR</language>",
-           f'<atom:link href="{base}index.xml" rel="self" type="application/rss+xml"/>']
+           f'<atom:link href="{base}{name}" rel="self" type="application/rss+xml"/>']
     if items:
         out.append(f"<lastBuildDate>{rfc822(items[0]['added'])}</lastBuildDate>")
     for p in items:
         url = abs_url(base, p["slug"])  # abs_url 이 이미 사이트맵과 같은 인코딩을 한다
-        out.append(f"<item><title>{esc(p['title'])}</title><link>{url}</link><guid isPermaLink=\"true\">{url}</guid>"
+        link = url + utm
+        out.append(f"<item><title>{esc(p['title'])}</title><link>{esc(link)}</link><guid isPermaLink=\"true\">{url}</guid>"
                    f"<category>{esc(CAT_NAMES[p['cat']])}</category>"
                    f"<description>{esc(p['summary'] or '')}</description><pubDate>{rfc822(p['added'])}</pubDate></item>")
     out.append("</channel></rss>")
@@ -128,6 +130,7 @@ def process(out: Path, base: str, posts: dict, intros: dict, git_modified):
         h = f.read_text(encoding="utf-8")
         if "</head>" not in h or 'data-nyuri-seo="1"' in h:
             continue
+        h = re.sub(r'(type="application/rss\+xml"[^>]*href="[^"]*)index\.xml"', r'\1feed.xml"', h)  # 구독자는 꼬리표 붙은 피드로
         h = h.replace("<head>", '<head data-nyuri-seo="1">', 1) if "<head>" in h else h
 
         # ── 성능: 쓰지 않는 기본 글꼴, 수식 없는 페이지의 KaTeX, 렌더링을 막는 웹 글꼴 CSS ──
@@ -278,6 +281,7 @@ def process(out: Path, base: str, posts: dict, intros: dict, git_modified):
     lines += ["## 더 보기", "", f"- [RSS]({base}index.xml)", f"- [사이트맵]({base}sitemap.xml)", ""]
     (out / "llms.txt").write_text("\n".join(lines), encoding="utf-8")
     (out / "index.xml").write_text(rss_xml(base, posts), encoding="utf-8")
+    (out / "feed.xml").write_text(rss_xml(base, posts, "feed.xml", "?utm_source=rss&utm_medium=feed"), encoding="utf-8")
     (out / f"{INDEXNOW_KEY}.txt").write_text(INDEXNOW_KEY, encoding="utf-8")  # IndexNow 키 파일
     # 검색엔진 소유 확인 파일(구글 HTML 파일 방식 등): scripts/verification/ 의 파일을 사이트 경로 바로 아래로 그대로 복사
     vdir = Path(__file__).with_name("verification")
