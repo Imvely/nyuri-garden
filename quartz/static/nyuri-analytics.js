@@ -16,7 +16,8 @@
       if (/^(localhost|127\.|192\.168\.)/.test(location.hostname)) return true
       if (navigator.webdriver || /HeadlessChrome|Headless/i.test(navigator.userAgent)) return true
       if (navigator.doNotTrack === "1" || window.doNotTrack === "1" || navigator.globalPrivacyControl) return true
-      if (localStorage.getItem("nyuri-admin")) return true
+      // 주인 링크(#nyuri-admin=키)로 처음 들어온 순간도 주인으로 본다 (키 저장보다 이 파일이 먼저 돌아도 빠지지 않게)
+      if (/nyuri-admin=/.test(location.hash) || localStorage.getItem("nyuri-admin")) return true
     } catch {}
     return false
   })()

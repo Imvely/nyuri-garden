@@ -252,9 +252,44 @@ function ipHash_(ip) {
 }
 const TRACK_EVENTS = { page_view: 1, page_leave: 1, related_click: 1 }
 
+// ── 주인 기기 목록: 주인이 통계를 열 때 그 브라우저 ID 와 IP 해시를 적어 둔다 ──
+// 적힌 브라우저나 IP 의 방문은 views 탭에 아예 쓰지 않고(track), 그 전에 쌓인 줄도 집계에서 뺀다(stats)
+const OWNER_MAX = 30
+
+function ownerSet_(name) {
+  try {
+    return JSON.parse(props_()[name] || "[]")
+  } catch (e) {
+    return []
+  }
+}
+
+function rememberOwner_(visitor, ipHash) {
+  let changed = false
+  ;[["OWNER_VISITORS", visitor], ["OWNER_IPS", ipHash]].forEach(function (p) {
+    const v = String(p[1] || "")
+    if (!v) return
+    const list = ownerSet_(p[0])
+    if (list.indexOf(v) >= 0) return
+    list.unshift(v)
+    PropertiesService.getScriptProperties().setProperty(p[0], JSON.stringify(list.slice(0, OWNER_MAX)))
+    changed = true
+  })
+  if (changed) {
+    PROPS_ = null
+    CacheService.getScriptCache().remove(STATS_KEY)
+  }
+}
+
+function isOwnerRow_(visitor, ipHash) {
+  return (!!visitor && ownerSet_("OWNER_VISITORS").indexOf(String(visitor)) >= 0) || (!!ipHash && ownerSet_("OWNER_IPS").indexOf(String(ipHash)) >= 0)
+}
+
 function track(b) {
   if (!TRACK_EVENTS[b.event]) return { ok: false, error: "bad_event" }
   if (isAdmin_(b.adminKey)) return { ok: true, skipped: "owner" } // 주인 방문은 세지 않는다
+  // 주인 기기(브라우저 ID 나 IP)로 알려진 방문은 views 탭에 쓰지 않는다
+  if (isOwnerRow_(b.visitor, b.meta && b.meta.ip ? ipHash_(b.meta.ip) : "")) return { ok: true, skipped: "owner" }
   if (!rateOk_("track", 600)) return { ok: false, error: "rate" }
   const s = function (v, n) {
     return clean_(v).slice(0, n || 120)
@@ -300,6 +335,7 @@ const STATS_TTL = 60
 
 function stats(b) {
   if (!isAdmin_(b.adminKey)) return { ok: false, error: "forbidden" }
+  rememberOwner_(b.visitor, b.meta && b.meta.ip ? ipHash_(b.meta.ip) : "")
   const cache = CacheService.getScriptCache()
   const hit = cache.get(STATS_KEY)
   if (hit) {
@@ -328,8 +364,15 @@ function stats(b) {
     bucket.views++
     if (who) bucket.who[who] = 1
   }
+  const ownerV = ownerSet_("OWNER_VISITORS")
+  const ownerI = ownerSet_("OWNER_IPS")
+  let ownerRows = 0
   rows.forEach(function (r, i) {
     if (r.event !== "page_view") return
+    if ((r.visitor && ownerV.indexOf(String(r.visitor)) >= 0) || (r.ipHash && ownerI.indexOf(String(r.ipHash)) >= 0)) {
+      ownerRows++
+      return
+    }
     const day = r.day instanceof Date ? Utilities.formatDate(r.day, "Asia/Seoul", "yyyy-MM-dd") : String(r.day)
     const who = r.ipHash ? "i:" + r.ipHash : r.visitor ? "v:" + r.visitor : "r:" + i
     add(site.total, who)
@@ -382,6 +425,7 @@ function stats(b) {
       .slice(0, 50),
     devices: devices,
     channels: channels,
+    ownerExcluded: ownerRows,
   }
   try {
     cache.put(STATS_KEY, JSON.stringify(out), STATS_TTL)

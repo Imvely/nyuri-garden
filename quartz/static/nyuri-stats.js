@@ -44,6 +44,20 @@
   }
   const slug = () => document.body?.dataset.slug || ""
 
+  // nyuri-analytics.js 와 같은 방문자 해시 (브라우저 임의 ID 의 SHA-256 앞 12자)
+  async function visitor() {
+    try {
+      const id = (window.NYURI && window.NYURI.clientId && window.NYURI.clientId()) || ""
+      if (!id || !crypto.subtle) return ""
+      const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("nyuri:" + id))
+      return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 12)
+    } catch {
+      return ""
+    }
+  }
+  const ipQuick = () =>
+    window.NYURI && window.NYURI.ip ? Promise.race([window.NYURI.ip(), new Promise((r) => setTimeout(() => r(""), 2000))]) : Promise.resolve("")
+
   let data = null
   let loadedAt = 0
   let pending = null
@@ -51,10 +65,12 @@
     if (!force && data && Date.now() - loadedAt < 60000) return data
     if (pending) return pending
     pending = (async () => {
+      // 이 브라우저의 방문자 ID(분석과 같은 해시)와 공개 IP 를 함께 보내 '주인 기기'로 등록한다.
+      // 백엔드는 이후 이 기기의 방문을 views 탭에 쓰지 않고, 예전에 쌓인 줄도 집계에서 뺀다
       const r = await fetch(api(), {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ action: "stats", adminKey: key() }),
+        body: JSON.stringify({ action: "stats", adminKey: key(), visitor: await visitor(), meta: { ip: await ipQuick() } }),
       })
       const j = await r.json()
       if (!j.ok) throw new Error(j.error || "failed")
@@ -219,7 +235,7 @@
             : `<p class="nop-empty">아직 기록이 없어요.</p>`
         }
       </section>
-      <p class="nop-updated">${esc(d.updated)} 기준. 1분마다 새로 계산해요.</p>`
+      <p class="nop-updated">${esc(d.updated)} 기준. 1분마다 새로 계산해요.${d.ownerExcluded ? ` 주인 기기 방문 ${n(d.ownerExcluded)}회는 뺐어요.` : ""}</p>`
   }
 
   function onNav() {
