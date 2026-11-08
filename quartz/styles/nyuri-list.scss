@@ -325,13 +325,24 @@
 }
 
 @media (max-width: 640px) {
+  .nyuri-list-tools > * {
+    min-width: 0;
+  }
+
   .nyuri-list-searchwrap {
     max-width: none;
+    min-width: 0;
     flex-basis: 100%;
   }
 
+  // 좁은 화면과 큰 글자에서는 정렬 단추가 다음 줄로 넘어가게 (한 줄로 버티면 화면 밖으로 밀린다)
   .nyuri-list-sorts {
+    flex-wrap: wrap;
     margin-left: -0.6rem;
+  }
+
+  .nyuri-list-sort {
+    min-height: 2.5rem;
   }
 }
 

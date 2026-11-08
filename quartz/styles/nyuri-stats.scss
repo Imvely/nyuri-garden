@@ -258,6 +258,7 @@
     text-align: left;
     font-weight: 500;
     color: var(--darkgray);
+    overflow-wrap: anywhere;
   }
 
   tbody tr:last-child > * {
@@ -266,15 +267,47 @@
 }
 
 // 글 제목 칸이 길어도 패널 폭을 넘지 않게: 숫자 칸 폭을 정하고 제목 칸이 나머지를 쓴다
-.nop-pages {
+// 표는 모두 고정 배치: 첫 칸(이름)이 남는 폭을 쓰고, 숫자 칸은 글자 크기에 따라 함께 커지는 em 폭.
+// 휴대폰 글자 크기를 키워도 패널 오른쪽이 잘리지 않는다
+.nop-table {
   table-layout: fixed;
 
-  thead th:not(:first-child) {
-    width: 3.6rem;
+  thead th:not(:first-child),
+  tbody td {
+    width: 4.4em;
+  }
+}
+
+.nop-pages thead th:last-child,
+.nop-pages tbody td:last-child {
+  width: 3.2em;
+}
+
+.nop-table td.nop-from {
+  width: 8.5em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 420px) {
+  .nop-head {
+    padding: 1.1rem 1.1rem 0.85rem;
   }
 
-  thead th:last-child {
-    width: 2.8rem;
+  .nop-body {
+    padding: 0.25rem 1.1rem 2rem;
+  }
+
+  .nop-table {
+    font-size: 0.82rem;
+
+    td {
+      padding-left: 0.5rem;
+    }
+  }
+
+  .nop-split dd b {
+    font-size: 1.05rem;
   }
 }
 
