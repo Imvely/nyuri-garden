@@ -107,9 +107,10 @@
 
   function paintLine(line, d) {
     line.classList.remove("is-loading")
-    const p = d.pages.find((x) => x.page === slug())
+    // 아직 기록이 없는 글은 0 으로 보인다 (블로그 전체 줄로 바뀌지 않게)
+    const p = d.pages.find((x) => x.page === slug()) || { views: 0, visitors: 0, today: 0 }
     const nums = line.querySelector(".nyuri-owner-nums")
-    const isPost = !!document.querySelector("h1.article-title") && slug() !== "index" && !slug().endsWith("index") && !!p
+    const isPost = !!document.querySelector("h1.article-title") && slug() !== "index" && !slug().endsWith("/index")
     nums.innerHTML = isPost
       ? `<span>조회 <b>${n(p.views)}</b></span><span>방문자 <b>${n(p.visitors)}</b></span><span>오늘 <b>${n(p.today)}</b></span>`
       : `<span>오늘 방문자 <b>${n(d.today.visitors)}</b></span><span>오늘 조회 <b>${n(d.today.views)}</b></span><span>누적 방문자 <b>${n(d.total.visitors)}</b></span>`
