@@ -29,6 +29,8 @@ NOINDEX_PREFIX = PRIVATE + ("tags/",)
 CAT_NAMES = {"it-트렌드": "IT 트렌드", "논문-노트": "논문 노트"}
 
 
+# 검색엔진 소유 확인 줄(robots.txt 방식). Daum 웹마스터도구: 사이트 https://imvely.github.io 로 등록 (2026-11-08)
+ROBOTS_VERIFY = ("#DaumWebMasterTool:b5f5a17a8b096e949c9c1aac83c7d4311f672fec472a42833ebe85fa1ac6dc62:8eDCqJCqTZrYCvf1G9zNRA==",)
 AI_BOTS = ("OAI-SearchBot", "ChatGPT-User", "GPTBot", "Claude-SearchBot", "ClaudeBot", "PerplexityBot", "Google-Extended", "Bingbot", "Yeti")
 
 
@@ -40,7 +42,8 @@ def robots_txt(base):
             + "".join(f"User-agent: {b}\n" for b in ("*",) + AI_BOTS)
             + "".join(f"Disallow: /nyuri-garden/{urllib.parse.quote(p)}\n" for p in PRIVATE)
             + "Allow: /\n\n"
-            + f"Sitemap: {base}sitemap.xml\n")
+            + f"Sitemap: {base}sitemap.xml\n"
+            + "".join(f"{v}\n" for v in ROBOTS_VERIFY))
 
 
 def rss_xml(base, posts, name="index.xml", utm=""):
