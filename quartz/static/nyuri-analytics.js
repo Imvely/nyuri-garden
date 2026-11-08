@@ -3,7 +3,9 @@
 // - page_view: 어떤 글을, 어디서 와서(검색, AI 답변, 커뮤니티, SNS, 직접, 사이트 안), 어떤 기기로, 처음 왔는지
 // - page_leave: 떠날 때 얼마나 내려 읽었는지(스크롤 %)와 화면에 보이던 시간(초)
 // - related_click: '다음에 읽을 글'에서 몇 번째, 어떤 이유 문구를 눌렀는지 (nyuri-related.js 가 부른다)
-// 개인정보: IP 와 브라우저 정보는 보내지 않는다. 방문자는 브라우저마다 하나인 임의 ID 의 해시 앞 12자로만 구분한다
+// 개인정보: 브라우저 정보(User-Agent)는 보내지 않는다. 방문자는 브라우저마다 하나인 임의 ID 의 해시 앞 12자로 구분하고,
+//   page_view 에만 공개 IP 를 함께 보내 백엔드가 비밀 소금을 섞은 해시로 바꿔 '같은 사람 한 번' 세기에만 쓴다(원래 IP 는 남기지 않는다)
+// 기기: 화면과 User-Agent 로 모바일, 태블릿, PC 중 하나만 보낸다. 검색어: 검색 사이트가 주소에 검색어를 넘겨줄 때만(구글은 넘기지 않는다)
 // 보내지 않는 경우: 블로그 주인 브라우저, 추적 거부(DNT, GPC), 자동화 브라우저, 로컬 주소
 ;(() => {
   if (window.__nyuriAnalytics) return
@@ -53,6 +55,17 @@
     }
   })()
 
+  const device = (() => {
+    const ua = navigator.userAgent
+    const touchMac = /Macintosh/.test(ua) && navigator.maxTouchPoints > 1 // iPadOS 는 데스크톱 주소를 쓴다
+    if (touchMac || /iPad|Tablet|PlayBook|Silk|Kindle/i.test(ua) || (/Android/i.test(ua) && !/Mobile/i.test(ua))) return "tablet"
+    if (/Mobi|iPhone|iPod|Android/i.test(ua)) return "mobile"
+    return "pc"
+  })()
+  // 공개 IP 는 1.5초까지만 기다린다(늦으면 IP 없이 보내고, 그 줄은 브라우저 ID 로 센다)
+  const ipQuick = () =>
+    window.NYURI && window.NYURI.ip ? Promise.race([window.NYURI.ip(), new Promise((r) => setTimeout(() => r(""), 1500))]) : Promise.resolve("")
+
   async function send(event, extra) {
     if (off || !api()) return
     const body = JSON.stringify({
@@ -60,8 +73,9 @@
       event,
       page: document.body.dataset.slug || location.pathname,
       title: (document.querySelector("h1.article-title")?.textContent || document.title).trim().slice(0, 200),
-      device: matchMedia("(max-width: 800px)").matches ? "mobile" : "desktop",
+      device,
       visitor: await visitor(),
+      ...(event === "page_view" ? { meta: { ip: await ipQuick() } } : {}),
       ...extra,
     })
     try {
@@ -91,7 +105,14 @@
     if (host && host === location.hostname) channel = "internal"
     else if (host) channel = (CHANNELS.find(([, re]) => re.test(host)) || ["other"])[0]
     if (!host && utm.utmSource) channel = /chatgpt|openai|perplexity|claude|gemini|copilot/i.test(utm.utmSource) ? "ai" : "campaign"
-    return { channel, refHost: host, ...utm }
+    let keyword = ""
+    if (channel === "search") {
+      try {
+        const q = new URL(document.referrer).searchParams
+        keyword = (["q", "query", "oquery", "wd", "p", "text", "search_query"].map((k) => q.get(k)).find(Boolean) || "").trim().slice(0, 100)
+      } catch {}
+    }
+    return { channel, refHost: host, keyword, ...utm }
   }
 
   // ── 읽은 깊이와 시간 ──

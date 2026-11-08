@@ -4,6 +4,7 @@
 @use "./nyuri-graph";
 @use "./nyuri-list";
 @use "./nyuri-related";
+@use "./nyuri-stats";
 
 // ─────────────────────────────────────────────────────────────
 // 뉴리의창고 · 차분한 손글씨 공부 노트
@@ -1329,4 +1330,12 @@ article .katex-display {
   overflow-x: auto;
   overflow-y: hidden;
   padding: 0.2rem 0;
+}
+
+// 휴대폰 탐색기 패널: 원래 absolute 라서, 페이지가 열릴 때 접히기 전 잠깐 화면 오른쪽으로 16px 넘쳐
+// 가로 스크롤이 생기고 화면 배율이 틀어졌다. 화면 전체를 덮는 패널이므로 fixed 로 두어 페이지 폭에서 뺀다
+@media (max-width: 800px) {
+  .explorer .explorer-content {
+    position: fixed;
+  }
 }

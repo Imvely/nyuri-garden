@@ -317,6 +317,13 @@
   color: var(--gray);
 }
 
+// 휴대폰은 입력 글자가 16px 보다 작으면 누르는 순간 화면을 확대한다(iOS Safari). 터치 화면에서는 16px 로 둔다
+@media (pointer: coarse), (max-width: 800px) {
+  .nyuri-list-search {
+    font-size: 1rem;
+  }
+}
+
 @media (max-width: 640px) {
   .nyuri-list-searchwrap {
     max-width: none;

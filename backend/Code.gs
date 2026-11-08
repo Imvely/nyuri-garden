@@ -43,6 +43,14 @@ function doPost(e) {
       return json({ ok: false, error: String(err.message || err) })
     }
   }
+  // 주인 전용 통계: 읽기만 하므로 잠그지 않는다. 관리자 키가 틀리면 아무것도 주지 않는다
+  if (body.action === "stats") {
+    try {
+      return json(stats(body))
+    } catch (err) {
+      return json({ ok: false, error: String(err.message || err) })
+    }
+  }
   // 쪽지는 시트 순서와 상관없으니 잠그지 않고 바로 보낸다
   if (body.action === "mail") {
     try {
@@ -216,12 +224,32 @@ function counts(pages, clientId) {
   return { ok: true, counts: out, liked: liked }
 }
 
-// ── 방문 분석: views 시트에 한 줄씩 (IP 는 받지 않는다) ─────────────
+// ── 방문 분석: views 시트에 한 줄씩 ─────────────
+// IP 는 원래 값을 남기지 않는다. 비밀 소금(IP_SALT)을 섞은 해시 앞 16자만 남겨 같은 사람을 한 번으로 세는 데만 쓴다
 const VIEWS_HEADER = [
   "time", "day", "event", "page", "title", "channel", "refHost",
   "utmSource", "utmMedium", "utmCampaign", "device", "visitor", "newVisitor",
-  "depth", "seconds", "target", "position", "reason",
+  "depth", "seconds", "target", "position", "reason", "ipHash", "keyword",
 ]
+const DEVICES = { mobile: 1, tablet: 1, pc: 1, desktop: 1 }
+
+function ipHash_(ip) {
+  if (!ip) return ""
+  const props = PropertiesService.getScriptProperties()
+  let salt = props_().IP_SALT
+  if (!salt) {
+    salt = Utilities.getUuid()
+    props.setProperty("IP_SALT", salt)
+    PROPS_ = null
+  }
+  const bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, salt + ":" + ip, Utilities.Charset.UTF_8)
+  return bytes
+    .slice(0, 8)
+    .map(function (b) {
+      return ((b + 256) % 256).toString(16).padStart(2, "0")
+    })
+    .join("")
+}
 const TRACK_EVENTS = { page_view: 1, page_leave: 1, related_click: 1 }
 
 function track(b) {
@@ -238,7 +266,11 @@ function track(b) {
   let sh = book().getSheetByName("views")
   if (!sh) sh = sheet_(book(), "views", VIEWS_HEADER)
   SHEETS_.views = sh
+  ensureColumns_("views", ["ipHash", "keyword"])
+  const device = DEVICES[b.device] ? b.device : ""
   append_("views", {
+    ipHash: b.event === "page_view" ? ipHash_(b.meta && b.meta.ip) : "",
+    keyword: s(b.keyword, 100),
     time: kst_(),
     day: Utilities.formatDate(new Date(), "Asia/Seoul", "yyyy-MM-dd"),
     event: b.event,
@@ -249,7 +281,7 @@ function track(b) {
     utmSource: s(b.utmSource, 60),
     utmMedium: s(b.utmMedium, 60),
     utmCampaign: s(b.utmCampaign, 80),
-    device: s(b.device, 10),
+    device: device,
     visitor: s(b.visitor, 16),
     newVisitor: b.newVisitor ? "TRUE" : "",
     depth: num(b.depth, 100),
@@ -259,6 +291,102 @@ function track(b) {
     reason: s(b.reason, 30),
   })
   return { ok: true }
+}
+
+// ── 주인 전용 방문 통계 (관리자 키가 맞을 때만 준다) ─────────────
+// 방문자는 IP 해시로 한 번만 센다. IP 해시가 없는 예전 기록은 브라우저 ID(visitor)로 대신 센다
+const STATS_KEY = "stats:owner"
+const STATS_TTL = 60
+
+function stats(b) {
+  if (!isAdmin_(b.adminKey)) return { ok: false, error: "forbidden" }
+  const cache = CacheService.getScriptCache()
+  const hit = cache.get(STATS_KEY)
+  if (hit) {
+    try {
+      return JSON.parse(hit)
+    } catch (e) {}
+  }
+  const sh = book().getSheetByName("views")
+  const rows = sh ? readAll_("views") : []
+  const today = Utilities.formatDate(new Date(), "Asia/Seoul", "yyyy-MM-dd")
+  const days = []
+  for (let i = 6; i >= 0; i--) days.push(Utilities.formatDate(new Date(Date.now() - i * 86400000), "Asia/Seoul", "yyyy-MM-dd"))
+  const set = function () {
+    return { views: 0, who: {} }
+  }
+  const site = { today: set(), total: set() }
+  const byDay = {}
+  days.forEach(function (d) {
+    byDay[d] = set()
+  })
+  const pages = {}
+  const keywords = {}
+  const devices = { mobile: 0, tablet: 0, pc: 0 }
+  const channels = {}
+  const add = function (bucket, who) {
+    bucket.views++
+    if (who) bucket.who[who] = 1
+  }
+  rows.forEach(function (r, i) {
+    if (r.event !== "page_view") return
+    const day = r.day instanceof Date ? Utilities.formatDate(r.day, "Asia/Seoul", "yyyy-MM-dd") : String(r.day)
+    const who = r.ipHash ? "i:" + r.ipHash : r.visitor ? "v:" + r.visitor : "r:" + i
+    add(site.total, who)
+    if (day === today) add(site.today, who)
+    if (byDay[day]) add(byDay[day], who)
+    const key = String(r.page || "")
+    if (key) {
+      const p = (pages[key] = pages[key] || { title: "", total: set(), today: set() })
+      if (r.title) p.title = String(r.title)
+      add(p.total, who)
+      if (day === today) add(p.today, who)
+    }
+    const kw = String(r.keyword || "").trim()
+    if (kw) {
+      const k = (keywords[kw] = keywords[kw] || { n: 0, from: {} })
+      k.n++
+      if (r.refHost) k.from[String(r.refHost)] = 1
+    }
+    const dev = String(r.device || "")
+    if (dev === "desktop" || dev === "pc") devices.pc++
+    else if (devices[dev] !== undefined) devices[dev]++
+    if (r.channel && r.channel !== "internal") channels[r.channel] = (channels[r.channel] || 0) + 1
+  })
+  const pack = function (x) {
+    return { views: x.views, visitors: Object.keys(x.who).length }
+  }
+  const out = {
+    ok: true,
+    updated: kst_(),
+    today: pack(site.today),
+    total: pack(site.total),
+    days: days.map(function (d) {
+      return { day: d, views: byDay[d].views, visitors: Object.keys(byDay[d].who).length }
+    }),
+    pages: Object.keys(pages)
+      .map(function (k) {
+        const p = pages[k]
+        return { page: k, title: p.title, views: p.total.views, visitors: Object.keys(p.total.who).length, today: p.today.views, todayVisitors: Object.keys(p.today.who).length }
+      })
+      .sort(function (a, b2) {
+        return b2.views - a.views
+      }),
+    keywords: Object.keys(keywords)
+      .map(function (k) {
+        return { keyword: k, n: keywords[k].n, from: Object.keys(keywords[k].from).join(", ") }
+      })
+      .sort(function (a, b2) {
+        return b2.n - a.n
+      })
+      .slice(0, 50),
+    devices: devices,
+    channels: channels,
+  }
+  try {
+    cache.put(STATS_KEY, JSON.stringify(out), STATS_TTL)
+  } catch (e) {}
+  return out
 }
 
 // 처음 한 번 실행: views 시트와 대시보드 시트를 만든다 (편집기에서 setupAnalytics 실행)
