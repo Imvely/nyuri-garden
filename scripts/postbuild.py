@@ -39,8 +39,9 @@ SNIPPET = (
     '<script src="__ROOT__static/nyuri-analytics.js" defer></script>'
     '<script src="__ROOT__static/nyuri-related.js" defer></script>'
     '<script src="__ROOT__static/nyuri-stats.js" defer></script>'
+    '<script src="__ROOT__static/nyuri-episode.js" defer></script>'
 )
-MARKER = "static/nyuri-stats.js"
+MARKER = "static/nyuri-episode.js"
 OLD_SNIPPET = '<script>try{if(!localStorage.getItem("theme"))localStorage.setItem("theme","dark")}catch(e){}</script>'
 
 out = Path(sys.argv[1] if len(sys.argv) > 1 else "public")
