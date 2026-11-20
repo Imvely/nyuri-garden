@@ -23,6 +23,8 @@ status: 정리완료
 publish: true
 summary: 데이터셋 라벨 없이 샘플 하나하나에서 스타일에 민감한 특징 상관을 지워, 처음 보는 데이터셋에서도 위조를 잘 걸러낸 CVPR 2023 논문이에요.
 title: "IADG: 데이터셋 라벨 대신 샘플 하나 단위로 맞추기"
+aliases:
+  - "논문 노트/IADG 논문 정리 (arXiv 2304.05640)"
 ---
 > [!abstract] 한 줄 요약
 > 기존 도메인 일반화 FAS는 "이 샘플은 어느 데이터셋에서 왔나"라는 라벨에 기대어 데이터셋끼리 분포를 맞췄다. IADG는 이 라벨을 쓰지 않는다. 샘플마다 특징 채널 사이의 상관(공분산) 가운데 스타일에 민감한 자리만 골라 지운다. 이때 진짜는 많이, 위조는 조금만 지운다. 네 가지 교차 데이터셋 평가 모두에서 비교 방법 가운데 가장 낮은 HTER를 냈다.
@@ -30,7 +32,7 @@ title: "IADG: 데이터셋 라벨 대신 샘플 하나 단위로 맞추기"
 ![[논문 노트/첨부/IADG/IADG 마인드맵.webp]]
 
 > [!tip] 마인드맵 크게 보기
-> <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/iadg/iadg-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/iadg/iadg-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/iadg-%EB%85%BC%EB%AC%B8-%EC%A0%95%EB%A6%AC-%28arxiv-2304.05640%29&title=IADG%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>
+> <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/iadg/iadg-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/iadg/iadg-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EA%B4%80%EC%8B%AC-%EB%85%BC%EB%AC%B8/iadg-%EB%85%BC%EB%AC%B8-%EC%A0%95%EB%A6%AC-%28arxiv-2304.05640%29&title=IADG%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>
 
 ## 서지 정보
 
@@ -317,8 +319,8 @@ t-SNE로 보면 데이터셋 단위로 맞춘 이전 방법은 소스 데이터�
 
 ## 함께 읽으면 좋은 논문
 
-- [[SSDG 논문 정리 (arXiv 2004.14043)|SSDG]]: IADG가 비교 대상으로 삼은 방법(SSDG-M)이다. 진짜는 모으고 위조는 흩어 두는 비대칭 생각을 먼저 내놓았지만 데이터셋 라벨을 쓴다는 점이 다르다.
-- [[I-FAS 논문 정리 (arXiv 2501.01720)|I-FAS]]: 같은 OCIM 교차 데이터셋 평가를 쓰는 최근 논문이다.
+- [[논문 노트/관심 논문/SSDG 논문 정리 (arXiv 2004.14043)|SSDG]]: IADG가 비교 대상으로 삼은 방법(SSDG-M)이다. 진짜는 모으고 위조는 흩어 두는 비대칭 생각을 먼저 내놓았지만 데이터셋 라벨을 쓴다는 점이 다르다.
+- [[논문 노트/관심 논문/I-FAS 논문 정리 (arXiv 2501.01720)|I-FAS]]: 같은 OCIM 교차 데이터셋 평가를 쓰는 최근 논문이다.
 
 ## 출처
 

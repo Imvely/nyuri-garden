@@ -24,6 +24,8 @@ status: 정리완료
 publish: true
 summary: CLIP의 글 인코더로 이미지마다 다른 채널 가중치를 만들어, 클래스 이름 없이도 처음 보는 데이터셋에서 위조를 잘 가려낸 CVPR 2024 논문이에요.
 title: "CFPL-FAS: 클래스 이름 없이 배우는 프롬프트"
+aliases:
+  - "논문 노트/CFPL-FAS 논문 정리 (arXiv 2403.14333)"
 ---
 > [!abstract] 한 줄 요약
 > CLIP 위에 작은 트랜스포머 두 개(CQF, SQF)를 얹어 이미지의 내용과 스타일에서 프롬프트를 만든다. 이 프롬프트를 글 인코더에 통과시켜 얻은 값으로 이미지 특징의 채널을 키우거나 줄인 뒤 진짜와 위조를 가른다. OCIM 네 과제에서 평균 HTER 3.60%를 기록했다.
@@ -31,7 +33,7 @@ title: "CFPL-FAS: 클래스 이름 없이 배우는 프롬프트"
 ![[논문 노트/첨부/CFPL-FAS/CFPL-FAS 마인드맵.webp]]
 
 > [!tip] 마인드맵 크게 보기
-> <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/cfpl-fas/cfpl-fas-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/cfpl-fas/cfpl-fas-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/cfpl-fas-%EB%85%BC%EB%AC%B8-%EC%A0%95%EB%A6%AC-%28arxiv-2403.14333%29&title=CFPL-FAS%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>
+> <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/cfpl-fas/cfpl-fas-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/cfpl-fas/cfpl-fas-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EA%B4%80%EC%8B%AC-%EB%85%BC%EB%AC%B8/cfpl-fas-%EB%85%BC%EB%AC%B8-%EC%A0%95%EB%A6%AC-%28arxiv-2403.14333%29&title=CFPL-FAS%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>
 
 ## 서지 정보
 
@@ -302,11 +304,11 @@ I 평가(O, C, M으로 학습)에서 기준선은 배경을 보다가 진짜 얼
 
 ## 함께 읽으면 좋은 논문
 
-- [[SSDG 논문 정리 (arXiv 2004.14043)|SSDG]]: 원문 표 1의 비교 대상이다. 진짜만 모으고 위조는 흩어 두는 DG 방법이다.
-- [[SA-FAS 논문 정리 (arXiv 2303.13662)|SA-FAS]]: 표 1에서 CFPL 이전 최고 평균 HTER(7.82%)를 낸 방법이다.
-- [[IADG 논문 정리 (arXiv 2304.05640)|IADG]]: 표 1의 비교 대상이다. 샘플 스타일에 덜 민감한 특징을 배우는 방법이다. CFPL의 "생존과 무관한 신호는 스타일에 있다"는 판단도 이 논문을 근거로 든다.
-- [[FLIP 논문 정리 (arXiv 2309.16649)|FLIP]]: 글을 이용해 시각 표현을 개선한 방법이다. 표 1과 표 2에서 CelebA-Spoof를 함께 쓴 조건끼리 비교된다.
-- [[I-FAS 논문 정리 (arXiv 2501.01720)|I-FAS]]: 같은 OCIM 평가를 쓰면서 멀티모달 LLM이 판단과 이유를 함께 말하게 만든 최근 논문이다.
+- [[논문 노트/관심 논문/SSDG 논문 정리 (arXiv 2004.14043)|SSDG]]: 원문 표 1의 비교 대상이다. 진짜만 모으고 위조는 흩어 두는 DG 방법이다.
+- [[논문 노트/관심 논문/SA-FAS 논문 정리 (arXiv 2303.13662)|SA-FAS]]: 표 1에서 CFPL 이전 최고 평균 HTER(7.82%)를 낸 방법이다.
+- [[논문 노트/관심 논문/IADG 논문 정리 (arXiv 2304.05640)|IADG]]: 표 1의 비교 대상이다. 샘플 스타일에 덜 민감한 특징을 배우는 방법이다. CFPL의 "생존과 무관한 신호는 스타일에 있다"는 판단도 이 논문을 근거로 든다.
+- [[논문 노트/관심 논문/FLIP 논문 정리 (arXiv 2309.16649)|FLIP]]: 글을 이용해 시각 표현을 개선한 방법이다. 표 1과 표 2에서 CelebA-Spoof를 함께 쓴 조건끼리 비교된다.
+- [[논문 노트/관심 논문/I-FAS 논문 정리 (arXiv 2501.01720)|I-FAS]]: 같은 OCIM 평가를 쓰면서 멀티모달 LLM이 판단과 이유를 함께 말하게 만든 최근 논문이다.
 
 ## 출처
 

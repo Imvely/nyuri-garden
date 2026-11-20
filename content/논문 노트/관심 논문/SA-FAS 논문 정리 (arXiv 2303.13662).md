@@ -21,6 +21,8 @@ status: 정리완료
 publish: true
 summary: 도메인 차이를 지우지 않고 오히려 나눠 두되, 진짜에서 위조로 가는 방향만 모든 도메인에서 같게 맞춰 처음 보는 데이터셋에서도 위조를 잘 가려낸 CVPR 2023 논문이에요.
 title: "SA-FAS: 도메인은 나누고, 방향은 맞추기"
+aliases:
+  - "논문 노트/SA-FAS 논문 정리 (arXiv 2303.13662)"
 ---
 > [!abstract] 한 줄 요약
 > 기존 도메인 일반화 FAS는 데이터셋마다 다른 흔적을 특징에서 지우려 했다. SA-FAS는 반대로 도메인마다 특징이 따로 뭉치게 두고, 진짜에서 위조로 넘어가는 방향만 모든 도메인에서 같게 맞춘다. 이 생각을 IRM 문제로 정리하고 projected gradient로 풀어서 OCIM 네 과제 모두에서 HTER를 가장 낮게 만들었다.
@@ -28,7 +30,7 @@ title: "SA-FAS: 도메인은 나누고, 방향은 맞추기"
 ![[논문 노트/첨부/SA-FAS/SA-FAS 마인드맵.webp]]
 
 > [!tip] 마인드맵 크게 보기
-> <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/sa-fas/sa-fas-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/sa-fas/sa-fas-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/sa-fas-%EB%85%BC%EB%AC%B8-%EC%A0%95%EB%A6%AC-%28arxiv-2303.13662%29&title=SA-FAS%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>
+> <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/sa-fas/sa-fas-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/sa-fas/sa-fas-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EA%B4%80%EC%8B%AC-%EB%85%BC%EB%AC%B8/sa-fas-%EB%85%BC%EB%AC%B8-%EC%A0%95%EB%A6%AC-%28arxiv-2303.13662%29&title=SA-FAS%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>
 
 ## 서지 정보
 
@@ -334,11 +336,11 @@ UMAP으로 보면 진짜와 위조를 가르는 경계가 학습 도메인 전�
 
 ## 함께 읽으면 좋은 논문
 
-- [[SSDG 논문 정리 (arXiv 2004.14043)|SSDG]]: SA-FAS가 직접 비교하고 비판한 방법이다. 진짜는 한 덩어리로 모으고 위조만 흩어 두는 SSDG와, 도메인을 모두 나눠 두는 SA-FAS를 나란히 보면 차이가 잘 보인다.
-- [[IADG 논문 정리 (arXiv 2304.05640)|IADG]]: 같은 교차 도메인 FAS 문제를 다룬 논문이다.
-- [[FLIP 논문 정리 (arXiv 2309.16649)|FLIP]]: 같은 교차 도메인 FAS 문제를 다룬 논문이다.
-- [[CFPL-FAS 논문 정리 (arXiv 2403.14333)|CFPL-FAS]]: 같은 문제를 다루는 교차 도메인 FAS 논문이다.
-- [[I-FAS 논문 정리 (arXiv 2501.01720)|I-FAS]]: 같은 OCIM 평가를 쓰면서 멀티모달 LLM으로 FAS를 다룬 논문이다.
+- [[논문 노트/관심 논문/SSDG 논문 정리 (arXiv 2004.14043)|SSDG]]: SA-FAS가 직접 비교하고 비판한 방법이다. 진짜는 한 덩어리로 모으고 위조만 흩어 두는 SSDG와, 도메인을 모두 나눠 두는 SA-FAS를 나란히 보면 차이가 잘 보인다.
+- [[논문 노트/관심 논문/IADG 논문 정리 (arXiv 2304.05640)|IADG]]: 같은 교차 도메인 FAS 문제를 다룬 논문이다.
+- [[논문 노트/관심 논문/FLIP 논문 정리 (arXiv 2309.16649)|FLIP]]: 같은 교차 도메인 FAS 문제를 다룬 논문이다.
+- [[논문 노트/관심 논문/CFPL-FAS 논문 정리 (arXiv 2403.14333)|CFPL-FAS]]: 같은 문제를 다루는 교차 도메인 FAS 논문이다.
+- [[논문 노트/관심 논문/I-FAS 논문 정리 (arXiv 2501.01720)|I-FAS]]: 같은 OCIM 평가를 쓰면서 멀티모달 LLM으로 FAS를 다룬 논문이다.
 
 ## 출처
 

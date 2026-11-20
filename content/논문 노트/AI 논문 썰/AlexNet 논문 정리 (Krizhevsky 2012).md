@@ -13,7 +13,9 @@ created: 2026-11-20
 status: 정리완료
 publish: true
 summary: AlexNet은 2012년 이미지 인식 대회 ILSVRC에서 top-5 오류율 15.3%로 2위(26.2%)를 크게 앞선 합성곱 신경망이에요. 그래픽 카드 두 장과 ReLU, 드롭아웃으로 어떻게 해냈는지 원문과 함께 풀었어요.
-title: "AlexNet: 그래픽 카드 두 장이 판을 뒤집은 2012년"
+title: "4편 AlexNet: 그래픽 카드 두 장이 판을 뒤집은 2012년"
+aliases:
+  - "논문 노트/AlexNet 논문 정리 (Krizhevsky 2012)"
 ---
 > [!abstract] 한 줄 요약
 > AlexNet은 2012년 토론토대의 크리제브스키, 수츠케버, 힌턴이 발표한 8층짜리 합성곱 신경망이다. 가중치 6천만 개짜리 그물을 사진 120만 장과 게임용 그래픽 카드 두 장으로 닷새에서 엿새 동안 학습시켰다. ILSVRC-2012 대회에서 top-5 오류율 15.3%를 기록해 2위(26.2%)를 10%포인트 넘게 앞섰다.
@@ -21,7 +23,7 @@ title: "AlexNet: 그래픽 카드 두 장이 판을 뒤집은 2012년"
 ![[논문 노트/첨부/AlexNet/AlexNet 마인드맵.webp]]
 
 > [!tip] 마인드맵 크게 보기
-> <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/alexnet/alexnet-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/alexnet/alexnet-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/alexnet-%EB%85%BC%EB%AC%B8-%EC%A0%95%EB%A6%AC-%28krizhevsky-2012%29&title=AlexNet%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>
+> <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/alexnet/alexnet-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/alexnet/alexnet-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/ai-%EB%85%BC%EB%AC%B8-%EC%8D%B0/alexnet-%EB%85%BC%EB%AC%B8-%EC%A0%95%EB%A6%AC-%28krizhevsky-2012%29&title=AlexNet%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>
 
 | 항목 | 내용 |
 |---|---|
@@ -30,11 +32,11 @@ title: "AlexNet: 그래픽 카드 두 장이 판을 뒤집은 2012년"
 | 소속 | University of Toronto |
 | 실린 곳 | Advances in Neural Information Processing Systems 25 (NIPS 2012) |
 | 분량 | 9쪽 |
-| 시리즈 | AI 논문 썰 4편 (이전 편: [[LeNet-5 논문 정리 (LeCun 1998)\|LeNet-5]], 다음 편: Dropout, 2014) |
+| 시리즈 | AI 논문 썰 4편 (이전 편: [[논문 노트/AI 논문 썰/LeNet-5 논문 정리 (LeCun 1998)\|LeNet-5]], 다음 편: [[논문 노트/AI 논문 썰/Dropout 논문 정리 (Srivastava 2014)\|Dropout]], 2014) |
 
 ## 1. 숫자는 다 읽었다, 남은 건 진짜 사진이다
 
-[[LeNet-5 논문 정리 (LeCun 1998)|지난 편]]의 LeNet-5는 1996년 6월부터 은행 수표를 읽었는데도 세상을 뒤집지 못했어. SVM이 MNIST에서 똑같이 0.8%를 찍었고, 더 큰 그물을 돌릴 계산 장치도 없었으니까. 르쿤은 논문 끝에 한 줄을 남겼지. 데이터가 많아지고 컴퓨터가 빨라지면 학습에 더 기대게 될 거라고.
+[[논문 노트/AI 논문 썰/LeNet-5 논문 정리 (LeCun 1998)|지난 편]]의 LeNet-5는 1996년 6월부터 은행 수표를 읽었는데도 세상을 뒤집지 못했어. SVM이 MNIST에서 똑같이 0.8%를 찍었고, 더 큰 그물을 돌릴 계산 장치도 없었으니까. 르쿤은 논문 끝에 한 줄을 남겼지. 데이터가 많아지고 컴퓨터가 빨라지면 학습에 더 기대게 될 거라고.
 
 그 뒤로 14년이 흘렀어.
 
@@ -69,7 +71,7 @@ AlexNet을 학습시킨 장치는 슈퍼컴퓨터가 아니라 GTX 580이라는 
 
 사람부터 소개할게. 셋 다 토론토대야.
 
-- **제프리 힌턴**: [[역전파 논문 정리 (Rumelhart 1986)|2편]]의 그 힌턴이야. 크리제브스키와 수츠케버의 지도 교수지.
+- **제프리 힌턴**: [[논문 노트/AI 논문 썰/역전파 논문 정리 (Rumelhart 1986)|2편]]의 그 힌턴이야. 크리제브스키와 수츠케버의 지도 교수지.
 - **알렉스 크리제브스키**: 힌턴의 박사과정 학생이야. 그래픽 카드로 합성곱 신경망을 돌리는 코드 cuda-convnet을 이미 짜 둔 사람이고, CIFAR-10 데이터를 만든 사람이기도 해.
 - **일리야 수츠케버**: 같은 연구실의 대학원생이야. 1986년 소련 고리키에서 태어나 다섯 살에 이스라엘로, 열여섯에 캐나다로 건너왔어.
 
@@ -144,7 +146,7 @@ $$
 | 국소 반응 정규화 | top-1 1.4%, top-5 1.2% 낮춤 |
 | 겹치는 풀링 | top-1 0.4%, top-5 0.3% 낮춤 |
 
-학습 방법 자체는 [[역전파 논문 정리 (Rumelhart 1986)|2편]]의 역전파에 모멘텀을 얹은 거야. 한 번에 128장씩 보고, 모멘텀 0.9, 가중치 감쇠 0.0005. 학습률은 0.01에서 시작해 검증 오류가 더 안 줄면 10으로 나눴고, 끝날 때까지 세 번 나눴어. 손으로.
+학습 방법 자체는 [[논문 노트/AI 논문 썰/역전파 논문 정리 (Rumelhart 1986)|2편]]의 역전파에 모멘텀을 얹은 거야. 한 번에 128장씩 보고, 모멘텀 0.9, 가중치 감쇠 0.0005. 학습률은 0.01에서 시작해 검증 오류가 더 안 줄면 10으로 나눴고, 끝날 때까지 세 번 나눴어. 손으로.
 
 ## 6. 6천만 개가 답을 외우지 못하게 막기
 
@@ -252,7 +254,7 @@ AlexNet의 대회 제출일은 2012년 9월 30일이고, 그로부터 반년 뒤
 
 드롭아웃 하나만 붙잡고 길게 따진 논문은 2014년에 나와.
 
-다음 편, Dropout.
+다음 편, [[논문 노트/AI 논문 썰/Dropout 논문 정리 (Srivastava 2014)|Dropout]].
 
 ## 11. 면접에서 물어보면
 

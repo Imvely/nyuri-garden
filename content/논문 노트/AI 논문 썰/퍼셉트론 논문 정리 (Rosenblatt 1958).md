@@ -13,7 +13,9 @@ created: 2026-11-20
 status: 정리완료
 publish: true
 summary: 퍼셉트론은 1958년 심리학자 로젠블랫이 만든 스스로 배우는 기계 모델이에요. 신문이 "의식을 가질 기계"라고 띄웠다가 책 한 권에 무너진 이야기를 원문과 함께 풀었어요.
-title: "퍼셉트론: 신문이 띄우고 책 한 권이 무너뜨린 AI의 조상님"
+title: "1편 퍼셉트론: 신문이 띄우고 책 한 권이 무너뜨린 AI의 조상님"
+aliases:
+  - "논문 노트/퍼셉트론 논문 정리 (Rosenblatt 1958)"
 ---
 > [!abstract] 한 줄 요약
 > 퍼셉트론은 1958년 심리학자 프랭크 로젠블랫이 논문으로 낸 "스스로 배우는 기계" 모델이다. 빛을 받는 점, 무작위로 이어진 연결 세포, 답을 내는 반응 세포로 되어 있고, 맞힐 때마다 연결을 세게 만들어서 배운다. 지금 쓰는 신경망은 전부 이 친구의 후손이다.
@@ -21,7 +23,7 @@ title: "퍼셉트론: 신문이 띄우고 책 한 권이 무너뜨린 AI의 조�
 ![[논문 노트/첨부/퍼셉트론/퍼셉트론 마인드맵.webp]]
 
 > [!tip] 마인드맵 크게 보기
-> <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/%ED%8D%BC%EC%85%89%ED%8A%B8%EB%A1%A0/%ED%8D%BC%EC%85%89%ED%8A%B8%EB%A1%A0-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/%ED%8D%BC%EC%85%89%ED%8A%B8%EB%A1%A0/%ED%8D%BC%EC%85%89%ED%8A%B8%EB%A1%A0-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%ED%8D%BC%EC%85%89%ED%8A%B8%EB%A1%A0-%EB%85%BC%EB%AC%B8-%EC%A0%95%EB%A6%AC-%28rosenblatt-1958%29&title=%ED%8D%BC%EC%85%89%ED%8A%B8%EB%A1%A0%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>
+> <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/%ED%8D%BC%EC%85%89%ED%8A%B8%EB%A1%A0/%ED%8D%BC%EC%85%89%ED%8A%B8%EB%A1%A0-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/%ED%8D%BC%EC%85%89%ED%8A%B8%EB%A1%A0/%ED%8D%BC%EC%85%89%ED%8A%B8%EB%A1%A0-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/ai-%EB%85%BC%EB%AC%B8-%EC%8D%B0/%ED%8D%BC%EC%85%89%ED%8A%B8%EB%A1%A0-%EB%85%BC%EB%AC%B8-%EC%A0%95%EB%A6%AC-%28rosenblatt-1958%29&title=%ED%8D%BC%EC%85%89%ED%8A%B8%EB%A1%A0%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>
 
 | 항목 | 내용 |
 |---|---|
@@ -30,7 +32,7 @@ title: "퍼셉트론: 신문이 띄우고 책 한 권이 무너뜨린 AI의 조�
 | 실린 곳 | Psychological Review 65권 6호, 386~408쪽, 1958년 |
 | 돈 댄 곳 | 미국 해군연구청(Office of Naval Research), 계약 번호 Nonr-2381(00) |
 | 한마디 | 신경망의 가장 오래된 조상 |
-| 시리즈 | AI 논문 썰 1편 (다음 편: [[역전파 논문 정리 (Rumelhart 1986)\|역전파]], 1986) |
+| 시리즈 | AI 논문 썰 1편 (다음 편: [[논문 노트/AI 논문 썰/역전파 논문 정리 (Rumelhart 1986)\|역전파]], 1986) |
 
 ## 1. 1958년 7월, 5톤짜리 컴퓨터가 카드 놀이를 했다
 
@@ -174,7 +176,7 @@ title: "퍼셉트론: 신문이 띄우고 책 한 권이 무너뜨린 AI의 조�
 
 그 답이 1986년에 나와. 얼어붙은 판이 거기서부터 녹기 시작해.
 
-다음 편, [[역전파 논문 정리 (Rumelhart 1986)|역전파]].
+다음 편, [[논문 노트/AI 논문 썰/역전파 논문 정리 (Rumelhart 1986)|역전파]].
 
 ## 9. 면접에서 물어보면
 
@@ -203,8 +205,8 @@ title: "퍼셉트론: 신문이 띄우고 책 한 권이 무너뜨린 AI의 조�
 
 퍼셉트론의 먼 후손들이 지금 하는 일이 궁금하면 이 글들을 봐.
 
-- [[SSDG 논문 정리 (arXiv 2004.14043)|SSDG]]: 신경망으로 진짜 얼굴과 위조 얼굴을 가르는 2020년 논문
-- [[I-FAS 논문 정리 (arXiv 2501.01720)|I-FAS]]: 판단에 이유까지 붙여 말하는 2025년 논문
+- [[논문 노트/관심 논문/SSDG 논문 정리 (arXiv 2004.14043)|SSDG]]: 신경망으로 진짜 얼굴과 위조 얼굴을 가르는 2020년 논문
+- [[논문 노트/관심 논문/I-FAS 논문 정리 (arXiv 2501.01720)|I-FAS]]: 판단에 이유까지 붙여 말하는 2025년 논문
 
 ## 출처
 

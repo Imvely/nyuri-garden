@@ -21,6 +21,8 @@ status: 정리완료
 publish: true
 summary: 진짜 얼굴은 한 무리로 모으고 위조 얼굴은 데이터셋마다 흩어 두는 방식으로, 처음 보는 데이터셋에서도 위조를 잘 걸러낸 CVPR 2020 논문이에요.
 title: "SSDG: 진짜는 모으고, 위조는 흩어 두기"
+aliases:
+  - "논문 노트/SSDG 논문 정리 (arXiv 2004.14043)"
 ---
 > [!abstract] 한 줄 요약
 > 얼굴 위조 방지(FAS) 모델을 여러 데이터셋으로 학습할 때, 진짜 얼굴만 데이터셋 구분 없이 한 무리로 모으고 위조 얼굴은 데이터셋마다 따로 흩어 둔다. 진짜와 위조를 똑같이 다루던 기존 도메인 일반화보다, 처음 보는 데이터셋에서 진짜와 위조를 훨씬 잘 가른다.
@@ -28,7 +30,7 @@ title: "SSDG: 진짜는 모으고, 위조는 흩어 두기"
 ![[논문 노트/첨부/SSDG/SSDG 마인드맵.webp]]
 
 > [!tip] 마인드맵 크게 보기
-> <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/ssdg/ssdg-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/ssdg/ssdg-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/ssdg-%EB%85%BC%EB%AC%B8-%EC%A0%95%EB%A6%AC-%28arxiv-2004.14043%29&title=SSDG%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>
+> <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/ssdg/ssdg-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/ssdg/ssdg-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EA%B4%80%EC%8B%AC-%EB%85%BC%EB%AC%B8/ssdg-%EB%85%BC%EB%AC%B8-%EC%A0%95%EB%A6%AC-%28arxiv-2004.14043%29&title=SSDG%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>
 
 ## 서지 정보
 
@@ -208,7 +210,7 @@ Grad-CAM으로 보면 SSDG는 배경이나 조명 대신 얼굴 안쪽을 본다
 
 ## 함께 읽으면 좋은 논문
 
-- [[I-FAS 논문 정리 (arXiv 2501.01720)|I-FAS]]: 같은 OCIM 평가를 쓰면서, 멀티모달 LLM이 판단과 이유를 함께 말하게 만든 최근 논문이다.
+- [[논문 노트/관심 논문/I-FAS 논문 정리 (arXiv 2501.01720)|I-FAS]]: 같은 OCIM 평가를 쓰면서, 멀티모달 LLM이 판단과 이유를 함께 말하게 만든 최근 논문이다.
 
 ## 출처
 

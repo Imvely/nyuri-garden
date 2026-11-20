@@ -13,6 +13,8 @@ status: 정리완료
 publish: true
 summary: 로봇과 자율주행 모델이 내는 궤적과 박스의 모양을 미리 알면 좌표를 한 번에 예측할 수 있다는 생각으로, 계획 생성을 빠르고 더 정확하게 만든 NVIDIA 논문이에요.
 title: "VFlash: 모양을 아는 시각 계획은 여러 칸을 한 번에 채운다"
+aliases:
+  - "논문 노트/VFlash 논문 정리 (arXiv 2611.08449)"
 ---
 > [!abstract] 한 줄 요약
 > 로봇용 VLM은 궤적과 박스를 좌표 토큰 하나씩 생성해서, 계획이 자세할수록 느려진다. VFlash는 도구 호출로 계획의 종류와 길이를 먼저 정하고, 작은 드래프터가 그 모양 전체를 한 번의 순전파로 채운다. 대상 모델과 토큰이 같은지 확인하지 않고 모양만 맞으면 받아들이는데, 3D 궤적 오차는 오히려 대상 모델보다 18~61% 줄었다.
@@ -20,7 +22,7 @@ title: "VFlash: 모양을 아는 시각 계획은 여러 칸을 한 번에 채�
 ![[논문 노트/첨부/VFlash/VFlash 마인드맵.webp]]
 
 > [!tip] 마인드맵 크게 보기
-> <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/vflash/vflash-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/vflash/vflash-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/vflash-%EB%85%BC%EB%AC%B8-%EC%A0%95%EB%A6%AC-%28arxiv-2611.08449%29&title=VFlash%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>
+> <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/vflash/vflash-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/vflash/vflash-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EA%B4%80%EC%8B%AC-%EB%85%BC%EB%AC%B8/vflash-%EB%85%BC%EB%AC%B8-%EC%A0%95%EB%A6%AC-%28arxiv-2611.08449%29&title=VFlash%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>
 *문제, 핵심 아이디어, 학습, 정확도, 속도, 한계를 한 장에 모은 마인드맵.*
 
 | 항목 | 내용 |

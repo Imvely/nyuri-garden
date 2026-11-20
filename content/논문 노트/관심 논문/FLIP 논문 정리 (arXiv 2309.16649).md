@@ -20,6 +20,8 @@ status: 정리완료
 publish: true
 summary: CLIP으로 시작한 ViT에 "진짜 얼굴", "위조 얼굴"을 설명하는 문장을 기준점으로 붙여서, 처음 보는 데이터셋에서도 위조를 더 잘 걸러낸 ICCV 2023 논문이에요.
 title: "FLIP: 문장을 기준점으로 삼는 얼굴 위조 판별"
+aliases:
+  - "논문 노트/FLIP 논문 정리 (arXiv 2309.16649)"
 ---
 > [!abstract] 한 줄 요약
 > 얼굴 위조 방지(FAS) 모델의 출발점을 ImageNet 대신 CLIP 이미지 인코더로 바꾸기만 해도 처음 보는 데이터셋에서 더 잘 버틴다. 여기에 진짜와 위조를 설명하는 문장 여러 개의 평균을 분류 기준으로 쓰고, 이미지 두 장과 문장 두 개 사이의 일관성까지 학습시키면 세 가지 평가 방식 모두에서 기존 방법보다 평균 HTER가 낮아진다.
@@ -27,7 +29,7 @@ title: "FLIP: 문장을 기준점으로 삼는 얼굴 위조 판별"
 ![[논문 노트/첨부/FLIP/FLIP 마인드맵.webp]]
 
 > [!tip] 마인드맵 크게 보기
-> <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/flip/flip-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/flip/flip-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/flip-%EB%85%BC%EB%AC%B8-%EC%A0%95%EB%A6%AC-%28arxiv-2309.16649%29&title=FLIP%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>
+> <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/flip/flip-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/flip/flip-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EA%B4%80%EC%8B%AC-%EB%85%BC%EB%AC%B8/flip-%EB%85%BC%EB%AC%B8-%EC%A0%95%EB%A6%AC-%28arxiv-2309.16649%29&title=FLIP%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>
 
 ## 서지 정보
 
@@ -327,9 +329,9 @@ Protocol 1에서는 종이 질감(M), 종이 테두리(C), 모아레 무늬(I, O
 
 ## 함께 읽으면 좋은 논문
 
-- [[SSDG 논문 정리 (arXiv 2004.14043)|SSDG]]: FLIP이 Protocol 1 비교 표에 넣은 기준 방법이다(SSDG-R, 평균 HTER 11.28%).
-- [[I-FAS 논문 정리 (arXiv 2501.01720)|I-FAS]]: 같은 MCIO 평가에서 언어 모델을 FAS에 끌어온 다른 방식이다. 멀티모달 LLM이 판단과 이유를 함께 말하게 만든다.
-- [[CFPL-FAS 논문 정리 (arXiv 2403.14333)|CFPL-FAS]]: FLIP-MCL을 비교 대상으로 인용한 후속 논문이다. 교차 데이터셋 FAS라는 같은 문제를 다룬다.
+- [[논문 노트/관심 논문/SSDG 논문 정리 (arXiv 2004.14043)|SSDG]]: FLIP이 Protocol 1 비교 표에 넣은 기준 방법이다(SSDG-R, 평균 HTER 11.28%).
+- [[논문 노트/관심 논문/I-FAS 논문 정리 (arXiv 2501.01720)|I-FAS]]: 같은 MCIO 평가에서 언어 모델을 FAS에 끌어온 다른 방식이다. 멀티모달 LLM이 판단과 이유를 함께 말하게 만든다.
+- [[논문 노트/관심 논문/CFPL-FAS 논문 정리 (arXiv 2403.14333)|CFPL-FAS]]: FLIP-MCL을 비교 대상으로 인용한 후속 논문이다. 교차 데이터셋 FAS라는 같은 문제를 다룬다.
 
 ## 출처
 

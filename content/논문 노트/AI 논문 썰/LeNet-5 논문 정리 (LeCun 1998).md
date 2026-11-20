@@ -13,7 +13,9 @@ created: 2026-11-20
 status: 정리완료
 publish: true
 summary: LeNet-5는 1998년 얀 르쿤이 발표한 손글씨 숫자 인식 신경망으로, 지금 쓰는 합성곱 신경망(CNN)의 원형이에요. 은행 수표를 하루 수백만 장 읽고도 왜 14년을 기다려야 했는지 원문과 함께 풀었어요.
-title: "LeNet-5: 은행 수표를 읽던 신경망, CNN의 시작"
+title: "3편 LeNet-5: 은행 수표를 읽던 신경망, CNN의 시작"
+aliases:
+  - "논문 노트/LeNet-5 논문 정리 (LeCun 1998)"
 ---
 > [!abstract] 한 줄 요약
 > LeNet-5는 1998년 얀 르쿤 연구진이 발표한 7층짜리 합성곱 신경망(CNN)이다. 작은 창 하나로 그림 전체를 훑고, 그 창의 가중치를 어디서나 같이 쓰고, 중간중간 크기를 줄이는 세 가지 생각으로 손글씨 숫자를 오류율 0.95%로 읽었다. 1996년 6월부터 미국 은행에서 하루 수백만 장의 수표를 읽었다.
@@ -21,7 +23,7 @@ title: "LeNet-5: 은행 수표를 읽던 신경망, CNN의 시작"
 ![[논문 노트/첨부/LeNet-5/LeNet-5 마인드맵.webp]]
 
 > [!tip] 마인드맵 크게 보기
-> <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/lenet-5/lenet-5-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/lenet-5/lenet-5-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/lenet-5-%EB%85%BC%EB%AC%B8-%EC%A0%95%EB%A6%AC-%28lecun-1998%29&title=LeNet-5%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>
+> <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/lenet-5/lenet-5-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/lenet-5/lenet-5-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/ai-%EB%85%BC%EB%AC%B8-%EC%8D%B0/lenet-5-%EB%85%BC%EB%AC%B8-%EC%A0%95%EB%A6%AC-%28lecun-1998%29&title=LeNet-5%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>
 
 | 항목 | 내용 |
 |---|---|
@@ -30,11 +32,11 @@ title: "LeNet-5: 은행 수표를 읽던 신경망, CNN의 시작"
 | 소속 | AT&T Labs-Research (뉴저지주 레드뱅크) |
 | 실린 곳 | Proceedings of the IEEE 86권 11호, 2278~2324쪽, 1998년 11월 |
 | 분량 | 46쪽 |
-| 시리즈 | AI 논문 썰 3편 (이전 편: [[역전파 논문 정리 (Rumelhart 1986)\|역전파]], 다음 편: [[AlexNet 논문 정리 (Krizhevsky 2012)\|AlexNet]], 2012) |
+| 시리즈 | AI 논문 썰 3편 (이전 편: [[논문 노트/AI 논문 썰/역전파 논문 정리 (Rumelhart 1986)\|역전파]], 다음 편: [[논문 노트/AI 논문 썰/AlexNet 논문 정리 (Krizhevsky 2012)\|AlexNet]], 2012) |
 
 ## 1. 장난감 문제는 풀었다, 이제 진짜 세상이다
 
-[[역전파 논문 정리 (Rumelhart 1986)|지난 편]]에서 신경망은 드디어 여러 겹을 가르치는 법을 얻었어. 근데 그때 푼 문제가 뭐였는지 기억나? 좌우 대칭 찾기, 그리고 24명짜리 가족 관계 맞히기. 솔직히 장난감이야.
+[[논문 노트/AI 논문 썰/역전파 논문 정리 (Rumelhart 1986)|지난 편]]에서 신경망은 드디어 여러 겹을 가르치는 법을 얻었어. 근데 그때 푼 문제가 뭐였는지 기억나? 좌우 대칭 찾기, 그리고 24명짜리 가족 관계 맞히기. 솔직히 장난감이야.
 
 세상은 이렇게 물었지. "그래서 그걸로 돈 되는 일을 할 수 있어?"
 
@@ -190,7 +192,7 @@ SVM은 그 무렵 떠오르던 다른 방법이야. 신경망이 아닌 방법�
 
 2012년에 그 둘이 한자리에 모여. 사진 100만 장이 넘는 데이터, 그리고 게임용 그래픽 카드.
 
-다음 편, [[AlexNet 논문 정리 (Krizhevsky 2012)|AlexNet]].
+다음 편, [[논문 노트/AI 논문 썰/AlexNet 논문 정리 (Krizhevsky 2012)|AlexNet]].
 
 ## 11. 네 저자의 그 뒤
 

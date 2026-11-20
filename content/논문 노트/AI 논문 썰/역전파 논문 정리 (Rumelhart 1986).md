@@ -13,7 +13,9 @@ created: 2026-11-20
 status: 정리완료
 publish: true
 summary: 역전파는 신경망이 틀린 만큼의 책임을 뒤에서 앞으로 나눠 주며 배우는 방법이에요. 1986년 네이처에 실린 4쪽짜리 논문이 얼어붙은 신경망 연구를 어떻게 깨웠는지 원문과 함께 풀었어요.
-title: "역전파: 얼어붙은 신경망을 깨운 네이처의 4쪽"
+title: "2편 역전파: 얼어붙은 신경망을 깨운 네이처의 4쪽"
+aliases:
+  - "논문 노트/역전파 논문 정리 (Rumelhart 1986)"
 ---
 > [!abstract] 한 줄 요약
 > 역전파는 여러 겹으로 쌓은 신경망을 가르치는 방법이다. 답을 낸 뒤 정답과 비교하고, 틀린 만큼의 책임을 출력에서 입력 쪽으로 거꾸로 나눠 주면서 연결의 세기를 고친다. 1986년 10월 9일 네이처에 실린 4쪽짜리 논문이 이 방법으로 가운데 층이 쓸모 있는 표현을 스스로 만든다는 것을 보여 줬다.
@@ -21,7 +23,7 @@ title: "역전파: 얼어붙은 신경망을 깨운 네이처의 4쪽"
 ![[논문 노트/첨부/역전파/역전파 마인드맵.webp]]
 
 > [!tip] 마인드맵 크게 보기
-> <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/%EC%97%AD%EC%A0%84%ED%8C%8C/%EC%97%AD%EC%A0%84%ED%8C%8C-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/%EC%97%AD%EC%A0%84%ED%8C%8C/%EC%97%AD%EC%A0%84%ED%8C%8C-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%97%AD%EC%A0%84%ED%8C%8C-%EB%85%BC%EB%AC%B8-%EC%A0%95%EB%A6%AC-%28rumelhart-1986%29&title=%EC%97%AD%EC%A0%84%ED%8C%8C%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>
+> <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/%EC%97%AD%EC%A0%84%ED%8C%8C/%EC%97%AD%EC%A0%84%ED%8C%8C-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/%EC%97%AD%EC%A0%84%ED%8C%8C/%EC%97%AD%EC%A0%84%ED%8C%8C-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/ai-%EB%85%BC%EB%AC%B8-%EC%8D%B0/%EC%97%AD%EC%A0%84%ED%8C%8C-%EB%85%BC%EB%AC%B8-%EC%A0%95%EB%A6%AC-%28rumelhart-1986%29&title=%EC%97%AD%EC%A0%84%ED%8C%8C%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>
 
 | 항목 | 내용 |
 |---|---|
@@ -30,11 +32,11 @@ title: "역전파: 얼어붙은 신경망을 깨운 네이처의 4쪽"
 | 소속 | 루멜하트와 윌리엄스는 UC 샌디에이고 인지과학연구소, 힌턴은 카네기멜런대 컴퓨터과학과 |
 | 실린 곳 | Nature 323권, 533~536쪽, 1986년 10월 9일 |
 | 돈 댄 곳 | System Development Foundation, 미국 해군연구청 |
-| 시리즈 | AI 논문 썰 2편 (이전 편: [[퍼셉트론 논문 정리 (Rosenblatt 1958)\|퍼셉트론]], 다음 편: [[LeNet-5 논문 정리 (LeCun 1998)\|LeNet-5]], 1998) |
+| 시리즈 | AI 논문 썰 2편 (이전 편: [[논문 노트/AI 논문 썰/퍼셉트론 논문 정리 (Rosenblatt 1958)\|퍼셉트론]], 다음 편: [[논문 노트/AI 논문 썰/LeNet-5 논문 정리 (LeCun 1998)\|LeNet-5]], 1998) |
 
 ## 1. 다들 답은 알았다, 푸는 법을 몰랐을 뿐
 
-[[퍼셉트론 논문 정리 (Rosenblatt 1958)|지난 편]]에서 퍼셉트론이 어떻게 됐는지 기억나? 한 겹짜리는 XOR도 못 푼다는 책 한 권에 맞고 판이 얼어붙었잖아.
+[[논문 노트/AI 논문 썰/퍼셉트론 논문 정리 (Rosenblatt 1958)|지난 편]]에서 퍼셉트론이 어떻게 됐는지 기억나? 한 겹짜리는 XOR도 못 푼다는 책 한 권에 맞고 판이 얼어붙었잖아.
 
 근데 웃긴 게 뭔지 알아? 해법은 다들 알고 있었어. 한 겹으로 안 되면 여러 겹을 쌓으면 돼. 가운데에 세포를 한 줄 더 끼우면 XOR도 풀려. 이건 비밀이 아니었어.
 
@@ -206,7 +208,7 @@ $$
 
 방법은 생겼어. 가족 관계 24명짜리 장난감 문제는 풀었어. 근데 이게 진짜 세상 문제에도 먹힐까? 예를 들어 사람이 손으로 갈겨쓴 숫자를 읽는 일 같은 거.
 
-르쿤이 그걸 해. 다음 편, [[LeNet-5 논문 정리 (LeCun 1998)|LeNet-5]].
+르쿤이 그걸 해. 다음 편, [[논문 노트/AI 논문 썰/LeNet-5 논문 정리 (LeCun 1998)|LeNet-5]].
 
 ## 9. 면접에서 물어보면
 

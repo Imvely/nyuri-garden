@@ -115,8 +115,8 @@ th.send({"role": "user", "content": TOOL_RESULT})   # 턴마다 새 메시지만
 
 ## 함께 보면 좋은 글
 
-- [[주간 별점표 2026년 11월 1주|2026년 11월 1주 IT 트렌드]]: Message Threads가 나온 주의 소식
-- [[Claude Code 스킬 직접 만들기|Claude Code 스킬 직접 만들기]]: 이 블로그가 Claude Code를 쓰는 방식
+- [[IT 트렌드/주간 별점표 2026년 11월 1주|2026년 11월 1주 IT 트렌드]]: Message Threads가 나온 주의 소식
+- [[IT 트렌드/Claude Code 스킬 직접 만들기|Claude Code 스킬 직접 만들기]]: 이 블로그가 Claude Code를 쓰는 방식
 
 ## 출처
 
