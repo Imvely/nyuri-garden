@@ -32,7 +32,7 @@ aliases:
 | 소속 | 킹마는 University of Amsterdam과 OpenAI, 바는 University of Toronto (2017년 1월에 올라온 9판의 표기) |
 | 실린 곳 | ICLR 2015 (샌디에이고). arXiv 1412.6980, 1판 2014년 12월 22일 |
 | 분량 | 15쪽 (본문과 참고 문헌 11쪽, 부록 4쪽) |
-| 시리즈 | AI 논문 썰 6편 (이전 편: [[논문 노트/AI 논문 썰/Dropout 논문 정리 (Srivastava 2014)\|Dropout]], 다음 편: Batch Normalization, 2015) |
+| 시리즈 | AI 논문 썰 6편 (이전 편: [[논문 노트/AI 논문 썰/Dropout 논문 정리 (Srivastava 2014)\|Dropout]], 다음 편: [[논문 노트/AI 논문 썰/Batch Normalization 논문 정리 (Ioffe 2015)\|Batch Normalization]], 2015) |
 
 ## 1. 과적합은 잡았는데 보폭은 아직 손으로 돌린다
 
@@ -272,7 +272,7 @@ Adam으로 가중치마다 걸음을 알아서 정하게 됐지만, 그물을 �
 
 그럼 층마다 들어오는 입력을 매번 같은 모양으로 맞춰 주면 어떨까. 2015년에 그 답이 나와.
 
-다음 편, Batch Normalization.
+다음 편, [[논문 노트/AI 논문 썰/Batch Normalization 논문 정리 (Ioffe 2015)|Batch Normalization]].
 
 ## 11. 면접에서 물어보면
 
