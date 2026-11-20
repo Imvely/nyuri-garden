@@ -22,7 +22,6 @@ title: "퍼셉트론: 신문이 띄우고 책 한 권이 무너뜨린 AI의 조�
 
 > [!tip] 마인드맵 크게 보기
 > <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/%ED%8D%BC%EC%85%89%ED%8A%B8%EB%A1%A0/%ED%8D%BC%EC%85%89%ED%8A%B8%EB%A1%A0-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/%ED%8D%BC%EC%85%89%ED%8A%B8%EB%A1%A0/%ED%8D%BC%EC%85%89%ED%8A%B8%EB%A1%A0-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%ED%8D%BC%EC%85%89%ED%8A%B8%EB%A1%A0-%EB%85%BC%EB%AC%B8-%EC%A0%95%EB%A6%AC-%28rosenblatt-1958%29&title=%ED%8D%BC%EC%85%89%ED%8A%B8%EB%A1%A0%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>크게 열어 보기</a>
-*퍼셉트론 썰을 한 장에 모은 마인드맵.*
 
 | 항목 | 내용 |
 |---|---|
