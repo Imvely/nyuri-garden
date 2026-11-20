@@ -14,11 +14,13 @@
     ["old", "오래된순"],
     ["title", "제목순"],
   ]
+  // 연재 폴더는 1편부터 보이는 게 기본 (제목이 "1편 …" 이라 제목순 = 편 순서)
+  const defSort = () => (/\/ai-논문-썰\/index$/.test(document.body.dataset.slug || "") ? "title" : "new")
   const NEW_DAYS = 3 // 이 날수 안에 올린 글은 '새 글'
   let dataPromise = null
 
   // ── 좋아요, 댓글 수: 글마다 쓰는 댓글 백엔드(thread)를 그대로 부른다 (comments.js 와 같은 키 규칙) ──
-  const KEY_ALIASES = [["논문-노트/", "논문/"]]
+  const KEY_ALIASES = [["논문-노트/ai-논문-썰/", "논문/"], ["논문-노트/관심-논문/", "논문/"], ["논문-노트/", "논문/"]]
   const pageKey = (slug) => {
     for (const [now, first] of KEY_ALIASES) if (slug.startsWith(now)) return first + slug.slice(now.length)
     return slug
@@ -165,7 +167,7 @@
     return {
       q: u.searchParams.get("q") || "",
       tag: u.searchParams.get("tag") || "",
-      sort: SORTS.some(([k]) => k === sort) ? sort : "new",
+      sort: SORTS.some(([k]) => k === sort) ? sort : defSort(),
       page: Math.max(1, parseInt(u.searchParams.get("page") || "1", 10) || 1),
     }
   }
@@ -174,7 +176,7 @@
     const set = (k, v, def) => (v && v !== def ? u.searchParams.set(k, v) : u.searchParams.delete(k))
     set("q", s.q.trim(), "")
     set("tag", s.tag, "")
-    set("sort", s.sort, "new")
+    set("sort", s.sort, defSort())
     set("page", String(s.page), "1")
     history.replaceState(history.state, "", u.pathname + u.search + u.hash)
   }

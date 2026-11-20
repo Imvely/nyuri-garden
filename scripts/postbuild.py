@@ -108,7 +108,7 @@ slug_of = {v.get("filePath"): k for k, v in idx.items()}
 lists = {}
 for folder, hide_tags in LIST_FOLDERS.items():
     items = []
-    for md in sorted((content / folder).glob("*.md")):
+    for md in sorted((content / folder).rglob("*.md")):
         if md.name == "index.md":
             continue
         rel = md.relative_to(content).as_posix()
@@ -128,11 +128,17 @@ for folder, hide_tags in LIST_FOLDERS.items():
         items.append({"slug": slug, "title": f.get("title") or idx[slug].get("title") or md.stem,
                       "summary": f.get("summary", ""), "tags": tags, "created": f.get("created", ""),
                       "venue": f.get("venue", ""), "added": added, "minutes": minutes,
+                      "sub": md.parent.relative_to(content).as_posix(), "series_no": int(f.get("series_no") or 0),
                       "file": str(md), "paper_url": f.get("url", "") if folder == "논문 노트" else "", "paper_title": f.get("paper", "")})
         idx[slug]["added"] = added  # 탐색기 정렬용 (quartz.config.yaml 의 explorer mapFn)
     if items:
         key = slug_of.get(f"{folder}/index.md", "")
         lists[key or folder] = items
+        # 하위 폴더(논문 노트/AI 논문 썰 등)의 첫 화면도 같은 목록 화면을 쓴다
+        for subdir in sorted({it["sub"] for it in items if it["sub"] != folder}):
+            skey = slug_of.get(f"{subdir}/index.md", "")
+            if skey:
+                lists[skey] = [it for it in items if it["sub"] == subdir]
 (out / "static" / "nyuri-list.json").write_text(json.dumps(lists, ensure_ascii=False), encoding="utf-8")
 
 # ── 관련 글 (static/nyuri-related.json, 글 페이지의 백링크 칸을 static/nyuri-related.js 가 바꿔 그린다) ──

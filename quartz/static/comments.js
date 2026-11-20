@@ -49,7 +49,7 @@
 
   const api = () => (window.NYURI && window.NYURI.api) || ""
   // 폴더 이름을 바꿔도 댓글 · 좋아요가 이어지게: 지금 주소 앞부분 → 처음 저장할 때의 앞부분
-  const KEY_ALIASES = [["논문-노트/", "논문/"]]
+  const KEY_ALIASES = [["논문-노트/ai-논문-썰/", "논문/"], ["논문-노트/관심-논문/", "논문/"], ["논문-노트/", "논문/"]]
   const pageKey = () => {
     const k = document.body.dataset.slug || location.pathname
     for (const [now, first] of KEY_ALIASES) if (k.startsWith(now)) return first + k.slice(now.length)

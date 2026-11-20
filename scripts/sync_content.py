@@ -139,6 +139,27 @@ def add_aliases(text, key):
 published, copied_assets = [], []
 
 
+NOTE_LINK_RE = re.compile(r"(?<!!)\[\[([^\]|#\\]+?)(#[^\]|\\]*)?(\\?\|[^\]]*)?\]\]")
+
+
+def full_link(m):
+    """[[노트 이름]] 을 블로그 전체 경로([[논문 노트/AI 논문 썰/노트 이름|노트 이름]])로 바꾼다.
+
+    노트를 하위 폴더로 옮기면 예전 주소 넘김 페이지와 이름이 겹쳐서, 이름만 적은 링크가 엉뚱한 곳으로 풀린다.
+    """
+    name, anchor, alias = m.group(1).strip(), m.group(2) or "", m.group(3) or ""
+    src = resolve(name)
+    if src is None or src.suffix != ".md" or src.name.endswith(".excalidraw.md"):
+        return m.group(0)
+    try:
+        if not is_publish(src.read_text(encoding="utf-8")):
+            return m.group(0)
+    except OSError:
+        return m.group(0)
+    target = site_path(src.relative_to(vault)).with_suffix("").as_posix()
+    return f"[[{target}{anchor}{alias or '|' + Path(name).name}]]"
+
+
 WEBP_MIN = 200_000  # 이보다 큰 PNG 는 WebP 도 만들어 본문에는 WebP 를 쓴다 (성능, seo-technical)
 
 
@@ -228,6 +249,7 @@ for md in vault.rglob("*.md"):
 
     text = EMBED_RE.sub(fix_embed, text)
     text = LINK_RE.sub(fix_link, text)
+    text = NOTE_LINK_RE.sub(full_link, text)
     text = promote_h1(text)
     text = add_aliases(text, rel.with_suffix("").as_posix())
     # 볼트 폴더 앞 정렬 번호("30 IT 트렌드")는 블로그 주소에서 떼고, 대분류 이름을 맞춘다
@@ -258,16 +280,23 @@ def fm_value(text, key):
 
 
 NEWEST_FIRST = {"IT 트렌드", "논문 노트"}
+SERIES_FOLDERS = {"논문 노트/AI 논문 썰"}
 folders = {}
 for rel in published:
     p = Path(rel)
     if len(p.parts) > 1:
         folders.setdefault(p.parent.as_posix(), []).append(p)
+        # 공개 카테고리는 하위 폴더(논문 노트/AI 논문 썰 등)의 글도 첫 화면 목록에 넣는다
+        if len(p.parts) > 2 and p.parts[0] in NEWEST_FIRST:
+            folders.setdefault(p.parts[0], []).append(p)
 
 for folder, notes in folders.items():
     items = []
     # 공개 카테고리(IT 트렌드, 논문 노트)는 최신 글이 위로. 나머지 폴더는 예전처럼 이름순
-    if folder in NEWEST_FIRST:
+    if folder in SERIES_FOLDERS:
+        # 연재는 1편부터 차례로
+        ordered = sorted(notes, key=lambda x: int(fm_value((content / x).read_text(encoding="utf-8"), "series_no") or 999))
+    elif folder.split("/")[0] in NEWEST_FIRST:
         def _key(x):
             tx = (content / x).read_text(encoding="utf-8")
             return (fm_value(tx, "created"), fm_value(tx, "date") or fm_value(tx, "published"), x.as_posix())
