@@ -30,7 +30,7 @@ title: "8편 VGG: 3x3 창만 쌓아서 19층까지 올라간 2014년"
 | 소속 | Visual Geometry Group, Department of Engineering Science, University of Oxford |
 | 실린 곳 | ICLR 2015 (arXiv 1409.1556, 첫 판 2014년 9월 4일, 최종 6판 2015년 4월 10일) |
 | 분량 | 14쪽 (본문 8쪽, 나머지는 참고 문헌과 부록) |
-| 시리즈 | AI 논문 썰 8편 (이전 편: [[논문 노트/AI 논문 썰/Batch Normalization 논문 정리 (Ioffe 2015)\|Batch Normalization]], 다음 편: GoogLeNet, 2014) |
+| 시리즈 | AI 논문 썰 8편 (이전 편: [[논문 노트/AI 논문 썰/Batch Normalization 논문 정리 (Ioffe 2015)\|Batch Normalization]], 다음 편: [[논문 노트/AI 논문 썰/GoogLeNet 논문 정리 (Szegedy 2014)\|GoogLeNet]], 2014) |
 
 ## 1. 시계를 1년 돌린다, 2014년으로
 
@@ -265,7 +265,7 @@ GoogLeNet 논문은 자기네 그물의 가중치가 AlexNet의 12분의 1이라
 
 어떻게 했는지는 다음에.
 
-다음 편, GoogLeNet.
+다음 편, [[논문 노트/AI 논문 썰/GoogLeNet 논문 정리 (Szegedy 2014)|GoogLeNet]].
 
 ## 11. 면접에서 물어보면
 
