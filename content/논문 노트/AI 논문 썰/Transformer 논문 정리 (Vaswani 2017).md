@@ -30,7 +30,7 @@ title: "16편 Transformer: 순환을 버리고 어텐션만 남겼다, 여덟 �
 | 소속 | Google Brain, Google Research, University of Toronto |
 | 실린 곳 | NIPS 2017 (arXiv 1706.03762, 2017년 6월 12일 첫 공개) |
 | 분량 | 15쪽, 그림 5개 (본문 10쪽, 참고 문헌 2쪽, 부록 그림 3쪽) |
-| 시리즈 | AI 논문 썰 16편 (이전 편: [[논문 노트/AI 논문 썰/Attention 논문 정리 (Bahdanau 2014)\|Attention]], 다음 편: BERT, 2018) |
+| 시리즈 | AI 논문 썰 16편 (이전 편: [[논문 노트/AI 논문 썰/Attention 논문 정리 (Bahdanau 2014)\|Attention]], 다음 편: [[논문 노트/AI 논문 썰/BERT 논문 정리 (Devlin 2018)\|BERT]], 2018) |
 
 ## 1. 어텐션은 3년 동안 조수였다
 
@@ -307,7 +307,7 @@ Transformer 논문의 저자 여덟 명은 그 뒤 모두 구글을 떠났어. �
 
 인코더 반쪽을 가져간 쪽의 이름이 BERT야.
 
-다음 편, BERT.
+다음 편, [[논문 노트/AI 논문 썰/BERT 논문 정리 (Devlin 2018)|BERT]].
 
 ## 13. 면접에서 물어보면
 
