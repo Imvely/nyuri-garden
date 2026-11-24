@@ -124,7 +124,7 @@
   // ── 좋아요 ──────────────────────────────────────────────────
   // 아래 공유 줄의 버튼과 위 반응 줄의 하트가 같은 상태를 쓴다
   const like = { likes: 0, liked: false, known: false, seq: 0 }
-  const likeLabel = () => (like.liked ? `좋아요 취소, 지금 ${like.likes} 명` : `좋아요, 지금 ${like.likes} 명`)
+  const likeLabel = () => (like.liked ? `좋아요 ${like.likes} 명, 다시 누르면 취소` : `좋아요 ${like.likes} 명`)
 
   function paintLikes() {
     document.querySelectorAll(".nyuri-like").forEach((btn) => {
@@ -180,7 +180,7 @@
     const btn = document.createElement("button")
     btn.type = "button"
     btn.className = "nyuri-like"
-    btn.innerHTML = `${HEART}<span>좋아요</span><span class="nyuri-like-count"></span>`
+    btn.innerHTML = `${HEART}<span>좋아요</span> <span class="nyuri-like-count"></span>`
     row.prepend(btn)
     btn.addEventListener("click", toggleLike)
     paintLikes()
