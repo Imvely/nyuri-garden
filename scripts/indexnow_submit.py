@@ -29,14 +29,17 @@ def main():
         "keyLocation": f"{BASE}{INDEXNOW_KEY}.txt",
         "urlList": urls[:10000],
     }).encode("utf-8")
-    req = urllib.request.Request("https://api.indexnow.org/indexnow", data=body,
-                                 headers={"Content-Type": "application/json; charset=utf-8"}, method="POST")
-    try:
-        with urllib.request.urlopen(req, timeout=30) as r:
-            print("IndexNow:", r.status, len(urls), "개 주소")
-    except urllib.error.HTTPError as e:
-        print("IndexNow 실패:", e.code, e.read()[:300])
-
+    # api.indexnow.org 는 참여 엔진 전체에 나눠 준다. 주로 보는 Bing 과 네이버에는 직접도 보낸다
+    for name, endpoint in (("IndexNow", "https://api.indexnow.org/indexnow"), ("Bing", "https://www.bing.com/indexnow"),
+                           ("네이버", "https://searchadvisor.naver.com/indexnow"), ("Yandex", "https://yandex.com/indexnow")):
+        req = urllib.request.Request(endpoint, data=body, headers={"Content-Type": "application/json; charset=utf-8"}, method="POST")
+        try:
+            with urllib.request.urlopen(req, timeout=30) as r:
+                print(f"{name}:", r.status, len(urls), "개 주소")
+        except urllib.error.HTTPError as e:
+            print(f"{name} 실패:", e.code, e.read()[:200])
+        except Exception as e:  # 회사망 차단 등
+            print(f"{name} 연결 실패:", type(e).__name__, str(e)[:120])
 
 if __name__ == "__main__":
     main()
