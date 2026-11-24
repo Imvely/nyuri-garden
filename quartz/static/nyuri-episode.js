@@ -23,6 +23,8 @@
   function run() {
     queued = false
     document.querySelectorAll(SEL).forEach(mark)
+    // 접근성: 탐색기 상자(div)에는 aria-expanded 를 쓸 수 없다. 플러그인이 붙인 것을 지운다
+    document.querySelectorAll("div.explorer[aria-expanded]").forEach((d) => d.removeAttribute("aria-expanded"))
   }
   function schedule() {
     if (queued) return
@@ -30,6 +32,6 @@
     requestAnimationFrame(run)
   }
   document.addEventListener("nav", schedule)
-  new MutationObserver(schedule).observe(document.documentElement, { childList: true, subtree: true })
+  new MutationObserver(schedule).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ["aria-expanded"] })
   schedule()
 })()

@@ -341,7 +341,7 @@
         "li",
         { class: "nyuri-list-item" },
         meta,
-        el("h3", {}, el("a", { href, class: "internal" }, it.title)),
+        el("h3", { "aria-level": "2" }, el("a", { href, class: "internal" }, it.title)),
         it.summary ? el("p", { class: "nyuri-list-summary" }, it.summary) : null,
         tags,
       )
@@ -390,7 +390,7 @@
         pager.append(pageButton(svg(ICON_PREV), state.page - 1, { disabled: state.page === 1, aria: "이전 페이지", cls: "is-step" }))
         for (let p = 1; p <= pages; p++) {
           const near = Math.abs(p - state.page) <= 1 || p === 1 || p === pages
-          if (near) pager.append(pageButton(String(p), p, { current: p === state.page, aria: `${p}페이지` }))
+          if (near) pager.append(pageButton(String(p), p, { current: p === state.page, aria: `${p} 페이지` }))
           else if (Math.abs(p - state.page) === 2) pager.append(el("span", { class: "nyuri-list-gap", "aria-hidden": "true" }, "…"))
         }
         pager.append(pageButton(svg(ICON_NEXT), state.page + 1, { disabled: state.page === pages, aria: "다음 페이지", cls: "is-step" }))
