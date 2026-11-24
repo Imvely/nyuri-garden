@@ -129,9 +129,9 @@ def faq_items(h):
     block = block[: end.start()] if end else block
     out = []
     for q, a in re.findall(r"<p><strong>(.*?)</strong><br\s*/?>\s*(.*?)</p>", block, re.S):
-        if "katex" in q or "katex" in a:
-            continue
-        q, a = (re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", x)).strip() for x in (q, a))
+        if "katex-display" in a or "katex-error" in a or "sqrt" in q + a or "mfrac" in q + a:
+            continue  # 줄 전체 수식은 글자로 옮기면 뜻이 깨진다. 문장 속 짧은 수식은 글자만 남긴다
+        q, a = (re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", x).replace("​", "")).strip() for x in (q, a))
         if q and a:
             out.append({"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}})
     return out
