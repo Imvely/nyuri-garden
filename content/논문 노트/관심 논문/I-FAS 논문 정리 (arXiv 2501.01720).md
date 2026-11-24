@@ -148,4 +148,4 @@ $$
 
 - 마인드맵: <a href="https://imvely.github.io/nyuri-garden/static/viewer.html?src=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/i-fas/i-fas-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.svg&fallback=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EC%B2%A8%EB%B6%80/i-fas/i-fas-%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5.png&back=%EB%85%BC%EB%AC%B8-%EB%85%B8%ED%8A%B8/%EA%B4%80%EC%8B%AC-%EB%85%BC%EB%AC%B8/i-fas-%EB%85%BC%EB%AC%B8-%EC%A0%95%EB%A6%AC-%28arxiv-2501.01720%29&title=I-FAS%20%EB%A7%88%EC%9D%B8%EB%93%9C%EB%A7%B5" target="_blank" rel="noopener" data-router-ignore>I-FAS 마인드맵 (크게 보기)</a>
 - 원문: https://arxiv.org/abs/2501.01720
-- 키워드: #FAS #MLLM #VQA #도메인일반화
+- 키워드: FAS, MLLM, VQA, 도메인일반화
