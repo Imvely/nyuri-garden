@@ -116,6 +116,27 @@ def jsonld(obj):
     return '<script type="application/ld+json">' + json.dumps(obj, ensure_ascii=False).replace("</", "<\\/") + "</script>"
 
 
+SUB_NAMES = {"논문-노트/ai-논문-썰": "AI 논문 썰", "논문-노트/관심-논문": "관심 논문"}
+
+
+def faq_items(h):
+    """글 끝 '면접에서 물어보면' 절의 굵은 질문과 답을 FAQPage 항목으로 뽑는다 (수식이 든 답은 건너뛴다)."""
+    m = re.search(r'<h2 id="[^"]*면접에서-물어보면"', h)
+    if not m:
+        return []
+    block = h[m.end():]
+    end = re.search(r"<h2[ >]", block)
+    block = block[: end.start()] if end else block
+    out = []
+    for q, a in re.findall(r"<p><strong>(.*?)</strong><br\s*/?>\s*(.*?)</p>", block, re.S):
+        if "katex" in q or "katex" in a:
+            continue
+        q, a = (re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", x)).strip() for x in (q, a))
+        if q and a:
+            out.append({"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}})
+    return out
+
+
 def first_sentence(text):
     text = re.sub(r"\s+", " ", text).strip()
     m = re.match(r"(.+?(?:요\.|다\.|\.))\s", text + " ")
@@ -147,6 +168,20 @@ def process(out: Path, base: str, posts: dict, intros: dict, git_modified):
         h = re.sub(r'<link rel="stylesheet" href="(https://(?:fonts\.googleapis\.com/css2\?family=Gaegu|cdn\.jsdelivr\.net/gh/orioncactus/pretendard)[^"]*)">', nonblock, h)
 
         page_url = abs_url(base, slug)
+        refresh = re.search(r'<meta http-equiv="refresh" content="0; url=([^"]+)"', h)
+        if refresh:
+            # 넘김 페이지: 검색엔진이 예전 주소를 새 주소로 합치도록 canonical 을 절대 주소로 적는다
+            target = urllib.parse.unquote(refresh.group(1))
+            parts = [x for x in slug.split("/")[:-1]]
+            for seg in target.split("/"):
+                if seg == "..":
+                    parts = parts[:-1]
+                elif seg not in ("", "."):
+                    parts.append(seg)
+            h = re.sub(r'<link rel="canonical" href="[^"]*"\s*/?>', f'<link rel="canonical" href="{abs_url(base, "/".join(parts))}"/>', h, count=1)
+            f.write_text(h, encoding="utf-8")
+            n += 1
+            continue
         if slug.startswith(NOINDEX_PREFIX) or slug == "404":
             h = h.replace("</head>", '<meta name="robots" content="noindex, follow"/></head>', 1)
             f.write_text(h, encoding="utf-8")
@@ -159,8 +194,8 @@ def process(out: Path, base: str, posts: dict, intros: dict, git_modified):
             desc = post["summary"] or first_sentence(post["title"])
         elif slug == "index":
             desc = SITE_DESC
-        elif slug.endswith("/index") and intros.get(slug.split("/")[0]):
-            desc = first_sentence(intros[slug.split("/")[0]])
+        elif slug.endswith("/index") and (intros.get(slug[:-6]) or intros.get(slug.split("/")[0])):
+            desc = first_sentence(intros.get(slug[:-6]) or intros[slug.split("/")[0]])
         else:
             desc = None
         if desc:
@@ -169,13 +204,41 @@ def process(out: Path, base: str, posts: dict, intros: dict, git_modified):
         if '<link rel="canonical"' not in h:
             h = h.replace("</head>", f'<link rel="canonical" href="{page_url}"/></head>', 1)
 
+        # ── 메타 태그 보강: 공유 주소, 언어, 미리보기 허용, 글쓴이, 제목 ──
+        h = set_meta(h, "property", "og:url", page_url)
+        h = set_meta(h, "property", "twitter:url", page_url)
+        h = set_meta(h, "property", "og:site_name", SITE_NAME)   # Quartz 는 name= 으로 내보낸다
+        h = set_meta(h, "property", "og:locale", "ko_KR")
+        h = set_meta(h, "name", "robots", "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1")
+        h = set_meta(h, "name", "author", AUTHOR)
+        tm = re.search(r"<title>(.*?)</title>", h, re.S)
+        if tm and slug != "index" and SITE_NAME not in tm.group(1):
+            raw = tm.group(1).strip()
+            # 목록 페이지는 이름만 있어 검색 결과에서 무슨 사이트인지 안 보인다. 글은 60자를 넘지 않을 때만 붙인다
+            if slug.endswith("/index") or len(raw) + len(SITE_NAME) + 3 <= 60:
+                h = h.replace(tm.group(0), f"<title>{raw} | {SITE_NAME}</title>", 1)
+        if post:
+            h = set_meta(h, "property", "article:author", AUTHOR)
+            if CAT_NAMES.get(slug.split("/")[0]):
+                h = set_meta(h, "property", "article:section", SUB_NAMES.get(slug.rsplit("/", 1)[0]) or CAT_NAMES[slug.split("/")[0]])
+            if post.get("series_no"):
+                # 연재의 앞뒤 편
+                sib = {q["series_no"]: q for q in posts.values() if q.get("series_no") and q["slug"].rsplit("/", 1)[0] == slug.rsplit("/", 1)[0]}
+                for rel, k in (("prev", post["series_no"] - 1), ("next", post["series_no"] + 1)):
+                    if k in sib:
+                        h = h.replace("</head>", f'<link rel="{rel}" href="{abs_url(base, sib[k]["slug"])}"/></head>', 1)
+
         # ── 구조화 데이터 ──
         crumbs = [{"@type": "ListItem", "position": 1, "name": SITE_NAME, "item": base}]
         cat = slug.split("/")[0]
         if cat in CAT_NAMES:
             crumbs.append({"@type": "ListItem", "position": 2, "name": CAT_NAMES[cat], "item": abs_url(base, cat + "/index")})
+        folder = slug.rsplit("/", 1)[0] if "/" in slug else ""
+        sub_name = SUB_NAMES.get(folder)
+        if sub_name:
+            crumbs.append({"@type": "ListItem", "position": len(crumbs) + 1, "name": sub_name, "item": abs_url(base, folder + "/index")})
         if post:
-            crumbs.append({"@type": "ListItem", "position": 3, "name": post["title"], "item": page_url})
+            crumbs.append({"@type": "ListItem", "position": len(crumbs) + 1, "name": post["title"], "item": page_url})
             modified = git_modified(post.get("file")) or post["added"]
             image = re.search(r'<meta property="og:image" content="([^"]+)"', h)
             article = {
@@ -200,6 +263,13 @@ def process(out: Path, base: str, posts: dict, intros: dict, git_modified):
                 article["about"] = {"@type": "ScholarlyArticle", "name": post.get("paper_title") or post["title"], "url": post["paper_url"]}
             if post.get("minutes"):
                 article["timeRequired"] = f"PT{post['minutes']}M"
+            if post.get("series_no") and sub_name:
+                # 연재: 몇 번째 편인지와 연재 첫 화면을 알려 준다
+                article["isPartOf"] = [article["isPartOf"], {"@type": "CreativeWorkSeries", "name": sub_name, "url": abs_url(base, folder + "/index")}]
+                article["position"] = post["series_no"]
+            faq = faq_items(h)
+            if faq:
+                h = h.replace("</head>", jsonld({"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": faq}) + "</head>", 1)
             h = h.replace("</head>", jsonld(article) + jsonld({"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": crumbs}) + "</head>", 1)
             h = set_meta(h, "property", "og:type", "article")
             extra = f'<meta property="article:published_time" content="{esc(post["added"])}"/><meta property="article:modified_time" content="{esc(modified)}"/>'
@@ -217,10 +287,13 @@ def process(out: Path, base: str, posts: dict, intros: dict, git_modified):
                     {"@type": "Blog", "name": SITE_NAME, "url": base, "inLanguage": "ko-KR", "author": {"@type": "Person", "name": AUTHOR}},
                 ]}) + "</head>", 1)
         elif slug.endswith("/index") and cat in CAT_NAMES:
-            items = [p for p in posts.values() if p["cat"] == cat]
-            items.sort(key=lambda p: p["added"], reverse=True)
+            items = [p for p in posts.values() if p["cat"] == cat and (not sub_name or p["slug"].startswith(folder + "/"))]
+            if sub_name and any(p.get("series_no") for p in items):
+                items.sort(key=lambda p: p.get("series_no") or 999)  # 연재는 1편부터
+            else:
+                items.sort(key=lambda p: p["added"], reverse=True)
             h = h.replace("</head>", jsonld({
-                "@context": "https://schema.org", "@type": "CollectionPage", "name": CAT_NAMES[cat], "url": page_url,
+                "@context": "https://schema.org", "@type": "CollectionPage", "name": sub_name or CAT_NAMES[cat], "url": page_url,
                 "description": desc, "inLanguage": "ko-KR",
                 "mainEntity": {"@type": "ItemList", "itemListElement": [
                     {"@type": "ListItem", "position": i + 1, "url": abs_url(base, p["slug"]), "name": p["title"]} for i, p in enumerate(items)]},
@@ -278,9 +351,17 @@ def process(out: Path, base: str, posts: dict, intros: dict, git_modified):
         items = sorted([p for p in posts.values() if p["cat"] == cat], key=lambda p: p["added"], reverse=True)
         if not items:
             continue
-        lines += [f"## {name}", ""]
-        lines += [f"- [{p['title']}]({abs_url(base, p['slug'])}): {p['summary']}" for p in items]
-        lines.append("")
+        series = sorted([p for p in items if p.get("series_no")], key=lambda p: p["series_no"])
+        rest = [p for p in items if not p.get("series_no")]
+        if rest:
+            lines += [f"## {name}", ""]
+            lines += [f"- [{p['title']}]({abs_url(base, p['slug'])}): {p['summary']}" for p in rest]
+            lines.append("")
+        if series:
+            lines += ["## AI 논문 썰 (연재)", "",
+                      "AI의 바탕이 된 논문을 1958년 퍼셉트론부터 한 편씩, 원문을 직접 읽고 입문자 눈높이로 풀어 쓴 연재다. 1편부터 차례로 읽으면 이어진다. 글마다 원문 수식, 직접 그린 그림, 면접 질문과 답, 용어 표, 출처가 있다.", ""]
+            lines += [f"- [{p['title']}]({abs_url(base, p['slug'])}): {p['summary']}" for p in series]
+            lines.append("")
     lines += ["## 더 보기", "", f"- [RSS]({base}index.xml)", f"- [사이트맵]({base}sitemap.xml)", ""]
     (out / "llms.txt").write_text("\n".join(lines), encoding="utf-8")
     (out / "index.xml").write_text(rss_xml(base, posts), encoding="utf-8")

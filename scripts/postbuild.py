@@ -234,7 +234,8 @@ import seo_post  # noqa: E402
 
 SITE = "https://" + re.search(r"^\s*baseUrl:\s*(\S+)", (repo / "quartz.config.yaml").read_text(encoding="utf-8"), re.M).group(1).strip("/") + "/"
 intros_raw = json.loads((repo / "scripts" / "folder_intros.json").read_text(encoding="utf-8"))
-intros = {"it-트렌드": intros_raw.get("IT 트렌드", ""), "논문-노트": intros_raw.get("논문 노트", "")}
+intros = {"it-트렌드": intros_raw.get("IT 트렌드", ""), "논문-노트": intros_raw.get("논문 노트", ""),
+          "논문-노트/ai-논문-썰": intros_raw.get("논문 노트/AI 논문 썰", ""), "논문-노트/관심-논문": intros_raw.get("논문 노트/관심 논문", "")}
 
 
 def git_modified(path):
