@@ -277,7 +277,7 @@ BERT는 2019년 6월 NAACL 2019에서 최우수 장편 논문상을 받았고, �
 
 숙제 둘 중 하나는 없어도 됐던 거야. 살아남은 건 빈칸 채우기였어.
 
-작게 줄이는 쪽도 나왔어. 2019년의 DistilBERT는 가중치를 6,600만 개로 줄이고도 점수의 95%쯤을 지켰대.
+작게 줄이는 쪽도 나왔어. 2019년의 DistilBERT는 크기를 40% 줄이고도 언어 이해 성능의 97%를 지켰다고 논문에 적었어.
 
 근데 BERT에는 구조에서 오는 한계가 있어. 인코더 반쪽이잖아. 읽기 전용이야. 디코더가 없어서 글을 써내는 일에는 맞지 않아.
 
@@ -330,7 +330,8 @@ BERT는 Transformer 인코더를 쌓아 모든 층에서 왼쪽과 오른쪽 문
 - 이름과 세서미 스트리트: DeepLearning.AI The Batch, [Inside AI's Muppet Empire](https://www.deeplearning.ai/the-batch/inside-ais-muppet-empire) (2019년 12월 18일). 인형 설명은 영어 위키백과 [Elmo](https://en.wikipedia.org/wiki/Elmo), [Bert (Sesame Street)](https://en.wikipedia.org/wiki/Bert_(Sesame_Street)). BERT의 저자들이 인형 이름을 노리고 지었다고 직접 말한 글은 확인하지 못해, 이름이 이어진다는 사실과 The Batch의 설명만 적었다. 같은 주제의 The Verge 기사는 열리지 않아 읽지 못했다. ELMo의 공개 시기는 The Batch가 2017년, 영어 위키백과 [ELMo](https://en.wikipedia.org/wiki/ELMo)가 2018년 2월로 달라 "먼저 나온"이라고만 썼다.
 - GPT의 공개 시기와 구조(2018년 6월, 12층 디코더): 영어 위키백과 [GPT-1](https://en.wikipedia.org/wiki/GPT-1). 이 논문의 본문은 읽지 않았고, GPT의 읽는 방향과 학습 데이터는 BERT 논문이 적은 대로 옮겼다.
 - Cloze의 뜻과 1953년: 영어 위키백과 [Cloze test](https://en.wikipedia.org/wiki/Cloze_test). 테일러의 1953년 논문은 읽지 않았다.
-- 구글 검색: Pandu Nayak, [Understanding searches better than ever before](https://blog.google/products/search/search-language-understanding-bert/) (2019년 10월 25일). 70개가 넘는 언어(2019년 12월 9일)와 DistilBERT의 수치, 인코더만으로는 글 생성에 맞지 않는다는 설명은 영어 위키백과 [BERT (language model)](https://en.wikipedia.org/wiki/BERT_(language_model)).
+- 구글 검색: Pandu Nayak, [Understanding searches better than ever before](https://blog.google/products/search/search-language-understanding-bert/) (2019년 10월 25일). 70개가 넘는 언어(2019년 12월 9일)와 인코더만으로는 글 생성에 맞지 않는다는 설명은 영어 위키백과 [BERT (language model)](https://en.wikipedia.org/wiki/BERT_(language_model)).
+- DistilBERT의 수치(크기 40% 감소, 언어 이해 성능의 97% 유지): V. Sanh, L. Debut, J. Chaumond, T. Wolf, DistilBERT, a distilled version of BERT: smaller, faster, cheaper and lighter, [arXiv:1910.01108](https://arxiv.org/abs/1910.01108) 초록 페이지(2019년 10월 2일 제출). 초록만 읽었고 본문은 읽지 않았다.
 - RoBERTa: Y. Liu 외, RoBERTa: A Robustly Optimized BERT Pretraining Approach, [arXiv:1907.11692](https://arxiv.org/abs/1907.11692) 1판(2019년 7월 26일)의 첫 쪽, 초록, 4.2절만 읽었다. 12절 마지막 답의 "이후 여러 모델"은 위키백과 BERT 문서가 적은 RoBERTa(NSP 제거)와 ALBERT(문장 순서 예측으로 교체)를 가리킨다.
 - 다음 편 예고: T. Brown 외, Language Models are Few-Shot Learners, [arXiv:2005.14165](https://arxiv.org/abs/2005.14165) 초록 페이지. 1판 2020년 5월 28일, 가중치 1,750억 개, 기울기 갱신이나 미세 조정 없이 과제와 예시를 글로만 준다는 것까지 확인했다. 본문은 아직 읽지 않았다.
 - 계산과 풀이: 33억 낱말(8억과 25억), 1.5%(15%의 10%), 4.5점(79.6과 75.1), 7.7점(80.5와 72.8), 3.5점(88.4와 84.9), 0.1점(91.8과 91.7), 4배(128,000과 32,000)는 원문의 숫자로 한 계산이다. 통장 예문, 수능과 벼락치기, 답이 비치는 시험지 비유와 12절의 답은 원문 내용을 풀어 쓴 설명이다.
