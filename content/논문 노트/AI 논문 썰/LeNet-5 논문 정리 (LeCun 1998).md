@@ -230,6 +230,7 @@ SVM은 그 무렵 떠오르던 다른 방법이야. 신경망이 아닌 방법�
 ## 출처
 
 - Y. LeCun, L. Bottou, Y. Bengio, P. Haffner. Gradient-Based Learning Applied to Document Recognition. Proceedings of the IEEE, 86(11), 2278-2324, 1998. [doi:10.1109/5.726791](https://doi.org/10.1109/5.726791). 46쪽 가운데 초록, 서론, 2절(합성곱 신경망과 LeNet-5), 3절(MNIST와 비교 실험), 결론을 읽고 썼다. 필기 인식과 그래프 변환 그물을 다루는 4절부터 10절 본문은 읽지 않았다.
+- 8절의 틀린 글씨 82장은 원문 그림 8에 실린 것이다. 이 82장이 오류율 0.95% 때의 결과인지 변형 데이터를 더한 0.8% 때의 결과인지 원문은 따로 밝히지 않았다.
 - 르쿤의 생애와 LeNet 연표, 2001년 수표 추정치: 영어 위키백과 [Yann LeCun](https://en.wikipedia.org/wiki/Yann_LeCun), [LeNet](https://en.wikipedia.org/wiki/LeNet)
 - 1990년대 후반 이후 신경망이 밀려난 배경: 영어 위키백과 [LeNet](https://en.wikipedia.org/wiki/LeNet), [Convolutional neural network](https://en.wikipedia.org/wiki/Convolutional_neural_network)
 - 저자들의 그 뒤: 영어 위키백과 [Yoshua Bengio](https://en.wikipedia.org/wiki/Yoshua_Bengio), [Léon Bottou](https://en.wikipedia.org/wiki/L%C3%A9on_Bottou)
